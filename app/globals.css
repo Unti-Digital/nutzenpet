@@ -2,25 +2,113 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #172021;
+  --brand-orange: #fe8c05;
+  --brand-teal: #124d55;
+  --brand-blue: #123f55;
+  --brand-purple: #3e1255;
+  --brand-burnt: #cc632b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-burnt: var(--brand-burnt);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Candara, "Segoe UI", Arial, sans-serif;
+}
+
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@keyframes sonar {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.8);
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+.reveal-up {
+  opacity: 0;
+  animation: reveal-up 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.float-soft {
+  animation: float-soft 5s ease-in-out infinite;
+}
+
+.float-soft-delayed {
+  animation: float-soft 6s ease-in-out 1.2s infinite reverse;
+}
+
+.sonar::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  border: 2px solid currentColor;
+  border-radius: 9999px;
+  animation: sonar 2s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal-up,
+  .float-soft,
+  .float-soft-delayed,
+  .sonar::before {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
 }
