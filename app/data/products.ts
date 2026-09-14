@@ -1,5 +1,20 @@
+import largeDogBanner from "../../fotos-extras/rottweiler.png";
+import smallDogBanner from "../../fotos-sobre/cahorro.jpg";
+import catBanner from "../../fotos-sobre/Gato-02.webp";
+
+export type ProductSpecies = "dog" | "cat";
+
+export type ProductBanner = {
+  eyebrow: string;
+  title: string;
+  image: string;
+  imageAlt: string;
+  imagePosition: string;
+};
+
 export type Product = {
   slug: string;
+  species: ProductSpecies;
   shortName: string;
   name: string;
   description: string;
@@ -15,11 +30,30 @@ export type Product = {
   directions: string;
   storage: string;
   feedingGuide: Array<{ weight: string; amount: string }>;
+  banner?: Partial<ProductBanner>;
+};
+
+const bannerDefaults: Record<ProductSpecies, ProductBanner> = {
+  dog: {
+    eyebrow: "Nutrição para cães",
+    title: "Cuidado completo em todas as fases.",
+    image: smallDogBanner.src,
+    imageAlt: "Cachorro saudável representando a linha de alimentos para cães",
+    imagePosition: "center",
+  },
+  cat: {
+    eyebrow: "Nutrição para gatos",
+    title: "Equilíbrio pensado para os felinos.",
+    image: catBanner.src,
+    imageAlt: "Gato saudável representando a linha de alimentos para gatos",
+    imagePosition: "center",
+  },
 };
 
 export const products: Product[] = [
   {
     slug: "racas-medias-grandes",
+    species: "dog",
     shortName: "Médias e grandes",
     name: "Cães Adultos Raças Médias e Grandes",
     description:
@@ -30,10 +64,17 @@ export const products: Product[] = [
     accent: "#3E1255",
     soft: "#F5EEF8",
     images: [
-      "/produtos/produto1-1.png",
-      "/produtos/produto1-2.png",
-      "/produtos/produto1-3.png",
+      "/produtos/produto1-1.png?v=2",
+      "/produtos/produto1-2.png?v=2",
+      "/produtos/produto1-3.png?v=2",
     ],
+    banner: {
+      eyebrow: "Força, energia e cuidado diário",
+      title: "Nutrição à altura dos cães médios e grandes.",
+      image: largeDogBanner.src,
+      imageAlt: "Cão de grande porte saudável",
+      imagePosition: "center 38%",
+    },
     features: ["Proteínas selecionadas", "Vitaminas e minerais", "Alta palatabilidade"],
     nutrition: [
       { label: "Proteína bruta", value: "23% mín." },
@@ -58,6 +99,7 @@ export const products: Product[] = [
   },
   {
     slug: "racas-pequenas",
+    species: "dog",
     shortName: "Raças pequenas",
     name: "Cães Adultos Raças Pequenas",
     description:
@@ -68,10 +110,17 @@ export const products: Product[] = [
     accent: "#124D55",
     soft: "#EAF3F3",
     images: [
-      "/produtos/produto2-1.png",
-      "/produtos/produto2-2.png",
-      "/produtos/produto2-3.png",
+      "/produtos/produto2-1.png?v=2",
+      "/produtos/produto2-2.png?v=2",
+      "/produtos/produto2-3.png?v=2",
     ],
+    banner: {
+      eyebrow: "Cuidado na medida certa",
+      title: "Pequenos no tamanho. Grandes em personalidade.",
+      image: smallDogBanner.src,
+      imageAlt: "Cachorro de pequeno porte saudável",
+      imagePosition: "center 38%",
+    },
     features: ["Grãos de tamanho ideal", "Digestão equilibrada", "Pele e pelagem saudáveis"],
     nutrition: [
       { label: "Proteína bruta", value: "24% mín." },
@@ -96,6 +145,7 @@ export const products: Product[] = [
   },
   {
     slug: "gatos-castrados",
+    species: "cat",
     shortName: "Gatos castrados",
     name: "Gatos Adultos Castrados",
     description:
@@ -106,10 +156,17 @@ export const products: Product[] = [
     accent: "#CC632B",
     soft: "#FFF0E9",
     images: [
-      "/produtos/produto3-1.png",
-      "/produtos/produto3-2.png",
-      "/produtos/produto3-3.png",
+      "/produtos/produto3-1.png?v=2",
+      "/produtos/produto3-2.png?v=2",
+      "/produtos/produto3-3.png?v=2",
     ],
+    banner: {
+      eyebrow: "Bem-estar depois da castração",
+      title: "Equilíbrio especial para gatos castrados.",
+      image: catBanner.src,
+      imageAlt: "Gato adulto saudável",
+      imagePosition: "center 35%",
+    },
     features: ["Controle de peso", "Saúde do trato urinário", "Taurina e antioxidantes"],
     nutrition: [
       { label: "Proteína bruta", value: "32% mín." },
@@ -133,6 +190,14 @@ export const products: Product[] = [
     ],
   },
 ];
+
+export function getProductBanner(product: Product): ProductBanner {
+  return {
+    ...bannerDefaults[product.species],
+    title: product.name,
+    ...product.banner,
+  };
+}
 
 export function getProduct(slug: string) {
   return products.find((product) => product.slug === slug);

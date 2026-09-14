@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { BrandButton } from "../components/brand-button";
 import { FloatingMotifs } from "../components/floating-motifs";
+import { PhotoRotator, type RotatingPhoto } from "../components/photo-rotator";
 import { ProductCard } from "../components/product-card";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
@@ -20,6 +21,20 @@ import { products } from "../data/products";
 import essencePair from "../../fotos-sobre/cachorro-gato.jpg";
 import essenceDog from "../../fotos-sobre/cahorro.jpg";
 import essenceFriends from "../../fotos-sobre/gato-cachorro.jpg";
+import borderCollie from "../../fotos-extras/border collie.png";
+import pitbull from "../../fotos-extras/pitbull.png";
+import rottweiler from "../../fotos-extras/rottweiler.png";
+import catOne from "../../fotos-sobre/Gato-01.webp";
+import catTwo from "../../fotos-sobre/Gato-02.webp";
+
+const heroPhotos: RotatingPhoto[] = [
+  { src: borderCollie, alt: "Border collie saudável e atento" },
+  { src: catOne, alt: "Gato siamês atento", objectPosition: "center 38%" },
+  { src: pitbull, alt: "Pitbull jovem em retrato" },
+  { src: catTwo, alt: "Gato cinza saudável", objectPosition: "center 42%" },
+  { src: rottweiler, alt: "Rottweiler saudável e feliz", objectPosition: "center 42%" },
+  { src: essencePair, alt: "Cachorro e gato juntos", objectPosition: "center 48%" },
+];
 
 const pillars = [
   {
@@ -104,16 +119,10 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <div className="reveal-up relative mx-auto h-[390px] w-full max-w-[650px] sm:h-[520px]" style={{ animationDelay: "120ms" }}>
-            <span className="absolute bottom-[13%] left-[10%] h-[72%] w-[72%] rounded-full bg-[#F1F6E7]" aria-hidden="true" />
-            <Image
-              src="/images/hero-pets-v3.png"
-              alt="Cão e gato juntos representando o cuidado NutzenPet"
-              fill
-              preload
-              sizes="(max-width: 1024px) 92vw, 650px"
-              className="relative object-contain object-bottom"
-            />
+          <div className="reveal-up relative mx-auto h-[390px] w-full max-w-[560px] sm:h-[520px]" style={{ animationDelay: "120ms" }}>
+            <span className="absolute -bottom-3 -right-3 h-[78%] w-[78%] rounded-lg bg-[#FE8C05]" aria-hidden="true" />
+            <span className="absolute -left-5 top-8 h-24 w-24 rounded-full bg-[#B9DC80]" aria-hidden="true" />
+            <PhotoRotator photos={heroPhotos} className="absolute inset-3 sm:inset-5" />
           </div>
         </div>
       </section>
@@ -205,7 +214,7 @@ export default function AboutPage() {
               const PillarIcon = pillar.icon;
               return (
                 <article key={pillar.title} className="reveal-up group min-h-64 rounded-lg border border-slate-100 bg-[#fffef9] p-7 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl" style={{ animationDelay: `${index * 90}ms` }}>
-                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#F1F6E7] text-[#67952F] transition-all duration-300 group-hover:scale-90 group-hover:bg-[#FE8C05] group-hover:text-white"><PillarIcon className="h-5 w-5" /></span>
+                  <span className="sonar sonar-green relative grid h-12 w-12 place-items-center rounded-full bg-[#F1F6E7] text-[#67952F] transition-all duration-300 group-hover:scale-90 group-hover:bg-[#FE8C05] group-hover:text-white"><PillarIcon className="h-5 w-5" /></span>
                   <h3 className="mt-6 text-xl font-black text-[#123F55]">{pillar.title}</h3>
                   <p className="mt-3 text-sm leading-6 text-slate-500">{pillar.description}</p>
                 </article>
@@ -228,7 +237,7 @@ export default function AboutPage() {
               const JourneyIcon = item.icon;
               return (
                 <div key={item.step} className={`reveal-up relative px-0 lg:px-7 ${index === 0 ? "lg:pl-0" : "lg:border-l lg:border-white/15"}`} style={{ animationDelay: `${index * 90}ms` }}>
-                  <div className="flex items-center gap-4"><span className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-[#B9DC80]"><JourneyIcon className="h-5 w-5" /></span><span className="text-xs font-black tracking-[0.18em] text-[#FE8C05]">{item.step}</span></div>
+                  <div className="flex items-center gap-4"><span className="sonar sonar-green relative grid h-12 w-12 place-items-center rounded-full bg-white/10 text-[#B9DC80]"><JourneyIcon className="h-5 w-5" /></span><span className="text-xs font-black tracking-[0.18em] text-[#FE8C05]">{item.step}</span></div>
                   <h3 className="mt-5 text-xl font-black">{item.title}</h3>
                   <p className="mt-3 text-sm leading-6 text-white/60">{item.description}</p>
                 </div>
@@ -259,7 +268,7 @@ export default function AboutPage() {
         <div className="mx-auto grid max-w-[1240px] items-center gap-8 py-12 md:grid-cols-[1fr_300px] md:py-0 lg:grid-cols-[1fr_390px]">
           <div className="py-2 text-center md:py-14 md:text-left">
             <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#67952F]">Uma vida inteira ao lado deles</p>
-            <h2 className="mt-3 max-w-2xl text-3xl font-black leading-tight text-[#123F55] sm:text-4xl">Mais saúde, energia e bons momentos em família.</h2>
+            <h2 className="mt-3 max-w-2xl text-3xl font-black leading-tight text-[#123F55] sm:text-4xl">Mais saúde, energia e <br />bons momentos em família.</h2>
             <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600">Conte com a NutzenPet para tornar cada refeição uma parte especial da rotina.</p>
             <BrandButton href="/contato" className="mt-7">Fale com a gente</BrandButton>
           </div>

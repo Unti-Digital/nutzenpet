@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MessageCircle } from "lucide-react";
 import "./globals.css";
 import { CartProvider } from "./components/cart-provider";
+import { contactDetails } from "./data/contact";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +25,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          {children}
+          <a
+            href={contactDetails.whatsapp}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Falar com a NutzenPet pelo WhatsApp"
+            title="Falar pelo WhatsApp"
+            className="sonar sonar-green fixed bottom-5 right-5 z-[70] grid h-14 w-14 place-items-center rounded-full bg-[#67952F] text-white transition-all duration-300 hover:scale-90 hover:bg-[#527C26] active:scale-95 sm:bottom-8 sm:right-8 sm:h-16 sm:w-16"
+          >
+            <MessageCircle className="relative z-10 h-7 w-7 sm:h-8 sm:w-8" />
+          </a>
+        </CartProvider>
       </body>
     </html>
   );

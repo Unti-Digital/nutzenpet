@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Check, ShoppingBag } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import type { Product } from "../data/products";
 import { useCart } from "./cart-provider";
 
@@ -28,7 +28,7 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
 
   return (
     <article className="reveal-up group relative flex min-h-[520px] flex-col overflow-hidden rounded-lg bg-white p-5 shadow-[0_12px_35px_rgba(18,63,85,.09)] transition-all duration-300 hover:-translate-y-2 hover:shadow-xl" style={{ animationDelay: `${index * 100}ms` }}>
-      <button type="button" onClick={handleAddToCart} aria-label={`Adicionar ${product.name} ao carrinho`} className="sonar absolute right-7 top-7 z-20 grid h-10 w-10 place-items-center rounded-full text-white transition-all duration-300 hover:scale-90 active:scale-75" style={{ backgroundColor: product.accent }}>
+      <button type="button" onClick={handleAddToCart} aria-label={`Adicionar ${product.name} ao carrinho`} className="sonar absolute right-7 top-7 z-20 grid h-10 w-10 place-items-center rounded-full text-white transition-all duration-300 hover:scale-90 active:scale-75" style={{ backgroundColor: product.accent, "--sonar-color": product.accent } as CSSProperties}>
         {added ? <Check className="relative z-10 h-4 w-4" /> : <ShoppingBag className="relative z-10 h-4 w-4" />}
       </button>
 

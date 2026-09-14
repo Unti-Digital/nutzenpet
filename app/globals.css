@@ -89,13 +89,39 @@ select {
   animation: float-soft 6s ease-in-out 1.2s infinite reverse;
 }
 
+.sonar {
+  --sonar-color: currentColor;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--sonar-color) 32%, transparent);
+}
+
 .sonar::before {
   position: absolute;
   inset: 0;
   content: "";
-  border: 2px solid currentColor;
+  pointer-events: none;
+  border: 2px solid var(--sonar-color);
   border-radius: 9999px;
-  animation: sonar 2s ease-out infinite;
+  animation: sonar 2.5s ease-out infinite;
+}
+
+.sonar-green {
+  --sonar-color: #8dbb46;
+}
+
+.sonar-orange {
+  --sonar-color: #fe8c05;
+}
+
+.sonar-teal {
+  --sonar-color: #124d55;
+}
+
+.sonar-purple {
+  --sonar-color: #3e1255;
+}
+
+.sonar-burnt {
+  --sonar-color: #cc632b;
 }
 
 @media (prefers-reduced-motion: reduce) {

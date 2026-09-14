@@ -2,7 +2,7 @@
 
 import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
-import type { FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowRight,
   CheckCircle2,
@@ -34,6 +34,8 @@ const benefits = [
   { icon: Sparkles, value: "100%", label: "Antioxidantes naturais" },
   { icon: ShieldCheck, value: "ALTO", label: "Teor de proteína" },
 ];
+
+const heroProducts = [products[1], products[0], products[2]];
 
 const categories: Array<{
   title: string;
@@ -77,6 +79,19 @@ function Eyebrow({ children, centered = false }: { children: React.ReactNode; ce
 }
 
 export default function Home() {
+  const [activeHeroProduct, setActiveHeroProduct] = useState(0);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reducedMotion.matches) return;
+
+    const timer = window.setInterval(() => {
+      setActiveHeroProduct((current) => (current + 1) % heroProducts.length);
+    }, 3600);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
   function handleNewsletter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
   }
@@ -123,7 +138,7 @@ export default function Home() {
                 const FeatureIcon = Icon as typeof Leaf;
                 return (
                   <div key={text as string} className="flex items-center gap-2.5">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#C9DDAA] text-[#67952F]">
+                    <span className="sonar sonar-green relative grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#C9DDAA] bg-[#fffef9] text-[#67952F]">
                       <FeatureIcon className="h-4 w-4" />
                     </span>
                     <span className="text-[11px] font-bold leading-4 text-slate-600">{text as string}</span>
@@ -150,15 +165,21 @@ export default function Home() {
               />
             </div>
             <div className="float-soft absolute -bottom-[2%] right-0 z-10 h-[82%] w-[48%]">
-              <Image
-                src="/produtos/produto2-1.png"
-                alt="Nutzen para cães adultos de raças pequenas"
-                fill
-                sizes="(max-width: 1024px) 44vw, 330px"
-                className="object-contain object-bottom drop-shadow-[0_20px_18px_rgba(18,77,85,.16)]"
-              />
+              {heroProducts.map((product, index) => (
+                <Image
+                  key={product.slug}
+                  src={product.images[1]}
+                  alt={product.name}
+                  fill
+                  preload={index === 0}
+                  loading={index === 0 ? undefined : "eager"}
+                  sizes="(max-width: 1024px) 44vw, 330px"
+                  aria-hidden={activeHeroProduct !== index}
+                  className={`object-contain object-bottom drop-shadow-[0_20px_18px_rgba(18,77,85,.16)] transition-opacity duration-700 ease-in-out motion-reduce:transition-none ${activeHeroProduct === index ? "opacity-100" : "opacity-0"}`}
+                />
+              ))}
             </div>
-            <span className="sonar absolute right-[10%] top-[7%] z-20 grid h-11 w-11 place-items-center rounded-full bg-[#FE8C05] text-white">
+            <span className="sonar sonar-orange absolute right-[10%] top-[7%] z-20 grid h-11 w-11 place-items-center rounded-full bg-[#FE8C05] text-white">
               <PawPrint className="relative z-10 h-5 w-5" />
             </span>
           </div>
@@ -173,7 +194,7 @@ export default function Home() {
               const BenefitIcon = benefit.icon;
               return (
                 <div key={benefit.value} className={`reveal-up flex items-center justify-center gap-4 px-4 ${index > 0 ? "md:border-l md:border-[#D6E2C2]" : ""}`} style={{ animationDelay: `${index * 90}ms` }}>
-                  <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#8DBB46] text-white">
+                  <span className="sonar sonar-green relative grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#8DBB46] text-white">
                     <BenefitIcon className="h-8 w-8" />
                   </span>
                   <div>
@@ -250,7 +271,7 @@ export default function Home() {
                 const DifferenceIcon = Icon as typeof Leaf;
                 return (
                   <div key={text as string} className="flex items-start gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-[#9BC55B] text-[#67952F]">
+                    <span className="sonar sonar-green relative grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-[#9BC55B] bg-[#F1F6E7] text-[#67952F]">
                       <DifferenceIcon className="h-4 w-4" />
                     </span>
                     <p className="pt-1 text-[11px] font-bold leading-4 text-slate-700">{text as string}</p>
@@ -286,7 +307,9 @@ export default function Home() {
               </article>
             ))}
             <aside id="representante" className="reveal-up rounded-lg bg-[#F1F6E7] p-7 md:col-span-2 lg:col-span-1" style={{ animationDelay: "300ms" }}>
-              <PackageCheck className="h-8 w-8 text-[#FE8C05]" />
+              <span className="sonar sonar-orange relative grid h-11 w-11 place-items-center rounded-full bg-[#FFF0DE] text-[#FE8C05]">
+                <PackageCheck className="h-5 w-5" />
+              </span>
               <h3 className="mt-5 text-2xl font-black leading-tight text-slate-950">Seja um representante <span className="text-[#67952F]">NutzenPet</span></h3>
               <p className="mt-4 text-sm leading-6 text-slate-600">Faça parte do nosso time e leve saúde e qualidade para mais pets.</p>
               <BrandButton href="/contato#representante" variant="teal" className="mt-7 w-full px-4">Quero representar</BrandButton>

@@ -69,7 +69,21 @@ export default function CheckoutPage() {
                   <div key={product.slug} className="grid grid-cols-[60px_1fr_auto] items-center gap-3 py-4"><div className="relative h-16 rounded-md bg-white/95"><Image src={product.images[0]} alt="" fill sizes="60px" className="object-contain p-1" /></div><div><p className="text-xs font-bold leading-4">{product.shortName}</p><p className="mt-1 text-[10px] text-white/55">Qtd. {quantity}</p></div><strong className="text-xs">{formatCurrency(product.priceValue * quantity)}</strong></div>
                 ))}
               </div>
-              <div className="p-7"><div className="grid gap-3 text-sm text-white/65"><div className="flex justify-between"><span>Subtotal ({itemCount})</span><span>{formatCurrency(subtotal)}</span></div><div className="flex justify-between"><span>Entrega</span><span className="text-[#B9DC80]">Grátis</span></div></div><div className="mt-5 flex items-end justify-between border-t border-white/15 pt-5"><strong>Total</strong><strong className="text-2xl text-[#FE8C05]">{formatCurrency(subtotal)}</strong></div><button type="submit" className="mt-7 h-13 w-full rounded-full bg-[#FE8C05] text-sm font-black transition-all duration-300 hover:scale-[0.98] hover:bg-[#CC632B] active:scale-95">Confirmar pedido</button><p className="mt-4 flex items-center justify-center gap-2 text-[10px] text-white/50"><Truck className="h-3.5 w-3.5" /> Entrega acompanhada até você</p></div>
+              <div className="p-7">
+                <div className="grid gap-3 text-sm text-white/65">
+                  <div className="flex justify-between"><span>Subtotal ({itemCount})</span><span>{formatCurrency(subtotal)}</span></div>
+                  <div className="flex justify-between"><span>Entrega</span><span className="text-[#B9DC80]">Grátis</span></div>
+                </div>
+                <div className="mt-5 flex items-end justify-between border-t border-white/15 pt-5"><strong>Total</strong><strong className="text-2xl text-[#FE8C05]">{formatCurrency(subtotal)}</strong></div>
+                <div className="mt-7 grid gap-3">
+                  <Link href="/carrinho" className="flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-white/70 text-sm font-black text-white transition-all duration-300 hover:scale-[0.98] hover:border-white hover:bg-white hover:text-[#124D55] active:scale-95">
+                    <ShoppingBag className="h-4 w-4" />
+                    <span>Conferir carrinho</span>
+                  </Link>
+                  <button type="submit" className="h-13 w-full rounded-full bg-[#FE8C05] text-sm font-black transition-all duration-300 hover:scale-[0.98] hover:bg-[#CC632B] active:scale-95">Confirmar pedido</button>
+                </div>
+                <p className="mt-4 flex items-center justify-center gap-2 text-[10px] text-white/50"><Truck className="h-3.5 w-3.5" /> Entrega acompanhada até você</p>
+              </div>
             </aside>
           </form>
         )}
