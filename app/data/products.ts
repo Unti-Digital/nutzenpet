@@ -21,6 +21,7 @@ export type Product = {
   weight: string;
   price: string;
   priceValue: number;
+  sizeOptions: Array<{ label: string; available: boolean }>;
   accent: string;
   soft: string;
   images: [string, string, string];
@@ -61,6 +62,7 @@ export const products: Product[] = [
     weight: "15 kg",
     price: "R$ 149,90",
     priceValue: 149.9,
+    sizeOptions: [{ label: "1 kg", available: false }, { label: "3 kg", available: false }, { label: "15 kg", available: true }],
     accent: "#3E1255",
     soft: "#F5EEF8",
     images: [
@@ -107,7 +109,8 @@ export const products: Product[] = [
     weight: "10,1 kg",
     price: "R$ 129,90",
     priceValue: 129.9,
-    accent: "#124D55",
+    sizeOptions: [{ label: "1 kg", available: false }, { label: "3 kg", available: false }, { label: "10,1 kg", available: true }],
+    accent: "#3E1255",
     soft: "#EAF3F3",
     images: [
       "/produtos/produto2-1.png?v=2",
@@ -153,6 +156,7 @@ export const products: Product[] = [
     weight: "10,1 kg",
     price: "R$ 139,90",
     priceValue: 139.9,
+    sizeOptions: [{ label: "1 kg", available: false }, { label: "3 kg", available: false }, { label: "10,1 kg", available: true }],
     accent: "#CC632B",
     soft: "#FFF0E9",
     images: [

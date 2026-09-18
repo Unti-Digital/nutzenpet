@@ -32,7 +32,7 @@ export function PhotoRotator({
   }, [interval, photos.length]);
 
   return (
-    <div className={`overflow-hidden rounded-lg bg-[#F1F6E7] shadow-[0_22px_55px_rgba(18,63,85,.24)] ${className}`}>
+    <div className={`overflow-hidden rounded-lg bg-[#F5EFF8] shadow-[0_22px_55px_rgba(18,63,85,.24)] ${className}`}>
       {photos.map((photo, index) => (
         <Image
           key={photo.alt}

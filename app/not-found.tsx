@@ -14,7 +14,7 @@ export default function NotFound() {
         <FloatingMotifs className="opacity-45" />
         <div className="relative mx-auto grid w-full max-w-[1240px] items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="reveal-up relative z-10 text-center lg:text-left">
-            <p className="flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#67952F] lg:justify-start">
+            <p className="flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#3E1255] lg:justify-start">
               <PawPrint className="h-4 w-4" /> Página não encontrada
             </p>
             <p className="mt-3 text-7xl font-black leading-none text-[#FE8C05] sm:text-8xl" aria-hidden="true">404</p>
@@ -31,7 +31,7 @@ export default function NotFound() {
           </div>
 
           <div className="reveal-up relative mx-auto h-[330px] w-full max-w-[620px] sm:h-[440px] lg:h-[520px]" style={{ animationDelay: "120ms" }}>
-            <span className="absolute bottom-[5%] left-1/2 h-[82%] w-[78%] -translate-x-1/2 rounded-full bg-[#EDF5DC]" aria-hidden="true" />
+            <span className="absolute bottom-[5%] left-1/2 h-[82%] w-[78%] -translate-x-1/2 rounded-full bg-[#F1E8F5]" aria-hidden="true" />
             <span className="absolute bottom-[2%] left-1/2 h-4 w-[62%] -translate-x-1/2 rounded-[50%] bg-[#123F55]/10 blur-md" aria-hidden="true" />
             <Image
               src="/images/hero-pets-v3.png"

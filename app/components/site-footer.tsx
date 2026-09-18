@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import type { SVGProps } from "react";
 import { contactDetails } from "../data/contact";
 import { products } from "../data/products";
+import { WhatsAppIcon } from "./whatsapp-icon";
 
 const footerLink = "transition-colors duration-300 hover:text-[#FE8C05]";
 
@@ -28,16 +29,16 @@ function FacebookIcon(props: SVGProps<SVGSVGElement>) {
 const socialLinks = [
   { label: "Instagram", href: contactDetails.instagram, icon: InstagramIcon, className: "sonar-burnt bg-[#CC632B]" },
   { label: "Facebook", href: contactDetails.facebook, icon: FacebookIcon, className: "sonar-purple bg-[#3E1255]" },
-  { label: "WhatsApp", href: contactDetails.whatsapp, icon: MessageCircle, className: "sonar-green bg-[#67952F]" },
+  { label: "WhatsApp", href: contactDetails.whatsapp, icon: WhatsAppIcon, className: "sonar-whatsapp bg-[#25D366]" },
 ];
 
 export function SiteFooter() {
   return (
-    <footer className="bg-[#124D55] pt-12 text-white">
+    <footer className="bg-[#3E1255] pt-12 text-white">
       <div className="mx-auto grid max-w-[1340px] gap-9 px-5 sm:grid-cols-2 sm:px-8 lg:grid-cols-[1.35fr_0.85fr_1.15fr_0.85fr_1.15fr]">
         <div><Image src="/logo/logo.png" alt="NutzenPet" width={220} height={79} className="h-11 w-auto object-contain" /><p className="mt-5 max-w-xs text-sm leading-6 text-white/70">Nutrição completa, transparente e responsável para cães e gatos.</p><div className="mt-5 flex gap-3">{socialLinks.map(({ label, href, icon: Icon, className }) => <Link key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className={`sonar relative grid h-9 w-9 place-items-center rounded-full text-white transition-all duration-300 hover:-translate-y-1 hover:scale-95 ${className}`}><Icon className="relative z-10 h-4 w-4" /></Link>)}</div></div>
-        <div><h3 className="text-sm font-black">Institucional</h3><nav className="mt-4 grid gap-2 text-xs text-white/70"><Link href="/sobre" className={footerLink}>Sobre nós</Link><Link href="/blog" className={footerLink}>Blog</Link><Link href="/conta" className={footerLink}>Minha conta</Link><Link href="/politica-de-privacidade" className={footerLink}>Política de privacidade</Link></nav></div>
-        <div><h3 className="text-sm font-black">Produtos</h3><nav className="mt-4 grid gap-2 text-xs text-white/70">{products.map((product) => <Link key={product.slug} href={`/produto/${product.slug}`} className={footerLink}>{product.shortName}</Link>)}<Link href="/produto" className="mt-1 font-black text-[#B9DC80] transition-colors duration-300 hover:text-[#FE8C05]">Ver todos</Link></nav></div>
+        <div><h3 className="text-sm font-black">Institucional</h3><nav className="mt-4 grid gap-2 text-xs text-white/70"><Link href="/sobre" className={footerLink}>Sobre nós</Link><Link href="/blog" className={footerLink}>Blog</Link><Link href="/nutzen-club" className={footerLink}>Nutzen Club</Link><Link href="/afiliados" className={footerLink}>Afiliados</Link><Link href="/representante" className={footerLink}>Seja um representante</Link><Link href="/conta" className={footerLink}>Minha conta</Link><Link href="/politica-de-privacidade" className={footerLink}>Política de privacidade</Link></nav></div>
+        <div><h3 className="text-sm font-black">Produtos</h3><nav className="mt-4 grid gap-2 text-xs text-white/70">{products.map((product) => <Link key={product.slug} href={`/produto/${product.slug}`} className={footerLink}>{product.shortName}</Link>)}<Link href="/produto" className="mt-1 font-black text-[#D9C7E3] transition-colors duration-300 hover:text-[#FE8C05]">Ver todos</Link></nav></div>
         <div><h3 className="text-sm font-black">Sua compra</h3><nav className="mt-4 grid gap-2 text-xs text-white/70"><Link href="/carrinho" className={footerLink}>Carrinho</Link><Link href="/checkout" className={footerLink}>Checkout</Link><span>Prazo e entrega</span></nav></div>
         <div><h3 className="text-sm font-black">Contato</h3><div className="mt-4 grid gap-3 text-xs text-white/70"><a href={contactDetails.phoneHref} className="flex items-center gap-2 transition-colors duration-300 hover:text-white"><Phone className="h-4 w-4 text-[#FE8C05]" /> {contactDetails.phoneDisplay}</a><a href={contactDetails.emailHref} className="flex items-center gap-2 transition-colors duration-300 hover:text-white"><Mail className="h-4 w-4 text-[#FE8C05]" /> {contactDetails.email}</a><Link href="/contato" className="flex items-center gap-2 transition-colors duration-300 hover:text-white"><MapPin className="h-4 w-4 text-[#FE8C05]" /> São Paulo - SP</Link></div></div>
       </div>

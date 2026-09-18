@@ -14,8 +14,8 @@ export function BrandButton({
 }) {
   const variants = {
     orange: "bg-[#FE8C05] text-white hover:bg-[#CC632B]",
-    teal: "bg-[#124D55] text-white hover:bg-[#123F55]",
-    outline: "border-2 border-[#124D55] bg-white text-[#124D55] hover:bg-slate-50",
+    teal: "bg-[#3E1255] text-white hover:bg-[#123F55]",
+    outline: "border-2 border-[#3E1255] bg-white text-[#3E1255] hover:bg-slate-50",
   };
 
   return (

@@ -8,7 +8,7 @@ import { formatCurrency, useCart } from "../components/cart-provider";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 
-const fieldClass = "h-12 w-full rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#124D55] focus:bg-white focus:shadow-[0_0_0_3px_rgba(18,77,85,.1)]";
+const fieldClass = "h-12 w-full rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#3E1255] focus:bg-white focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)]";
 
 export default function CheckoutPage() {
   const { items, itemCount, subtotal } = useCart();
@@ -20,13 +20,13 @@ export default function CheckoutPage() {
       <section className="border-b border-slate-200 bg-white px-5 py-7 sm:px-8">
         <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-5">
           <div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#CC632B]">Compra segura</p><h1 className="mt-1 text-3xl font-black text-[#123F55] sm:text-4xl">Finalizar pedido</h1></div>
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400"><span className="text-[#67952F]">Carrinho</span><span>•</span><span className="text-[#124D55]">Dados e pagamento</span><span>•</span><span>Confirmação</span></div>
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400"><span className="text-[#3E1255]">Carrinho</span><span>•</span><span className="text-[#3E1255]">Dados e pagamento</span><span>•</span><span>Confirmação</span></div>
         </div>
       </section>
 
       <section className="px-5 py-10 sm:px-8 sm:py-14">
         {items.length === 0 ? (
-          <div className="mx-auto max-w-lg py-16 text-center"><ShoppingBag className="mx-auto h-12 w-12 text-[#67952F]" /><h2 className="mt-5 text-3xl font-black text-[#123F55]">Adicione produtos primeiro</h2><p className="mt-3 text-sm leading-6 text-slate-500">Seu resumo de compra aparecerá aqui assim que você escolher os produtos.</p><Link href="/produto" className="mt-7 inline-flex h-12 items-center rounded-full bg-[#FE8C05] px-7 text-sm font-black text-white">Ver produtos</Link></div>
+          <div className="mx-auto max-w-lg py-16 text-center"><ShoppingBag className="mx-auto h-12 w-12 text-[#3E1255]" /><h2 className="mt-5 text-3xl font-black text-[#123F55]">Adicione produtos primeiro</h2><p className="mt-3 text-sm leading-6 text-slate-500">Seu resumo de compra aparecerá aqui assim que você escolher os produtos.</p><Link href="/produto" className="mt-7 inline-flex h-12 items-center rounded-full bg-[#FE8C05] px-7 text-sm font-black text-white">Ver produtos</Link></div>
         ) : (
           <form onSubmit={handleSubmit} className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1fr_390px]">
             <div className="space-y-6">
@@ -52,14 +52,14 @@ export default function CheckoutPage() {
 
               <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8" style={{ animationDelay: "160ms" }}>
                 <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><CreditCard className="h-5 w-5 text-[#FE8C05]" />Pagamento</h2>
-                <div className="mt-6 rounded-md border-2 border-[#124D55] bg-[#F1F6E7] p-4"><label className="flex items-center gap-3 text-sm font-black text-[#124D55]"><input type="radio" name="payment" defaultChecked className="accent-[#124D55]" /> Cartão de crédito</label></div>
+                <div className="mt-6 rounded-md border-2 border-[#3E1255] bg-[#F5EFF8] p-4"><label className="flex items-center gap-3 text-sm font-black text-[#3E1255]"><input type="radio" name="payment" defaultChecked className="accent-[#3E1255]" /> Cartão de crédito</label></div>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Número do cartão<input inputMode="numeric" className={fieldClass} placeholder="0000 0000 0000 0000" required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600">Validade<input className={fieldClass} placeholder="MM/AA" required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600">CVV<input inputMode="numeric" className={fieldClass} placeholder="000" required /></label>
                 </div>
               </section>
-              <Link href="/carrinho" className="group inline-flex items-center gap-2 text-sm font-black text-[#124D55]"><ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-2" /> Voltar ao carrinho</Link>
+              <Link href="/carrinho" className="group inline-flex items-center gap-2 text-sm font-black text-[#3E1255]"><ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-2" /> Voltar ao carrinho</Link>
             </div>
 
             <aside className="h-fit overflow-hidden rounded-lg bg-[#123F55] text-white shadow-[0_20px_50px_rgba(18,63,85,.2)] lg:sticky lg:top-28">
@@ -72,11 +72,11 @@ export default function CheckoutPage() {
               <div className="p-7">
                 <div className="grid gap-3 text-sm text-white/65">
                   <div className="flex justify-between"><span>Subtotal ({itemCount})</span><span>{formatCurrency(subtotal)}</span></div>
-                  <div className="flex justify-between"><span>Entrega</span><span className="text-[#B9DC80]">Grátis</span></div>
+                  <div className="flex justify-between"><span>Entrega</span><span className="text-[#D9C7E3]">Grátis</span></div>
                 </div>
                 <div className="mt-5 flex items-end justify-between border-t border-white/15 pt-5"><strong>Total</strong><strong className="text-2xl text-[#FE8C05]">{formatCurrency(subtotal)}</strong></div>
                 <div className="mt-7 grid gap-3">
-                  <Link href="/carrinho" className="flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-white/70 text-sm font-black text-white transition-all duration-300 hover:scale-[0.98] hover:border-white hover:bg-white hover:text-[#124D55] active:scale-95">
+                  <Link href="/carrinho" className="flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-white/70 text-sm font-black text-white transition-all duration-300 hover:scale-[0.98] hover:border-white hover:bg-white hover:text-[#3E1255] active:scale-95">
                     <ShoppingBag className="h-4 w-4" />
                     <span>Conferir carrinho</span>
                   </Link>

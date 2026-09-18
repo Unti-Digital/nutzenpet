@@ -4,9 +4,11 @@
   --background: #ffffff;
   --foreground: #172021;
   --brand-orange: #fe8c05;
-  --brand-teal: #124d55;
+  --brand-teal: #3e1255;
   --brand-blue: #123f55;
   --brand-purple: #3e1255;
+  --brand-purple-mid: #7b4b90;
+  --brand-purple-soft: #f5eff8;
   --brand-burnt: #cc632b;
 }
 
@@ -105,7 +107,7 @@ select {
 }
 
 .sonar-green {
-  --sonar-color: #8dbb46;
+  --sonar-color: #3e1255;
 }
 
 .sonar-orange {
@@ -113,11 +115,15 @@ select {
 }
 
 .sonar-teal {
-  --sonar-color: #124d55;
+  --sonar-color: #3e1255;
 }
 
 .sonar-purple {
   --sonar-color: #3e1255;
+}
+
+.sonar-whatsapp {
+  --sonar-color: #25d366;
 }
 
 .sonar-burnt {

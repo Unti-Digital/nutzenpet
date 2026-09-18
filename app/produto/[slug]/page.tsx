@@ -19,13 +19,13 @@ export default async function ProductPage({ params }: PageProps<"/produto/[slug]
   return (
     <main className="min-h-screen bg-white">
       <SiteHeader />
-      <section className="relative overflow-hidden border-b border-[#DCE7CC]" style={{ backgroundColor: product.soft }}>
+      <section className="relative overflow-hidden border-b border-[#E2D4E9]" style={{ backgroundColor: product.soft }}>
         <FloatingMotifs className="z-10 opacity-35" />
         <div className="relative mx-auto grid min-h-[560px] max-w-[1440px] md:min-h-[440px] md:grid-cols-[1.02fr_0.98fr] lg:min-h-[500px]">
           <div className="reveal-up relative z-20 flex flex-col justify-center px-5 py-14 sm:px-8 md:px-12 lg:px-20">
             <p className="text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: product.accent }}>{banner.eyebrow}</p>
             <h1 className="mt-4 max-w-2xl text-4xl font-black leading-tight text-[#123F55] sm:text-5xl lg:text-6xl">{banner.title}</h1>
-            <div className="mt-7 flex items-center gap-3 text-xs font-black uppercase tracking-[0.14em] text-[#124D55]">
+            <div className="mt-7 flex items-center gap-3 text-xs font-black uppercase tracking-[0.14em] text-[#3E1255]">
               <span className="h-px w-10" style={{ backgroundColor: product.accent }} />
               {product.name}
             </div>

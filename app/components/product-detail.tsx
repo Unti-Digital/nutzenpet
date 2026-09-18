@@ -82,6 +82,17 @@ export function ProductDetail({ product }: { product: Product }) {
               </li>
             ))}
           </ul>
+          <div className="mt-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Escolha o tamanho</p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              {product.sizeOptions.map((option) => (
+                <button key={option.label} type="button" disabled={!option.available} aria-pressed={option.available} className={`relative min-w-24 rounded-md border-2 px-4 py-3 text-sm font-black transition-all duration-300 ${option.available ? "border-[#3E1255] bg-[#F5EFF8] text-[#3E1255]" : "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"}`}>
+                  {option.label}
+                  {!option.available && <span className="mt-1 block text-[8px] uppercase tracking-[0.12em]">Em breve</span>}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="mt-9 flex items-end justify-between border-y border-slate-200 py-6">
             <strong className="block text-3xl font-black" style={{ color: product.accent }}>{product.price}</strong>
             {cartItem && (
@@ -100,45 +111,45 @@ export function ProductDetail({ product }: { product: Product }) {
               {isInCart ? <Check className="h-5 w-5 shrink-0" /> : <ShoppingBag className="h-5 w-5 shrink-0" />}
               <span>{isInCart ? "Adicionado" : "Adicionar ao carrinho"}</span>
             </button>
-            <Link href="/carrinho" className="group flex h-14 min-w-0 items-center justify-center gap-2 rounded-full border-2 border-[#124D55] px-4 text-center text-xs font-black text-[#124D55] transition-colors duration-300 hover:bg-[#F1F6E7]">
+            <Link href="/carrinho" className="group flex h-14 min-w-0 items-center justify-center gap-2 rounded-full border-2 border-[#3E1255] px-4 text-center text-xs font-black text-[#3E1255] transition-colors duration-300 hover:bg-[#F5EFF8]">
               <span>Ir para o carrinho</span>
               <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-2" />
             </Link>
-            <Link href="/checkout" className="group flex h-14 min-w-0 items-center justify-center gap-2 rounded-full bg-[#124D55] px-4 text-center text-xs font-black text-white transition-colors duration-300 hover:bg-[#123F55]">
+            <Link href="/checkout" className="group flex h-14 min-w-0 items-center justify-center gap-2 rounded-full bg-[#3E1255] px-4 text-center text-xs font-black text-white transition-colors duration-300 hover:bg-[#123F55]">
               <span>Finalizar compra</span>
               <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-2" />
             </Link>
           </div>
-          <section className="mt-5 rounded-lg border border-[#D8E4C5] bg-[#F1F6E7] p-5 sm:p-6" aria-labelledby={`subscription-${product.slug}`}>
+          <section className="mt-5 rounded-lg border border-[#E2D4E9] bg-[#F5EFF8] p-5 sm:p-6" aria-labelledby={`subscription-${product.slug}`}>
             <div className="flex items-start gap-4">
-              <span className="sonar sonar-green relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#8DBB46] text-white">
+              <span className="sonar sonar-purple relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#6F3B85] text-white">
                 <RefreshCw className="relative z-10 h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#67952F]">Assinatura NutzenPet</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#3E1255]">Nutzen Club</p>
                 <h3 id={`subscription-${product.slug}`} className="mt-1 text-xl font-black leading-tight text-[#123F55]">Receba sua nutrição de forma programada.</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600">Mais praticidade para manter a rotina do seu pet sempre em dia.</p>
               </div>
-              <span className="hidden items-center gap-2 rounded-full bg-white px-3 py-2 text-[10px] font-black text-[#124D55] sm:flex">
-                <CalendarClock className="h-4 w-4 text-[#FE8C05]" /> A cada 30 dias
+              <span className="hidden items-center gap-2 rounded-full bg-white px-3 py-2 text-[10px] font-black text-[#3E1255] sm:flex">
+                <CalendarClock className="h-4 w-4 text-[#FE8C05]" /> Frequência flexível
               </span>
             </div>
-            <button type="button" className="group mt-5 flex min-h-16 w-full items-center justify-center gap-3 rounded-full bg-[#FE8C05] px-6 text-sm font-black text-white transition-all duration-300 hover:scale-[0.99] hover:bg-[#CC632B] active:scale-95">
+            <Link href="/nutzen-club" className="group mt-5 flex min-h-16 w-full items-center justify-center gap-3 rounded-full bg-[#FE8C05] px-6 text-sm font-black text-white transition-all duration-300 hover:scale-[0.99] hover:bg-[#CC632B] active:scale-95">
               <RefreshCw className="h-5 w-5 shrink-0" />
               <span>Assinar este produto</span>
               <ArrowRight className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:translate-x-2" />
-            </button>
+            </Link>
           </section>
         </div>
       </div>
 
-      <section className="reveal-up overflow-hidden rounded-lg bg-[#F1F6E7]" aria-labelledby="product-information-title">
+      <section className="reveal-up overflow-hidden rounded-lg bg-[#F5EFF8]" aria-labelledby="product-information-title">
         <div className="px-5 pb-7 pt-9 text-center sm:px-8">
           <p className="text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: product.accent }}>Conheça melhor o produto</p>
           <h2 id="product-information-title" className="mt-2 text-3xl font-black text-[#123F55] sm:text-4xl">Informações do alimento</h2>
         </div>
 
-        <div className="flex overflow-x-auto border-y border-[#D8E4C5] bg-white/65 px-3 sm:justify-center sm:px-6" role="tablist" aria-label="Informações do produto">
+        <div className="flex overflow-x-auto border-y border-[#E2D4E9] bg-white/65 px-3 sm:justify-center sm:px-6" role="tablist" aria-label="Informações do produto">
           {informationTabs.map((tab) => {
             const TabIcon = tab.icon;
             const selected = activeInformation === tab.id;
@@ -149,7 +160,7 @@ export function ProductDetail({ product }: { product: Product }) {
                 role="tab"
                 aria-selected={selected}
                 onClick={() => setActiveInformation(tab.id)}
-                className={`relative flex min-h-16 shrink-0 items-center gap-2 px-4 text-xs font-black transition-all duration-300 hover:scale-[0.97] sm:px-6 ${selected ? "text-[#124D55]" : "text-slate-500 hover:text-[#124D55]"}`}
+                className={`relative flex min-h-16 shrink-0 items-center gap-2 px-4 text-xs font-black transition-all duration-300 hover:scale-[0.97] sm:px-6 ${selected ? "text-[#3E1255]" : "text-slate-500 hover:text-[#3E1255]"}`}
               >
                 <TabIcon className="h-4 w-4" />
                 {tab.label}
@@ -163,9 +174,9 @@ export function ProductDetail({ product }: { product: Product }) {
           {activeInformation === "nutrition" && (
             <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {product.nutrition.map((item) => (
-                <div key={item.label} className="flex items-center justify-between gap-4 bg-white px-5 py-4 shadow-[0_8px_25px_rgba(18,77,85,.06)]">
+                <div key={item.label} className="flex items-center justify-between gap-4 bg-white px-5 py-4 shadow-[0_8px_25px_rgba(62,18,85,.06)]">
                   <span className="text-sm font-bold text-slate-600">{item.label}</span>
-                  <strong className="text-sm text-[#124D55]">{item.value}</strong>
+                  <strong className="text-sm text-[#3E1255]">{item.value}</strong>
                 </div>
               ))}
             </div>
@@ -174,7 +185,7 @@ export function ProductDetail({ product }: { product: Product }) {
           {activeInformation === "ingredients" && (
             <div className="mx-auto max-w-3xl">
               <div className="flex items-start gap-5 bg-white p-6 sm:p-8">
-                <span className="sonar sonar-green relative grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#8DBB46] text-white"><Leaf className="h-6 w-6" /></span>
+                <span className="sonar sonar-purple relative grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#6F3B85] text-white"><Leaf className="h-6 w-6" /></span>
                 <div><h3 className="text-xl font-black text-[#123F55]">Ingredientes selecionados</h3><p className="mt-3 text-sm leading-7 text-slate-600">{product.ingredients}</p></div>
               </div>
             </div>
@@ -186,7 +197,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <div className="bg-white p-5 sm:p-6">
                 <h3 className="text-sm font-black text-[#123F55]">Quantidade diária sugerida</h3>
                 <div className="mt-4 divide-y divide-slate-100">
-                  {product.feedingGuide.map((row) => <div key={row.weight} className="flex justify-between gap-4 py-3 text-sm"><span className="text-slate-500">{row.weight}</span><strong className="text-[#124D55]">{row.amount}</strong></div>)}
+                  {product.feedingGuide.map((row) => <div key={row.weight} className="flex justify-between gap-4 py-3 text-sm"><span className="text-slate-500">{row.weight}</span><strong className="text-[#3E1255]">{row.amount}</strong></div>)}
                 </div>
               </div>
             </div>

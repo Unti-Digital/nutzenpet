@@ -56,7 +56,7 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
       <p className="mt-3 text-sm leading-6 text-slate-500">{product.description}</p>
       <div className="mt-auto flex items-end justify-between gap-4 pt-6">
         <strong className="text-xl font-black" style={{ color: product.accent }}>{product.price}</strong>
-        <Link href={`/produto/${product.slug}`} className="group/link flex items-center gap-2 text-xs font-black text-[#124D55] transition-colors duration-300 hover:text-[#FE8C05]">
+        <Link href={`/produto/${product.slug}`} className="group/link flex items-center gap-2 text-xs font-black text-[#3E1255] transition-colors duration-300 hover:text-[#FE8C05]">
           <span>Conhecer</span>
           <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/link:translate-x-2" />
         </Link>

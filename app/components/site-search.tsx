@@ -23,10 +23,13 @@ type SearchResult = {
 
 const pageResults: SearchResult[] = [
   { id: "page-products", category: "Páginas", title: "Todos os produtos", description: "Conheça todas as linhas NutzenPet.", href: "/produto", keywords: "produtos racao alimentacao catalogo linhas comprar" },
+  { id: "page-club", category: "Páginas", title: "Nutzen Club", description: "Conheça a experiência de assinatura NutzenPet.", href: "/nutzen-club", keywords: "nutzen club assinatura assinar recorrencia entrega programada mensal" },
+  { id: "page-kits", category: "Páginas", title: "Monte seu kit", description: "Combine produtos e tamanhos NutzenPet.", href: "/produto#kits", keywords: "kit kits desconto tamanhos 1kg 3kg pacote embalagem" },
   { id: "page-about", category: "Páginas", title: "Sobre a NutzenPet", description: "Nossa essência, história e diferenciais.", href: "/sobre", keywords: "sobre historia empresa essencia diferenciais quem somos" },
   { id: "page-blog", category: "Páginas", title: "Conteúdos e Blog", description: "Informação para uma rotina mais saudável.", href: "/blog", keywords: "blog artigos dicas conteudos nutricao bem estar comportamento" },
   { id: "page-contact", category: "Páginas", title: "Fale com a NutzenPet", description: "Telefone, e-mail, WhatsApp e formulário de contato.", href: "/contato", keywords: `contato fale conosco sac telefone email e-mail whatsapp mensagem atendimento ajuda instagram ${contactDetails.phoneDisplay} ${contactDetails.email}` },
-  { id: "page-representative", category: "Páginas", title: "Seja um representante", description: "Leve a qualidade NutzenPet para mais famílias.", href: "/contato#representante", keywords: "representante representacao revendedor distribuidor parceria comercial quero representar" },
+  { id: "page-representative", category: "Páginas", title: "Seja um representante", description: "Conheça as vantagens e cadastre-se para representar a NutzenPet.", href: "/representante", keywords: "representante representacao revendedor distribuidor parceria comercial quero representar cadastro regioes" },
+  { id: "page-affiliates", category: "Páginas", title: "Programa de Afiliados", description: "Conheça a proposta para afiliados NutzenPet.", href: "/afiliados", keywords: "afiliado afiliados programa parceria criador influencer divulgacao" },
   { id: "page-account", category: "Páginas", title: "Minha conta", description: "Acesse sua área de cliente.", href: "/conta", keywords: "minha conta cliente entrar login cadastro pedidos" },
   { id: "page-cart", category: "Páginas", title: "Carrinho", description: "Confira os produtos da sua compra.", href: "/carrinho", keywords: "carrinho sacola compra pedido remover quantidade" },
   { id: "page-checkout", category: "Páginas", title: "Finalizar compra", description: "Informe entrega e pagamento.", href: "/checkout", keywords: "checkout finalizar compra pagamento entrega endereco" },
@@ -156,7 +159,7 @@ export function SiteSearch({ open, onClose }: { open: boolean; onClose: () => vo
     <div ref={containerRef} className={`absolute inset-y-0 right-5 z-40 flex items-center transition-all duration-500 sm:right-8 ${open ? "pointer-events-auto translate-x-0 opacity-100" : "pointer-events-none translate-x-12 opacity-0"}`} aria-hidden={!open}>
       <div className="relative">
         <form onSubmit={(event) => event.preventDefault()} role="search" className="flex h-12 w-[calc(100vw-40px)] items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 shadow-[0_10px_30px_rgba(18,63,85,.12)] sm:w-[460px]">
-          <Search className="h-5 w-5 shrink-0 text-[#124D55]" />
+          <Search className="h-5 w-5 shrink-0 text-[#3E1255]" />
           <label htmlFor="site-search" className="sr-only">Buscar no site</label>
           <input
             ref={inputRef}
@@ -201,14 +204,14 @@ export function SiteSearch({ open, onClose }: { open: boolean; onClose: () => vo
                         aria-selected={active}
                         onClick={closeSearch}
                         onMouseEnter={() => setActiveIndex(resultIndex)}
-                        className={`flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors duration-200 ${active ? "bg-[#F1F6E7]" : "hover:bg-slate-50"}`}
+                        className={`flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors duration-200 ${active ? "bg-[#F5EFF8]" : "hover:bg-slate-50"}`}
                       >
                         {result.image ? (
                           <span className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-md ${result.category === "Produtos" ? "bg-white" : "bg-slate-100"}`}>
                             <Image src={result.image} alt="" fill sizes="48px" className={result.category === "Produtos" ? "object-contain p-1" : "object-cover"} />
                           </span>
                         ) : (
-                          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[#F1F6E7] text-[#67952F]"><ResultIcon className="h-5 w-5" /></span>
+                          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[#F5EFF8] text-[#3E1255]"><ResultIcon className="h-5 w-5" /></span>
                         )}
                         <span className="min-w-0 flex-1">
                           <strong className="block truncate text-sm text-[#123F55]">{result.title}</strong>
