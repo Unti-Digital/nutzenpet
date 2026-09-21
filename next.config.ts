@@ -1,11 +1,35 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/representante",
+        destination: "/seja-um-lojista-parceiro",
+        permanent: true,
+      },
+      {
+        source: "/produto/racas-medias-grandes",
+        destination: "/produto/racas-medias-grandes-15kg",
+        permanent: true,
+      },
+      {
+        source: "/produto/racas-pequenas",
+        destination: "/produto/racas-pequenas-10kg",
+        permanent: true,
+      },
+      {
+        source: "/produto/gatos-castrados",
+        destination: "/produto/gatos-castrados-10-1kg",
+        permanent: true,
+      },
+    ];
+  },
   images: {
+    qualities: [75, 88, 90, 92],
     localPatterns: [
       {
         pathname: "/produtos/**",
-        search: "?v=2",
       },
       {
         pathname: "/images/**",

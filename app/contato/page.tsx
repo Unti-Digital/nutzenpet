@@ -12,7 +12,7 @@ import { contactDetails } from "../data/contact";
 import representativePets from "../../fotos-extras/Seja um representante.png";
 
 const fieldClass =
-  "h-12 w-full rounded-md border border-[#D9C7E3] bg-white px-4 text-sm text-slate-700 outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-[#3E1255] focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)]";
+  "h-12 w-full rounded-md border border-[#D9C7E3] bg-white px-4 text-sm text-slate-700 outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-[#3E1255] focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)] user-invalid:border-[#CC632B] user-invalid:shadow-[0_0_0_3px_rgba(204,99,43,.1)]";
 
 const channels = [
   { icon: Phone, label: "Telefone", value: contactDetails.phoneDisplay, href: contactDetails.phoneHref },
@@ -76,7 +76,7 @@ export default function ContactPage() {
               <label className="grid gap-2 text-xs font-bold text-slate-600">E-mail<input required type="email" placeholder="seuemail@exemplo.com" className={fieldClass} /></label>
               <label className="grid gap-2 text-xs font-bold text-slate-600">WhatsApp<input required type="tel" placeholder="(00) 00000-0000" className={fieldClass} /></label>
               <label className="grid gap-2 text-xs font-bold text-slate-600">Cidade<input required placeholder="Sua cidade" className={fieldClass} /></label>
-              <label className="grid gap-2 text-xs font-bold text-slate-600">Assunto<select required className={fieldClass} defaultValue=""><option value="" disabled>Selecione</option><option>Produtos</option><option>Pedido e entrega</option><option>Nutzen Club</option><option>Quero ser representante</option><option>Quero ser afiliado</option><option>Outro assunto</option></select></label>
+              <label className="grid gap-2 text-xs font-bold text-slate-600">Assunto<select required className={fieldClass} defaultValue=""><option value="" disabled>Selecione</option><option>Produtos</option><option>Pedido e entrega</option><option>Nutzen Club</option><option>Quero ser lojista parceiro</option><option>Quero ser afiliado</option><option>Outro assunto</option></select></label>
               <label className="grid gap-2 text-xs font-bold text-slate-600">Número do pedido <span className="font-normal text-slate-400">(opcional)</span><input placeholder="Ex.: NP-000123" className={fieldClass} /></label>
 
               <fieldset className="grid gap-3 text-xs font-bold text-slate-600 sm:col-span-2">
@@ -104,8 +104,8 @@ export default function ContactPage() {
       <section id="representante" className="relative overflow-hidden bg-white px-5 sm:px-8">
         <FloatingMotifs className="opacity-30" />
         <div className="relative mx-auto grid max-w-[1240px] items-center gap-5 py-14 lg:grid-cols-[1fr_520px] lg:py-0">
-          <div className="relative z-10 py-2 lg:py-16"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#3E1255]">Seja um representante</p><h2 className="mt-3 max-w-2xl text-3xl font-black text-[#123F55] sm:text-4xl">Leve a qualidade NutzenPet<br />para mais famílias.</h2><p className="mt-4 max-w-xl text-sm leading-6 text-slate-600">Conheça as vantagens da parceria, as etapas e envie seu cadastro pelo canal dedicado.</p><Link href="/representante" className="group mt-6 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#3E1255] px-6 text-sm font-black text-white transition-colors duration-300 hover:bg-[#561D70]">Conhecer o programa <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link></div>
-          <div className="reveal-up relative -mb-14 min-h-[300px] self-end sm:min-h-[350px] lg:-mb-0 lg:min-h-[410px]"><span className="absolute bottom-8 left-1/2 h-32 w-[82%] -translate-x-1/2 rounded-full bg-[#E2D4E9]" aria-hidden="true" /><Image src={representativePets} alt="Cachorro e gato convidando novos representantes" fill quality={92} sizes="(max-width: 1024px) 92vw, 520px" className="relative object-contain object-bottom drop-shadow-[0_18px_22px_rgba(62,18,85,.16)]" /></div>
+          <div className="relative z-10 py-2 lg:py-16"><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#3E1255]">Seja um lojista parceiro</p><h2 className="mt-3 max-w-2xl text-3xl font-black text-[#123F55] sm:text-4xl">Leve a qualidade NutzenPet<br />para mais famílias.</h2><p className="mt-4 max-w-xl text-sm leading-6 text-slate-600">Conheça as vantagens da parceria, as etapas e envie o cadastro da sua loja pelo canal dedicado.</p><Link href="/seja-um-lojista-parceiro" className="group mt-6 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#3E1255] px-6 text-sm font-black text-white transition-colors duration-300 hover:bg-[#561D70]">Conhecer o programa <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link></div>
+          <div className="reveal-up relative -mb-14 min-h-[300px] self-end sm:min-h-[350px] lg:-mb-0 lg:min-h-[410px]"><span className="absolute bottom-8 left-1/2 h-32 w-[82%] -translate-x-1/2 rounded-full bg-[#E2D4E9]" aria-hidden="true" /><Image src={representativePets} alt="Cachorro e gato convidando novos lojistas parceiros" fill quality={92} sizes="(max-width: 1024px) 92vw, 520px" className="relative object-contain object-bottom drop-shadow-[0_18px_22px_rgba(62,18,85,.16)]" /></div>
         </div>
       </section>
 

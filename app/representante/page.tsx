@@ -27,9 +27,10 @@ import { useState, type FormEvent } from "react";
 import { FloatingMotifs } from "../components/floating-motifs";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
-import { products } from "../data/products";
-import representativePets from "../../fotos-extras/Seja um representante.png";
-import representativeDog from "../../fotos-extras/rottweiler.png";
+import { featuredProducts } from "../data/products";
+import homeDog from "../../public/images/differentials-dog-v3.png";
+import homePets from "../../public/images/hero-pets-v3.png";
+import smallBreedDog from "../../fotos-sobre/cahorro.jpg";
 
 const heroBenefits = [
   { icon: BadgeCheck, label: "Marca em crescimento" },
@@ -82,7 +83,7 @@ const formBenefits = [
 ];
 
 const fieldClass =
-  "h-12 w-full rounded-md border border-[#D9C7E3] bg-white px-4 text-sm text-slate-700 outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-[#3E1255] focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)]";
+  "h-12 w-full rounded-md border border-[#D9C7E3] bg-white px-4 text-sm text-slate-700 outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-[#3E1255] focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)] user-invalid:border-[#CC632B] user-invalid:shadow-[0_0_0_3px_rgba(204,99,43,.1)]";
 
 export default function RepresentativePage() {
   const [sent, setSent] = useState(false);
@@ -103,21 +104,22 @@ export default function RepresentativePage() {
           <div className="relative grid min-h-[610px] lg:grid-cols-[0.9fr_1.1fr]">
             <div className="reveal-up relative z-20 flex flex-col justify-center px-6 pb-8 pt-12 text-center sm:px-10 sm:py-16 lg:px-16 lg:text-left">
               <p className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#D9C7E3] lg:justify-start"><Handshake className="h-4 w-4" /> Oportunidade de parceria</p>
-              <h1 className="mx-auto mt-5 max-w-2xl text-4xl font-black leading-[1.08] sm:text-6xl lg:mx-0">Seja um representante <span className="text-[#FE8C05]">NutzenPet.</span></h1>
+              <h1 className="mx-auto mt-5 max-w-2xl text-4xl font-black leading-[1.08] sm:text-6xl lg:mx-0">Seja um lojista parceiro <span className="text-[#FE8C05]">NutzenPet.</span></h1>
               <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-white/75 lg:mx-0">Leve nutrição de verdade para mais pets e desenvolva novas oportunidades com uma marca feita para cuidar.</p>
               <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-                <a href="#cadastro" className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#FE8C05] px-7 text-sm font-black text-white transition-colors duration-300 hover:bg-[#CC632B]">Quero representar <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></a>
+                <a href="#cadastro" className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#FE8C05] px-7 text-sm font-black text-white transition-colors duration-300 hover:bg-[#CC632B]">Quero ser parceiro <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></a>
                 <Link href="/sobre" className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-white px-7 text-sm font-black text-[#3E1255] transition-colors duration-300 hover:bg-[#F5EFF8]">Conheça a NutzenPet <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link>
               </div>
             </div>
 
-            <div className="relative min-h-[390px] self-end sm:min-h-[500px] lg:min-h-[610px]">
-              <span className="absolute bottom-[10%] left-[10%] h-[68%] w-[70%] rounded-[50%_50%_42%_58%] bg-[#6D3286]" aria-hidden="true" />
-              <Image src="/images/hero-pets-v3.png" alt="Cachorro e gato representando a parceria NutzenPet" fill preload quality={92} sizes="(max-width: 1024px) 96vw, 700px" className="z-10 object-contain object-bottom drop-shadow-[0_22px_24px_rgba(0,0,0,.24)]" />
-              <div className="float-soft absolute bottom-[7%] right-[2%] z-20 h-[58%] w-[28%] min-w-[108px] sm:right-[6%] sm:w-[25%]">
-                <Image src={products[0].images[1]} alt={products[0].name} fill sizes="(max-width: 640px) 120px, 190px" className="object-contain drop-shadow-[0_18px_18px_rgba(0,0,0,.24)]" />
+            <div className="relative min-h-[390px] self-end overflow-hidden sm:min-h-[500px] lg:min-h-[610px]">
+              <span className="absolute bottom-[5%] left-[8%] h-[78%] w-[78%] rounded-full bg-[#6F3B85]" aria-hidden="true" />
+              <Image src={homePets} alt="Cachorro e gato representando os lojistas parceiros NutzenPet" fill preload quality={92} sizes="(max-width: 1024px) 96vw, 740px" className="object-contain object-bottom p-4 sm:p-8 lg:p-10" />
+              <span className="absolute inset-x-[12%] bottom-[5%] h-5 rounded-[50%] bg-black/20 blur-lg" aria-hidden="true" />
+              <div className="float-soft absolute bottom-[5%] right-[1%] z-20 h-[52%] w-[25%] min-w-[106px] sm:right-[4%] sm:w-[23%]">
+                <Image src={featuredProducts[0].images[1]} alt={featuredProducts[0].name} fill sizes="(max-width: 640px) 120px, 190px" className="object-contain drop-shadow-[0_18px_18px_rgba(0,0,0,.24)]" />
               </div>
-              <p className="absolute right-[7%] top-[10%] z-20 hidden max-w-[130px] rotate-[-5deg] text-center text-2xl font-black leading-tight text-[#F6D9A8] sm:block">Mais cuidado. Mais histórias.</p>
+              <p className="absolute right-[7%] top-[8%] z-20 hidden max-w-[150px] rotate-[-4deg] text-center text-2xl font-black leading-tight text-white drop-shadow-md sm:block">Mais presença. Mais oportunidades.</p>
             </div>
           </div>
 
@@ -131,30 +133,34 @@ export default function RepresentativePage() {
         </div>
       </section>
 
-      <section id="marca" className="relative scroll-mt-24 overflow-hidden bg-white px-5 py-16 sm:px-8 sm:py-24">
-        <FloatingMotifs className="opacity-15" />
-        <div className="relative mx-auto grid max-w-[1240px] items-center gap-12 lg:grid-cols-[1fr_0.9fr] lg:gap-20">
-          <div className="reveal-up">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E1255]">Conheça nossa marca</p>
-            <h2 className="mt-4 max-w-2xl text-3xl font-black leading-tight text-[#123F55] sm:text-5xl">Uma marca para quem acredita em uma <span className="text-[#3E1255]">nutrição melhor.</span></h2>
-            <p className="mt-6 max-w-2xl text-sm leading-7 text-slate-600">A NutzenPet desenvolve produtos que unem qualidade, cuidado e nutrição para cães e gatos. Queremos ampliar nossa presença ao lado de parceiros que conhecem seus mercados e compartilham esse compromisso.</p>
-            <div className="mt-8 flex max-w-2xl items-start gap-4 rounded-lg border border-[#E2D4E9] bg-[#F5EFF8] p-5 sm:p-6">
-              <span className="sonar sonar-purple relative grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-[#3E1255]"><Store className="relative z-10 h-5 w-5" /></span>
-              <div><h3 className="font-black text-[#123F55]">Nossa proposta de parceria</h3><p className="mt-2 text-sm leading-6 text-slate-600">Construir relações comerciais consistentes, aproximando a NutzenPet de novos clientes e regiões.</p></div>
+      <section id="marca" className="relative scroll-mt-24 overflow-hidden bg-[#3E1255] px-5 py-14 text-white sm:px-8 sm:py-20">
+        <FloatingMotifs className="text-[#D9C7E3] opacity-30" />
+        <div className="relative mx-auto grid max-w-[1240px] items-center gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+          <div className="reveal-up relative z-10 text-center lg:text-left">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FE8C05]">Conheça nossa marca</p>
+            <h2 className="mx-auto mt-4 max-w-2xl text-4xl font-black leading-[1.08] sm:text-6xl lg:mx-0">Uma marca para quem acredita em uma <span className="text-[#FE8C05]">nutrição melhor.</span></h2>
+            <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-white/70 lg:mx-0">A NutzenPet desenvolve produtos que unem qualidade, cuidado e nutrição para cães e gatos. Queremos ampliar nossa presença ao lado de parceiros que conhecem seus mercados e compartilham esse compromisso.</p>
+            <div className="mx-auto mt-8 flex max-w-2xl items-start gap-4 rounded-lg border border-white/15 bg-white/[0.07] p-5 text-left sm:p-6 lg:mx-0">
+              <span className="sonar sonar-orange relative grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#FE8C05] text-white"><Store className="relative z-10 h-5 w-5" /></span>
+              <div><h3 className="font-black text-white">Nossa proposta de parceria</h3><p className="mt-2 text-sm leading-6 text-white/65">Construir relações comerciais consistentes, aproximando a NutzenPet de novos clientes e regiões.</p></div>
             </div>
           </div>
 
-          <div className="relative min-h-[390px] overflow-hidden rounded-lg bg-[#F5EFF8] sm:min-h-[520px]">
-            <span className="absolute left-[12%] top-[12%] h-[56%] w-[64%] rounded-[44%_56%_52%_48%] bg-[#E2D4E9]" aria-hidden="true" />
-            <Image src={representativePets} alt="Cachorro e gato celebrando uma nova parceria" fill quality={92} sizes="(max-width: 1024px) 90vw, 520px" className="object-contain object-bottom drop-shadow-[0_18px_22px_rgba(62,18,85,.14)]" />
-            <div className="absolute right-5 top-5 max-w-[165px] text-right"><span className="text-sm font-black leading-5 text-[#3E1255]">Juntos por pets mais felizes.</span></div>
+          <div className="reveal-up relative mx-auto h-[390px] w-full max-w-[560px] sm:h-[520px]" style={{ animationDelay: "120ms" }}>
+            <span className="absolute -bottom-3 -right-3 h-[78%] w-[78%] rounded-lg bg-[#FE8C05]" aria-hidden="true" />
+            <span className="absolute -left-5 top-8 h-24 w-24 rounded-full bg-[#D9C7E3]" aria-hidden="true" />
+            <div className="absolute inset-3 overflow-hidden rounded-lg bg-[#F5EFF8] sm:inset-5">
+              <Image src={smallBreedDog} alt="Cachorro de pequeno porte representando a proximidade da NutzenPet" fill quality={92} sizes="(max-width: 1024px) 92vw, 540px" className="object-cover object-[center_38%]" />
+              <span className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#3E1255]/90 to-transparent" aria-hidden="true" />
+              <p className="absolute bottom-6 left-6 max-w-[250px] text-xl font-black leading-tight text-white sm:bottom-8 sm:left-8">Proximidade para entender cada mercado.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-[#F5EFF8] px-5 py-16 sm:px-8 sm:py-24">
+      <section id="presenca" className="scroll-mt-28 bg-[#F5EFF8] px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-[1240px]">
-          <div className="mx-auto max-w-3xl text-center"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E1255]">Por que ser nosso parceiro?</p><h2 className="mt-4 text-3xl font-black text-[#123F55] sm:text-5xl">Uma parceria com espaço para crescer.</h2><p className="mt-4 text-sm leading-7 text-slate-600">Conheça os pilares que orientam a experiência da nossa rede de representantes.</p></div>
+          <div className="mx-auto max-w-3xl text-center"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E1255]">Por que ser nosso parceiro?</p><h2 className="mt-4 text-3xl font-black text-[#123F55] sm:text-5xl">Uma parceria com espaço para crescer.</h2><p className="mt-4 text-sm leading-7 text-slate-600">Conheça os pilares que orientam a experiência da nossa rede de lojistas parceiros.</p></div>
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {advantages.map(({ icon: Icon, title, text }, index) => (
               <article key={title} className="reveal-up group rounded-lg bg-white p-6 shadow-[0_12px_35px_rgba(62,18,85,.06)] transition-transform duration-300 hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(62,18,85,.12)]" style={{ animationDelay: `${index * 90}ms` }}>
@@ -163,6 +169,18 @@ export default function RepresentativePage() {
                 <p className="mt-3 text-sm leading-7 text-slate-600">{text}</p>
               </article>
             ))}
+          </div>
+
+          <div className="mx-auto mt-10 grid max-w-[1060px] overflow-hidden rounded-lg bg-[#3E1255] shadow-[0_18px_50px_rgba(62,18,85,.16)] lg:grid-cols-[1.08fr_0.92fr]">
+            <div className="relative z-10 flex flex-col justify-center px-6 py-9 text-center text-white sm:px-9 sm:py-10 lg:min-h-[270px] lg:p-10 lg:text-left">
+              <p className="relative z-10 text-[10px] font-black uppercase tracking-[0.2em] text-[#D9C7E3]">Presença no dia a dia</p>
+              <h3 className="relative z-10 mx-auto mt-4 max-w-md text-2xl font-black leading-tight sm:text-3xl lg:mx-0">Parcerias feitas para aproximar marca, lojas e tutores.</h3>
+              <p className="relative z-10 mx-auto mt-4 max-w-md text-sm leading-6 text-white/70 lg:mx-0">Conhecimento local e cuidado próximo ajudam a transformar boas escolhas em relações duradouras.</p>
+            </div>
+            <div className="relative min-h-[210px] overflow-hidden bg-[#3E1255] sm:min-h-[250px] lg:min-h-[270px]">
+              <span className="absolute bottom-[-24%] left-1/2 h-[112%] w-[88%] -translate-x-1/2 rounded-full bg-[#5B2674]" aria-hidden="true" />
+              <Image src={homeDog} alt="Cachorro saudável" fill quality={92} sizes="(max-width: 1024px) 100vw, 440px" className="object-contain object-bottom px-5 pt-2 sm:px-7 sm:pt-5" />
+            </div>
           </div>
         </div>
       </section>
@@ -220,20 +238,22 @@ export default function RepresentativePage() {
               )}
             </form>
 
-            <aside className="relative overflow-hidden rounded-lg bg-white p-6 shadow-[0_18px_50px_rgba(62,18,85,.08)] sm:p-8">
+            <aside className="relative self-start overflow-hidden rounded-lg bg-[#3E1255] p-6 text-white shadow-[0_18px_50px_rgba(62,18,85,.14)] sm:p-8">
               <div className="grid gap-7">
                 {formBenefits.map(({ icon: Icon, title, text }) => (
-                  <div key={title} className="flex gap-4"><span className="sonar sonar-purple relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#F5EFF8] text-[#3E1255]"><Icon className="relative z-10 h-5 w-5" /></span><div><h3 className="font-black text-[#123F55]">{title}</h3><p className="mt-2 text-xs leading-5 text-slate-600">{text}</p></div></div>
+                  <div key={title} className="flex gap-4"><span className="sonar sonar-orange relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#FE8C05] text-white"><Icon className="relative z-10 h-5 w-5" /></span><div><h3 className="font-black text-white">{title}</h3><p className="mt-2 text-xs leading-5 text-white/65">{text}</p></div></div>
                 ))}
               </div>
-              <div className="relative -mx-6 -mb-6 mt-8 h-[260px] overflow-hidden sm:-mx-8 sm:-mb-8"><span className="absolute bottom-0 left-[8%] h-[75%] w-[84%] rounded-t-full bg-[#F5EFF8]" aria-hidden="true" /><Image src={representativeDog} alt="Rottweiler saudável representando uma parceria" fill sizes="(max-width: 1024px) 90vw, 360px" className="object-cover object-[center_28%] mix-blend-multiply" /></div>
+              <div className="-mx-6 -mb-6 mt-7 h-[220px] overflow-hidden border-t border-white/10 bg-[#3E1255] sm:-mx-8 sm:-mb-8 sm:h-[240px]">
+                <div className="relative mx-auto h-full max-w-[360px]"><span className="absolute inset-x-[12%] bottom-[-30%] h-[110%] rounded-full bg-[#5B2674]" aria-hidden="true" /><Image src={homeDog} alt="Cachorro saudável" fill sizes="(max-width: 640px) 100vw, 300px" className="object-contain object-bottom px-6 pt-4" /></div>
+              </div>
             </aside>
           </div>
         </div>
       </section>
 
       <section className="bg-white px-5 py-9 sm:px-8">
-        <div className="mx-auto flex max-w-[1240px] flex-col gap-6 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-4"><span className="sonar sonar-purple relative grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#3E1255] text-white"><Mail className="relative z-10 h-5 w-5" /></span><div><h2 className="text-xl font-black text-[#123F55]">Ainda tem dúvidas?</h2><p className="mt-1 text-sm text-slate-600">Fale com nosso time comercial sobre o programa de representantes.</p></div></div><Link href="/contato" className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full border-2 border-[#3E1255] px-7 text-sm font-black text-[#3E1255] transition-colors duration-300 hover:bg-[#F5EFF8]">Entrar em contato <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link></div>
+        <div className="mx-auto flex max-w-[1240px] flex-col gap-6 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-4"><span className="sonar sonar-purple relative grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#3E1255] text-white"><Mail className="relative z-10 h-5 w-5" /></span><div><h2 className="text-xl font-black text-[#123F55]">Ainda tem dúvidas?</h2><p className="mt-1 text-sm text-slate-600">Fale com nosso time comercial sobre o programa para lojistas parceiros.</p></div></div><Link href="/contato" className="group inline-flex min-h-12 items-center justify-center gap-3 rounded-full border-2 border-[#3E1255] px-7 text-sm font-black text-[#3E1255] transition-colors duration-300 hover:bg-[#F5EFF8]">Entrar em contato <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link></div>
       </section>
 
       <SiteFooter />

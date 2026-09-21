@@ -21,7 +21,7 @@ import { FloatingMotifs } from "../components/floating-motifs";
 import { ProductCarousel } from "../components/product-carousel";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
-import { products } from "../data/products";
+import { featuredProducts } from "../data/products";
 import clubPets from "../../public/images/hero-pets-v3.png";
 import kitPets from "../../fotos-sobre/cachorro-gato.jpg";
 import clubCat from "../../fotos-sobre/Gato-02.webp";
@@ -98,9 +98,9 @@ export default function NutzenClubPage() {
 
             <div className="relative min-h-[410px] self-end sm:min-h-[510px] lg:min-h-[610px]">
               <span className="absolute bottom-[8%] left-[8%] h-[70%] w-[76%] rounded-[48%_52%_42%_58%] bg-[#6D3286]" aria-hidden="true" />
-              <div className="absolute bottom-[3%] left-[1%] z-10 h-[46%] w-[25%]"><Image src={products[0].images[1]} alt={products[0].name} fill sizes="(max-width: 640px) 100px, 180px" className="object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,.25)]" /></div>
+              <div className="absolute bottom-[3%] left-[1%] z-10 h-[46%] w-[25%]"><Image src={featuredProducts[0].images[1]} alt={featuredProducts[0].name} fill sizes="(max-width: 640px) 100px, 180px" className="object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,.25)]" /></div>
               <Image src={clubPets} alt="Cachorro e gato representando o Nutzen Club" fill preload quality={92} sizes="(max-width: 1024px) 94vw, 660px" className="z-20 object-contain object-bottom drop-shadow-[0_22px_24px_rgba(0,0,0,.22)]" />
-              <div className="absolute bottom-[3%] right-[1%] z-30 h-[48%] w-[24%]"><Image src={products[2].images[1]} alt={products[2].name} fill sizes="(max-width: 640px) 95px, 170px" className="object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,.25)]" /></div>
+              <div className="absolute bottom-[3%] right-[1%] z-30 h-[48%] w-[24%]"><Image src={featuredProducts[2].images[1]} alt={featuredProducts[2].name} fill sizes="(max-width: 640px) 95px, 170px" className="object-contain drop-shadow-[0_20px_20px_rgba(0,0,0,.25)]" /></div>
               <p className="absolute right-[7%] top-[10%] z-30 hidden max-w-[160px] rotate-[-4deg] text-center text-xl font-black leading-tight text-[#F6D9A8] sm:block">Mais saúde para hoje e para todo amanhã.</p>
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function NutzenClubPage() {
       </section>
 
       <section id="produtos-club" className="scroll-mt-24 bg-[#F5EFF8] px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-[1240px]"><div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E1255]">Escolha sua nutrição</p><h2 className="mt-3 text-3xl font-black text-[#123F55] sm:text-5xl">Produtos para assinar.</h2><p className="mt-4 max-w-xl text-sm leading-7 text-slate-600">Combine as linhas disponíveis conforme a fase e as necessidades do seu pet.</p></div><Link href="/produto" className="group flex items-center gap-2 text-sm font-black text-[#3E1255]">Ver todas as linhas <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link></div><ProductCarousel products={products} className="mt-8" /></div>
+        <div className="mx-auto max-w-[1240px]"><div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E1255]">Escolha sua nutrição</p><h2 className="mt-3 text-3xl font-black text-[#123F55] sm:text-5xl">Produtos para assinar.</h2><p className="mt-4 max-w-xl text-sm leading-7 text-slate-600">Combine as linhas disponíveis conforme a fase e as necessidades do seu pet.</p></div><Link href="/produto" className="group flex items-center gap-2 text-sm font-black text-[#3E1255]">Ver todas as linhas <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link></div><ProductCarousel products={featuredProducts} className="mt-8" /></div>
       </section>
 
       <section id="controle" className="relative scroll-mt-24 overflow-hidden bg-[#3E1255] px-5 py-14 text-white sm:px-8 sm:py-20">
@@ -164,10 +164,10 @@ export default function NutzenClubPage() {
         </div>
       </section>
 
-      <section id="kits" className="bg-white px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto grid max-w-[1240px] overflow-hidden rounded-lg bg-[#F5EFF8] lg:grid-cols-[0.72fr_1.28fr]">
-          <div className="relative min-h-[320px] lg:min-h-[420px]"><span className="absolute bottom-0 left-[10%] h-[76%] w-[80%] rounded-t-full bg-[#E2D4E9]" aria-hidden="true" /><Image src={kitPets} alt="Cachorro e gato ao lado da nutrição escolhida" fill sizes="(max-width: 1024px) 92vw, 480px" className="object-cover object-center mix-blend-multiply" /></div>
-          <div className="flex flex-col justify-center px-6 py-12 text-center sm:px-12 lg:text-left"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E1255]">Seu pet, sua combinação</p><h2 className="mt-4 text-3xl font-black leading-tight text-[#123F55] sm:text-5xl">Monte seu kit e faça parte do Nutzen Club.</h2><p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600">Escolha os produtos, combine tamanhos disponíveis e organize a frequência que melhor acompanha a rotina da casa.</p><BrandButton href="/produto#kits" variant="orange" className="mt-8 self-center lg:self-start">Quero montar meu kit</BrandButton></div>
+      <section id="kits" className="bg-white px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto grid max-w-[1240px] overflow-hidden rounded-lg bg-[#F5EFF8] lg:grid-cols-[0.68fr_1.32fr]">
+          <div className="relative min-h-[250px] sm:min-h-[300px] lg:min-h-[350px]"><span className="absolute bottom-0 left-[8%] h-[78%] w-[84%] rounded-t-full bg-[#E2D4E9]" aria-hidden="true" /><Image src={kitPets} alt="Cachorro e gato ao lado da nutrição escolhida" fill sizes="(max-width: 1024px) 92vw, 460px" className="object-contain object-bottom p-3 mix-blend-multiply sm:p-5" /></div>
+          <div className="flex flex-col justify-center px-6 py-10 text-center sm:px-12 lg:text-left"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E1255]">Seu pet, sua combinação</p><h2 className="mt-4 text-3xl font-black leading-tight text-[#123F55] sm:text-5xl">Monte seu kit e faça parte do Nutzen Club.</h2><p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600">Escolha os produtos, combine tamanhos disponíveis e organize a frequência que melhor acompanha a rotina da casa.</p><BrandButton href="/produto#kits" variant="orange" className="mt-7 self-center lg:self-start">Quero montar meu kit</BrandButton></div>
         </div>
       </section>
 

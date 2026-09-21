@@ -13,6 +13,15 @@
 # testing
 /coverage
 /tmp-screenshots/
+/.artifacts/
+/.codex-screenshots/
+/.dev-server*.log
+
+# local source material (not shipped by the site)
+/Catálogo*.pdf
+/Catálogo*.indd
+/produtos/*-1Kg.png
+/produtos/*-3Kg.png
 
 # next.js
 /.next/

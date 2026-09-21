@@ -3,9 +3,9 @@
 import Image from "next/image";
 import { PawPrint } from "lucide-react";
 import { useEffect, useState } from "react";
-import { products } from "../data/products";
+import { featuredProducts } from "../data/products";
 
-const heroProducts = [products[1], products[0], products[2]];
+const heroProducts = [featuredProducts[1], featuredProducts[0], featuredProducts[2]];
 
 export function ProductHeroSlider() {
   const [activeProduct, setActiveProduct] = useState(0);

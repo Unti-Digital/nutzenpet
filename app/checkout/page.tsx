@@ -2,17 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { FormEvent } from "react";
-import { ArrowLeft, CreditCard, LockKeyhole, MapPin, ShoppingBag, Truck, UserRound } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { ArrowLeft, CheckCircle2, CreditCard, LockKeyhole, MapPin, ShoppingBag, Truck, UserRound } from "lucide-react";
 import { formatCurrency, useCart } from "../components/cart-provider";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 
-const fieldClass = "h-12 w-full rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#3E1255] focus:bg-white focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)]";
+const fieldClass = "h-12 w-full rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#3E1255] focus:bg-white focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)] user-invalid:border-[#CC632B] user-invalid:shadow-[0_0_0_3px_rgba(204,99,43,.1)]";
 
 export default function CheckoutPage() {
   const { items, itemCount, subtotal } = useCart();
-  function handleSubmit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); }
+  const [submitted, setSubmitted] = useState(false);
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitted(true);
+  }
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -29,6 +34,7 @@ export default function CheckoutPage() {
           <div className="mx-auto max-w-lg py-16 text-center"><ShoppingBag className="mx-auto h-12 w-12 text-[#3E1255]" /><h2 className="mt-5 text-3xl font-black text-[#123F55]">Adicione produtos primeiro</h2><p className="mt-3 text-sm leading-6 text-slate-500">Seu resumo de compra aparecerá aqui assim que você escolher os produtos.</p><Link href="/produto" className="mt-7 inline-flex h-12 items-center rounded-full bg-[#FE8C05] px-7 text-sm font-black text-white">Ver produtos</Link></div>
         ) : (
           <form onSubmit={handleSubmit} className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1fr_390px]">
+            {submitted && <div role="status" className="reveal-up flex items-center gap-3 rounded-lg border border-[#D9C7E3] bg-[#F5EFF8] p-5 text-sm font-bold text-[#3E1255] lg:col-span-2"><CheckCircle2 className="h-5 w-5 shrink-0 text-[#FE8C05]" /> Dados validados neste protótipo. A confirmação será conectada ao backend.</div>}
             <div className="space-y-6">
               <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8">
                 <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><UserRound className="h-5 w-5 text-[#FE8C05]" />Dados pessoais</h2>
@@ -80,7 +86,7 @@ export default function CheckoutPage() {
                     <ShoppingBag className="h-4 w-4" />
                     <span>Conferir carrinho</span>
                   </Link>
-                  <button type="submit" className="h-13 w-full rounded-full bg-[#FE8C05] text-sm font-black transition-all duration-300 hover:scale-[0.98] hover:bg-[#CC632B] active:scale-95">Confirmar pedido</button>
+                  <button type="submit" className="h-13 w-full rounded-full bg-[#FE8C05] text-sm font-black transition-all duration-300 hover:scale-[0.98] hover:bg-[#CC632B] active:scale-95">{submitted ? "Dados conferidos" : "Confirmar pedido"}</button>
                 </div>
                 <p className="mt-4 flex items-center justify-center gap-2 text-[10px] text-white/50"><Truck className="h-3.5 w-3.5" /> Entrega acompanhada até você</p>
               </div>

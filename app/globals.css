@@ -28,10 +28,6 @@
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -68,19 +64,27 @@ select {
 
 @keyframes sonar {
   0% {
-    opacity: 0.55;
-    transform: scale(0.8);
+    opacity: 0.42;
+    transform: scale(0.84);
   }
   75%,
   100% {
     opacity: 0;
-    transform: scale(1.7);
+    transform: scale(1.55);
   }
 }
 
 .reveal-up {
+  opacity: 1;
+}
+
+.motion-ready .reveal-up {
   opacity: 0;
-  animation: reveal-up 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  transform: translateY(22px);
+}
+
+.motion-ready .reveal-up.is-visible {
+  animation: reveal-up 0.68s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .float-soft {
@@ -96,14 +100,14 @@ select {
   box-shadow: 0 8px 22px color-mix(in srgb, var(--sonar-color) 32%, transparent);
 }
 
-.sonar::before {
+.sonar.sonar-active::before {
   position: absolute;
   inset: 0;
   content: "";
   pointer-events: none;
   border: 2px solid var(--sonar-color);
   border-radius: 9999px;
-  animation: sonar 2.5s ease-out infinite;
+  animation: sonar 3.1s ease-out infinite;
 }
 
 .sonar-green {
@@ -135,10 +139,10 @@ select {
     scroll-behavior: auto;
   }
 
-  .reveal-up,
+  .motion-ready .reveal-up,
   .float-soft,
   .float-soft-delayed,
-  .sonar::before {
+  .sonar.sonar-active::before {
     opacity: 1;
     animation: none;
     transform: none;

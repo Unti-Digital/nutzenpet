@@ -17,11 +17,12 @@ import {
 } from "lucide-react";
 import { BrandButton } from "../components/brand-button";
 import { FloatingMotifs } from "../components/floating-motifs";
+import { OpportunityBanners } from "../components/opportunity-banners";
 import { PhotoRotator, type RotatingPhoto } from "../components/photo-rotator";
 import { ProductCarousel } from "../components/product-carousel";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
-import { products } from "../data/products";
+import { featuredProducts } from "../data/products";
 import essencePair from "../../fotos-sobre/cachorro-gato.jpg";
 import essenceDog from "../../fotos-sobre/cahorro.jpg";
 import essenceFriends from "../../fotos-sobre/gato-cachorro.jpg";
@@ -320,7 +321,7 @@ export default function AboutPage() {
                 <Image src={pitbull} alt="Cachorro saudável representando a fórmula Nutzen" fill sizes="(max-width: 640px) 58vw, 310px" className="object-cover object-[52%_38%] mix-blend-multiply" />
               </div>
               <div className="float-soft absolute bottom-[3%] right-[4%] h-[92%] w-[55%] sm:right-[7%] sm:w-[52%]">
-                <Image src={products[0].images[1]} alt={products[0].name} fill sizes="(max-width: 640px) 52vw, 300px" className="object-contain drop-shadow-[0_22px_22px_rgba(62,18,85,.22)]" />
+                <Image src={featuredProducts[0].images[1]} alt={featuredProducts[0].name} fill sizes="(max-width: 640px) 52vw, 300px" className="object-contain drop-shadow-[0_22px_22px_rgba(62,18,85,.22)]" />
               </div>
               <p className="absolute left-5 top-5 max-w-[150px] -rotate-3 text-lg font-black leading-6 text-[#3E1255] sm:left-8 sm:top-8">Nutrição que faz bem de verdade.</p>
             </div>
@@ -349,9 +350,11 @@ export default function AboutPage() {
             </div>
             <BrandButton href="/produto" variant="outline">Ver todos os produtos</BrandButton>
           </div>
-          <ProductCarousel products={products} className="mt-8" />
+          <ProductCarousel products={featuredProducts} className="mt-8" />
         </div>
       </section>
+
+      <OpportunityBanners id="proximos-passos" />
 
       <section className="overflow-hidden bg-[#F5EFF8] px-5 sm:px-8">
         <div className="mx-auto grid max-w-[1240px] items-center gap-8 py-12 md:grid-cols-[1fr_300px] md:py-0 lg:grid-cols-[1fr_390px]">

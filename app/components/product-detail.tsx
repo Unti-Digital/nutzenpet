@@ -24,7 +24,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const isInCart = Boolean(cartItem);
 
   function handleAddToCart() {
-    if (!isInCart) addItem(product, 1);
+    if (product.availableForPurchase && !isInCart) addItem(product, 1);
   }
 
   return (
@@ -85,12 +85,14 @@ export function ProductDetail({ product }: { product: Product }) {
           <div className="mt-8">
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Escolha o tamanho</p>
             <div className="mt-3 flex flex-wrap gap-3">
-              {product.sizeOptions.map((option) => (
-                <button key={option.label} type="button" disabled={!option.available} aria-pressed={option.available} className={`relative min-w-24 rounded-md border-2 px-4 py-3 text-sm font-black transition-all duration-300 ${option.available ? "border-[#3E1255] bg-[#F5EFF8] text-[#3E1255]" : "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"}`}>
-                  {option.label}
-                  {!option.available && <span className="mt-1 block text-[8px] uppercase tracking-[0.12em]">Em breve</span>}
-                </button>
-              ))}
+              {product.sizeOptions.map((option) => {
+                const selected = option.slug === product.slug;
+                return (
+                  <Link key={option.slug} href={`/produto/${option.slug}`} aria-current={selected ? "page" : undefined} className={`relative min-w-24 rounded-md border-2 px-4 py-3 text-center text-sm font-black transition-all duration-300 ${selected ? "border-[#3E1255] bg-[#3E1255] text-white" : "border-[#D9C7E3] bg-white text-[#3E1255] hover:border-[#3E1255] hover:bg-[#F5EFF8]"}`}>
+                    {option.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
           <div className="mt-9 flex items-end justify-between border-y border-slate-200 py-6">
@@ -107,9 +109,9 @@ export function ProductDetail({ product }: { product: Product }) {
             )}
           </div>
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            <button type="button" onClick={handleAddToCart} disabled={isInCart} aria-pressed={isInCart} className="flex h-14 min-w-0 items-center justify-center gap-2 rounded-full bg-[#FE8C05] px-4 text-xs font-black text-white transition-all duration-300 enabled:hover:scale-[0.98] enabled:hover:bg-[#CC632B] enabled:active:scale-95 disabled:cursor-default sm:text-sm">
+            <button type="button" onClick={handleAddToCart} disabled={isInCart || !product.availableForPurchase} aria-pressed={isInCart} className="flex h-14 min-w-0 items-center justify-center gap-2 rounded-full bg-[#FE8C05] px-4 text-xs font-black text-white transition-all duration-300 enabled:hover:scale-[0.98] enabled:hover:bg-[#CC632B] enabled:active:scale-95 disabled:cursor-default disabled:bg-slate-300 sm:text-sm">
               {isInCart ? <Check className="h-5 w-5 shrink-0" /> : <ShoppingBag className="h-5 w-5 shrink-0" />}
-              <span>{isInCart ? "Adicionado" : "Adicionar ao carrinho"}</span>
+              <span>{isInCart ? "Adicionado" : product.availableForPurchase ? "Adicionar ao carrinho" : "Preço em breve"}</span>
             </button>
             <Link href="/carrinho" className="group flex h-14 min-w-0 items-center justify-center gap-2 rounded-full border-2 border-[#3E1255] px-4 text-center text-xs font-black text-[#3E1255] transition-colors duration-300 hover:bg-[#F5EFF8]">
               <span>Ir para o carrinho</span>
