@@ -2,3 +2,8 @@
 /tmp-screenshots
 /tmp-*.png
 *.psd
+/.codex-screenshots
+/.artifacts
+/.dev-server*.log
+/Catálogo*.pdf
+/Catálogo*.indd
