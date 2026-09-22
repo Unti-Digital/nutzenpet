@@ -29,7 +29,7 @@ export function ProductDetail({ product }: { product: Product }) {
 
   return (
     <div className="space-y-20">
-      <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid items-start gap-12 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="relative">
           <div
             className="relative h-[480px] overflow-hidden rounded-lg border shadow-[0_18px_55px_rgba(18,63,85,.08)] sm:h-[620px]"

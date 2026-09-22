@@ -3,7 +3,7 @@ import smallDogBanner from "../../fotos-sobre/cahorro.jpg";
 import catBanner from "../../fotos-sobre/Gato-02.webp";
 
 export type ProductSpecies = "dog" | "cat";
-export type ProductLine = "medium-large-dogs" | "small-dogs" | "neutered-cats";
+export type ProductLine = "medium-large-dogs" | "small-dogs" | "neutered-cats" | "other";
 
 export type ProductBanner = {
   eyebrow: string;
@@ -19,6 +19,9 @@ export type ProductSizeOption = {
 };
 
 export type Product = {
+  wooId?: number;
+  sku?: string;
+  stockStatus?: "instock" | "outofstock" | "onbackorder";
   slug: string;
   line: ProductLine;
   species: ProductSpecies;

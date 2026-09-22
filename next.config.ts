@@ -1,5 +1,32 @@
 import type { NextConfig } from "next";
 
+const wordpressOrigin = process.env.WORDPRESS_URL ? new URL(process.env.WORDPRESS_URL) : null;
+const wordpressUploads = wordpressOrigin
+  ? {
+      protocol: wordpressOrigin.protocol.replace(":", "") as "http" | "https",
+      hostname: wordpressOrigin.hostname,
+      port: wordpressOrigin.port,
+      pathname: `${wordpressOrigin.pathname.replace(/\/$/, "")}/wp-content/uploads/**`,
+    }
+  : null;
+
+const localWordPressUploads = [
+  {
+    protocol: "http" as const,
+    hostname: "localhost",
+    port: "",
+    pathname: "/nutzen-wp/wp-content/uploads/**",
+    search: "",
+  },
+  {
+    protocol: "http" as const,
+    hostname: "127.0.0.1",
+    port: "",
+    pathname: "/nutzen-wp/wp-content/uploads/**",
+    search: "",
+  },
+];
+
 const nextConfig: NextConfig = {
   async redirects() {
     return [
@@ -26,6 +53,7 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
     qualities: [75, 88, 90, 92],
     localPatterns: [
       {
@@ -46,6 +74,8 @@ const nextConfig: NextConfig = {
         hostname: "www.untidigital.com.br",
         pathname: "/images/logo-horizontal.svg",
       },
+      ...localWordPressUploads,
+      ...(wordpressUploads ? [wordpressUploads] : []),
     ],
   },
 };

@@ -61,7 +61,7 @@ export function ProductCarousel({ products, startIndex = 0, className = "" }: { 
         <button type="button" onClick={() => move(-1)} aria-label="Produto anterior" className="sonar sonar-purple relative grid h-11 w-11 place-items-center rounded-full border border-[#D9C7E3] bg-white text-[#3E1255] shadow-[0_8px_20px_rgba(62,18,85,.12)] transition-all duration-300 hover:scale-90 hover:bg-[#3E1255] hover:text-white active:scale-75"><ChevronLeft className="relative z-10 h-5 w-5" /></button>
         <button type="button" onClick={() => move(1)} aria-label="Próximo produto" className="sonar sonar-purple relative grid h-11 w-11 place-items-center rounded-full border border-[#D9C7E3] bg-white text-[#3E1255] shadow-[0_8px_20px_rgba(62,18,85,.12)] transition-all duration-300 hover:scale-90 hover:bg-[#3E1255] hover:text-white active:scale-75"><ChevronRight className="relative z-10 h-5 w-5" /></button>
       </div>}
-      <div ref={trackRef} onScroll={syncActiveIndex} className={`gap-4 pr-[14%] sm:gap-6 sm:pr-0 ${trackLayout}`}>
+      <div ref={trackRef} onScroll={syncActiveIndex} className={`gap-4 px-1 pb-8 pt-3 pr-[14%] sm:gap-6 sm:px-2 sm:pb-10 sm:pr-2 ${trackLayout}`}>
         {products.map((product, index) => (
           <div key={product.slug} className={itemLayout}>
             <ProductCard product={product} index={index + startIndex} />

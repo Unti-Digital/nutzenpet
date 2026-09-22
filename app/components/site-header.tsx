@@ -24,6 +24,12 @@ import { SiteSearch } from "./site-search";
 import { featuredProducts } from "../data/products";
 import { contactDetails } from "../data/contact";
 
+type HeaderUser = {
+  email: string;
+  name: string;
+  first_name: string;
+};
+
 const links = [
   { label: "Início", href: "/" },
   { label: "Sobre", href: "/sobre" },
@@ -47,12 +53,34 @@ export function SiteHeader() {
   const [mobilePartnershipsOpen, setMobilePartnershipsOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const [accountUser, setAccountUser] = useState<HeaderUser | null>(null);
+  const [accountLoading, setAccountLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const cartDialogRef = useRef<HTMLElement>(null);
   const userDialogRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
   const { items, itemCount, subtotal } = useCart();
   const modalOpen = cartOpen || userOpen;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/auth/me", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const payload = await response.json() as { user?: HeaderUser };
+        return payload.user ?? null;
+      })
+      .then((nextUser) => {
+        if (!controller.signal.aborted) setAccountUser(nextUser);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setAccountUser(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setAccountLoading(false);
+      });
+    return () => controller.abort();
+  }, [pathname, userOpen]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -288,8 +316,22 @@ export function SiteHeader() {
           <button type="button" aria-label="Fechar acesso à conta" onClick={() => setUserOpen(false)} className="absolute inset-0 bg-[#123F55]/55 backdrop-blur-sm" />
           <section ref={userDialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="user-popup-title" className="reveal-up relative w-full max-w-md overflow-hidden rounded-lg bg-white shadow-[0_28px_90px_rgba(18,63,85,.3)]">
             <button type="button" onClick={() => setUserOpen(false)} aria-label="Fechar" className="absolute right-5 top-5 z-10 grid h-10 w-10 place-items-center rounded-full bg-white/80 text-[#3E1255] transition-all duration-300 hover:scale-90 hover:bg-white"><X className="h-5 w-5" /></button>
-            <div className="relative overflow-hidden bg-[#F5EFF8] px-7 py-8"><CircleUserRound className="h-12 w-12 text-[#3E1255]" /><p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-[#3E1255]">Área do cliente</p><h2 id="user-popup-title" className="mt-1 text-3xl font-black text-[#123F55]">Olá, que bom ter você aqui.</h2></div>
-            <div className="p-7"><p className="text-sm leading-6 text-slate-500">Entre para acompanhar pedidos, atualizar seus dados e agilizar suas próximas compras.</p><Link href="/conta" onClick={() => setUserOpen(false)} className="group mt-6 flex h-12 items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-all duration-300 hover:scale-[0.98] hover:bg-[#CC632B] active:scale-95">Acessar minha conta <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link><Link href="/minha-conta#pedidos" onClick={() => setUserOpen(false)} className="mt-3 flex h-12 items-center justify-center gap-2 rounded-full border-2 border-[#3E1255] text-sm font-black text-[#3E1255] transition-colors duration-300 hover:bg-[#F5EFF8]"><PackageCheck className="h-4 w-4" /> Ver meus pedidos</Link></div>
+            <div className="relative overflow-hidden bg-[#F5EFF8] px-7 py-8"><CircleUserRound className="h-12 w-12 text-[#3E1255]" /><p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-[#3E1255]">Área do cliente</p><h2 id="user-popup-title" className="mt-1 text-3xl font-black text-[#123F55]">{accountUser ? `Olá, ${accountUser.first_name || accountUser.name}.` : "Olá, que bom ter você aqui."}</h2>{accountUser && <p className="mt-2 truncate text-sm font-bold text-[#3E1255]/65">{accountUser.email}</p>}</div>
+            <div className="p-7">
+              {accountLoading ? <p className="text-sm leading-6 text-slate-500">Consultando sua conta...</p> : accountUser ? (
+                <>
+                  <p className="text-sm leading-6 text-slate-500">Acompanhe pedidos, endereços, dados pessoais e seus programas NutzenPet.</p>
+                  <Link href="/minha-conta" onClick={() => setUserOpen(false)} className="group mt-6 flex h-12 items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-all duration-300 hover:scale-[0.98] hover:bg-[#CC632B] active:scale-95">Ir para minha conta <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link>
+                  <Link href="/minha-conta#pedidos" onClick={() => setUserOpen(false)} className="mt-3 flex h-12 items-center justify-center gap-2 rounded-full border-2 border-[#3E1255] text-sm font-black text-[#3E1255] transition-colors duration-300 hover:bg-[#F5EFF8]"><PackageCheck className="h-4 w-4" /> Ver meus pedidos</Link>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm leading-6 text-slate-500">Entre para acompanhar pedidos, atualizar seus dados e agilizar suas próximas compras.</p>
+                  <Link href="/conta" onClick={() => setUserOpen(false)} className="group mt-6 flex h-12 items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-all duration-300 hover:scale-[0.98] hover:bg-[#CC632B] active:scale-95">Entrar na minha conta <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link>
+                  <Link href="/conta?modo=cadastro" onClick={() => setUserOpen(false)} className="mt-3 flex h-12 items-center justify-center rounded-full border-2 border-[#3E1255] text-sm font-black text-[#3E1255] transition-colors duration-300 hover:bg-[#F5EFF8]">Criar nova conta</Link>
+                </>
+              )}
+            </div>
           </section>
         </div>
       )}

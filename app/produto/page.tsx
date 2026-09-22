@@ -7,12 +7,15 @@ import { ProductCarousel } from "../components/product-carousel";
 import { ProductHeroSlider } from "../components/product-hero-slider";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
-import { featuredProducts, getProductsByLine } from "../data/products";
+import { featuredProducts } from "../data/products";
+import { getCommerceCatalog } from "@/lib/woocommerce/products";
 
-export default function ProductIndexPage() {
-  const mediumLargeProducts = getProductsByLine("medium-large-dogs");
-  const smallDogProducts = getProductsByLine("small-dogs");
-  const catProducts = getProductsByLine("neutered-cats");
+export default async function ProductIndexPage() {
+  const catalog = await getCommerceCatalog();
+  const mediumLargeProducts = catalog.products.filter((product) => product.line === "medium-large-dogs");
+  const smallDogProducts = catalog.products.filter((product) => product.line === "small-dogs");
+  const catProducts = catalog.products.filter((product) => product.line === "neutered-cats");
+  const otherProducts = catalog.products.filter((product) => product.line === "other");
 
   return (
     <main className="min-h-screen bg-[#fffef9]">
@@ -34,6 +37,7 @@ export default function ProductIndexPage() {
               ["#medias-grandes", "Cães médios e grandes"],
               ["#racas-pequenas", "Cães pequenos"],
               ["#gatos-castrados", "Gatos castrados"],
+              ...(otherProducts.length > 0 ? [["#outros-produtos", "Outros produtos"]] : []),
             ].map(([href, label]) => <a key={href} href={href} className="shrink-0 snap-start rounded-full border border-[#D9C7E3] bg-[#F5EFF8] px-5 py-3 text-xs font-black text-[#3E1255] transition-colors duration-300 hover:border-[#3E1255] hover:bg-white">{label}</a>)}
           </nav>
 
@@ -51,6 +55,11 @@ export default function ProductIndexPage() {
             <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#D9C7E3] pb-5"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#CC632B]">Linha gatos</p><h2 id="cat-line-title" className="mt-2 text-3xl font-black text-[#123F55]">Gatos adultos castrados</h2></div><span className="text-xs font-bold text-slate-500">1 kg · 3 kg · 10,1 kg</span></div>
             <ProductCarousel products={catProducts} startIndex={6} className="mt-7" />
           </section>
+
+          {otherProducts.length > 0 && <section id="outros-produtos" className="scroll-mt-36 pt-16" aria-labelledby="other-products-title">
+            <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#D9C7E3] pb-5"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#3E1255]">Catálogo</p><h2 id="other-products-title" className="mt-2 text-3xl font-black text-[#123F55]">Outros produtos</h2></div></div>
+            <ProductCarousel products={otherProducts} startIndex={9} className="mt-7" />
+          </section>}
 
         </div>
       </section>

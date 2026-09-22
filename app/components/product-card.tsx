@@ -28,7 +28,7 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
   }, [index, product.images.length]);
 
   return (
-    <article className="reveal-up group relative flex min-h-[520px] flex-col overflow-hidden rounded-lg border border-[#D9C7E3] bg-white p-5 shadow-[0_12px_35px_rgba(18,63,85,.09)] transition-all duration-300 hover:-translate-y-2 hover:border-[#8A5AA0] hover:shadow-xl" style={{ animationDelay: `${index * 100}ms` }}>
+    <article className="reveal-up group relative flex h-[650px] flex-col overflow-hidden rounded-lg border border-[#D9C7E3] bg-white p-5 shadow-[0_10px_28px_rgba(18,63,85,.08)] transition-all duration-300 hover:-translate-y-1 hover:border-[#8A5AA0] hover:shadow-[0_18px_38px_rgba(62,18,85,.13)]" style={{ animationDelay: `${index * 100}ms` }}>
       <Link
         href={`/produto/${product.slug}`}
         aria-label={`Conhecer ${product.name}, ${product.weight}`}
@@ -51,15 +51,15 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
         ))}
       </div>
 
-      {product.images.length > 1 && <div className="relative z-20 mt-4 flex w-fit items-center gap-2" aria-label={`Imagem ${activeImage + 1} de ${product.images.length}`}>
-        {product.images.map((image, imageIndex) => (
+      <div className="relative z-20 mt-4 flex h-4 w-fit items-center gap-2" aria-label={product.images.length > 1 ? `Imagem ${activeImage + 1} de ${product.images.length}` : undefined}>
+        {product.images.length > 1 && product.images.map((image, imageIndex) => (
           <button key={image} type="button" aria-label={`Ver imagem ${imageIndex + 1}`} onClick={() => setActiveImage(imageIndex)} className={`h-1.5 rounded-full transition-all duration-300 hover:scale-90 ${activeImage === imageIndex ? "w-8" : "w-2 bg-slate-300"}`} style={activeImage === imageIndex ? { backgroundColor: product.accent } : undefined} />
         ))}
-      </div>}
+      </div>
 
       <p className="mt-5 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Nutrição completa · {product.weight}</p>
-      <h3 className="mt-2 text-xl font-black leading-tight text-slate-900">{product.name}</h3>
-      <p className="mt-3 text-sm leading-6 text-slate-500">{product.description}</p>
+      <h3 className="mt-2 line-clamp-2 min-h-14 text-xl font-black leading-7 text-slate-900">{product.name}</h3>
+      <p className="mt-3 line-clamp-3 h-[72px] text-sm leading-6 text-slate-500">{product.description}</p>
       <div className="mt-auto flex items-end justify-between gap-4 pt-6">
         <strong className={`${product.availableForPurchase ? "text-xl" : "text-sm"} font-black`} style={{ color: product.accent }}>{product.price}</strong>
         <Link href={`/produto/${product.slug}`} className="group/link relative z-20 flex items-center gap-2 text-xs font-black text-[#3E1255] transition-colors duration-300 hover:text-[#FE8C05]">

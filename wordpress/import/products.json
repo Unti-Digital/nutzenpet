@@ -1,0 +1,110 @@
+[
+  {
+    "slug": "racas-medias-grandes-1kg",
+    "line_key": "medium-large-dogs",
+    "name": "Cães Adultos Raças Médias e Grandes — 1 kg",
+    "line": "Cães — Raças Médias e Grandes",
+    "species": "Cães",
+    "weight": "1 kg",
+    "weight_kg": "1",
+    "price": "29.90",
+    "description": "Alimento completo com frango e batata-doce, desenvolvido para a energia e o cuidado diário de cães adultos.",
+    "images": ["produtos/racas-medias-grandes-1kg.png"]
+  },
+  {
+    "slug": "racas-medias-grandes-3kg",
+    "line_key": "medium-large-dogs",
+    "name": "Cães Adultos Raças Médias e Grandes — 3 kg",
+    "line": "Cães — Raças Médias e Grandes",
+    "species": "Cães",
+    "weight": "3 kg",
+    "weight_kg": "3",
+    "price": "69.90",
+    "description": "Alimento completo com frango e batata-doce, desenvolvido para a energia e o cuidado diário de cães adultos.",
+    "images": ["produtos/racas-medias-grandes-3kg.png"]
+  },
+  {
+    "slug": "racas-medias-grandes-15kg",
+    "line_key": "medium-large-dogs",
+    "name": "Cães Adultos Raças Médias e Grandes — 15 kg",
+    "line": "Cães — Raças Médias e Grandes",
+    "species": "Cães",
+    "weight": "15 kg",
+    "weight_kg": "15",
+    "price": "149.90",
+    "description": "Alimento completo com frango e batata-doce, desenvolvido para a energia e o cuidado diário de cães adultos.",
+    "images": ["produtos/produto1-1.png", "produtos/produto1-2.png", "produtos/produto1-3.png"]
+  },
+  {
+    "slug": "racas-pequenas-1kg",
+    "line_key": "small-dogs",
+    "name": "Cães Adultos Raças Pequenas — 1 kg",
+    "line": "Cães — Raças Pequenas",
+    "species": "Cães",
+    "weight": "1 kg",
+    "weight_kg": "1",
+    "price": "29.90",
+    "description": "Nutrição completa com frango e batata-doce em grãos adequados para cães de pequeno porte.",
+    "images": ["produtos/racas-pequenas-1kg.png"]
+  },
+  {
+    "slug": "racas-pequenas-3kg",
+    "line_key": "small-dogs",
+    "name": "Cães Adultos Raças Pequenas — 3 kg",
+    "line": "Cães — Raças Pequenas",
+    "species": "Cães",
+    "weight": "3 kg",
+    "weight_kg": "3",
+    "price": "69.90",
+    "description": "Nutrição completa com frango e batata-doce em grãos adequados para cães de pequeno porte.",
+    "images": ["produtos/racas-pequenas-3kg.png"]
+  },
+  {
+    "slug": "racas-pequenas-10kg",
+    "line_key": "small-dogs",
+    "name": "Cães Adultos Raças Pequenas — 10 kg",
+    "line": "Cães — Raças Pequenas",
+    "species": "Cães",
+    "weight": "10 kg",
+    "weight_kg": "10",
+    "price": "129.90",
+    "description": "Nutrição completa com frango e batata-doce em grãos adequados para cães de pequeno porte.",
+    "images": ["produtos/produto2-1.png", "produtos/produto2-2.png", "produtos/produto2-3.png"]
+  },
+  {
+    "slug": "gatos-castrados-1kg",
+    "line_key": "neutered-cats",
+    "name": "Gatos Adultos Castrados — 1 kg",
+    "line": "Gatos Castrados",
+    "species": "Gatos",
+    "weight": "1 kg",
+    "weight_kg": "1",
+    "price": "34.90",
+    "description": "Fórmula completa com salmão, frango e batata-doce para o cuidado diário de gatos adultos castrados.",
+    "images": ["produtos/gatos-castrados-1kg.png"]
+  },
+  {
+    "slug": "gatos-castrados-3kg",
+    "line_key": "neutered-cats",
+    "name": "Gatos Adultos Castrados — 3 kg",
+    "line": "Gatos Castrados",
+    "species": "Gatos",
+    "weight": "3 kg",
+    "weight_kg": "3",
+    "price": "79.90",
+    "description": "Fórmula completa com salmão, frango e batata-doce para o cuidado diário de gatos adultos castrados.",
+    "images": ["produtos/gatos-castrados-3kg.png"]
+  },
+  {
+    "slug": "gatos-castrados-10-1kg",
+    "line_key": "neutered-cats",
+    "name": "Gatos Adultos Castrados — 10,1 kg",
+    "line": "Gatos Castrados",
+    "species": "Gatos",
+    "weight": "10,1 kg",
+    "weight_kg": "10.1",
+    "price": "139.90",
+    "description": "Fórmula completa com salmão, frango e batata-doce para o cuidado diário de gatos adultos castrados.",
+    "images": ["produtos/produto3-1.png", "produtos/produto3-2.png", "produtos/produto3-3.png"]
+  }
+]

@@ -1,0 +1,56 @@
+{
+  "medium-large-dogs": {
+    "category": "Cães — Raças Médias e Grandes",
+    "category_slug": "caes-racas-medias-grandes",
+    "pet_size": "Médio e grande",
+    "life_stage": "Adulto",
+    "benefits": ["23% de proteína", "Ômegas 3 e 6 + DHA", "Condroitina e glicosamina"],
+    "ingredients": "Fórmula com frango, batata-doce, cereais ancestrais, proteínas selecionadas, ômegas 3 e 6, DHA e nutrientes funcionais.",
+    "directions": "Ofereça o alimento seco. Faça a troca de alimentação gradualmente e mantenha água fresca sempre disponível.",
+    "storage": "Conserve a embalagem bem fechada, em local seco, fresco e protegido da luz solar. Após aberta, mantenha afastada de produtos com odor forte.",
+    "nutrition": [
+      { "label": "Umidade", "value": "10% máx." },
+      { "label": "Proteína bruta", "value": "23% mín." },
+      { "label": "Extrato etéreo", "value": "10% mín." },
+      { "label": "Matéria fibrosa", "value": "3% máx." },
+      { "label": "Matéria mineral", "value": "8% máx." },
+      { "label": "Energia metabolizável", "value": "3.750 kcal/kg" }
+    ]
+  },
+  "small-dogs": {
+    "category": "Cães — Raças Pequenas",
+    "category_slug": "caes-racas-pequenas",
+    "pet_size": "Pequeno",
+    "life_stage": "Adulto",
+    "benefits": ["25% de proteína", "Ômegas 3 e 6 + DHA", "Condroitina e glicosamina"],
+    "ingredients": "Fórmula com frango, batata-doce, cereais ancestrais, proteínas selecionadas, ômegas 3 e 6, DHA e nutrientes funcionais.",
+    "directions": "Sirva o alimento seco. Adapte a porção à condição corporal do pet e mantenha água fresca sempre disponível.",
+    "storage": "Armazene em ambiente limpo, seco e arejado, mantendo a embalagem fechada e protegida do calor, da umidade e da incidência direta de sol.",
+    "nutrition": [
+      { "label": "Umidade", "value": "10% máx." },
+      { "label": "Proteína bruta", "value": "25% mín." },
+      { "label": "Extrato etéreo", "value": "10% mín." },
+      { "label": "Matéria fibrosa", "value": "3% máx." },
+      { "label": "Matéria mineral", "value": "8% máx." },
+      { "label": "Energia metabolizável", "value": "3.800 kcal/kg" }
+    ]
+  },
+  "neutered-cats": {
+    "category": "Gatos Adultos Castrados",
+    "category_slug": "gatos-adultos-castrados",
+    "pet_size": "Todos os portes",
+    "life_stage": "Adulto castrado",
+    "benefits": ["32% de proteína", "Redução de bolas de pelo", "Saúde intestinal e urinária"],
+    "ingredients": "Fórmula com salmão, frango, batata-doce, cereais ancestrais, proteínas selecionadas, taurina, extrato de yucca e nutrientes funcionais.",
+    "directions": "Divida a recomendação diária em pequenas refeições. Ajuste a quantidade conforme peso, idade e condição corporal do gato, mantendo água limpa sempre disponível.",
+    "storage": "Mantenha em local fresco, seco e sem luz direta. Feche completamente a embalagem após cada uso e não armazene junto a produtos de limpeza.",
+    "nutrition": [
+      { "label": "Umidade", "value": "10% máx." },
+      { "label": "Proteína bruta", "value": "32% mín." },
+      { "label": "Extrato etéreo", "value": "10% mín." },
+      { "label": "Matéria fibrosa", "value": "4% máx." },
+      { "label": "Taurina", "value": "0,1% mín." },
+      { "label": "Energia metabolizável", "value": "3.700 kcal/kg" }
+    ]
+  }
+}
