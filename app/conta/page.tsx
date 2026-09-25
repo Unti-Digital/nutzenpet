@@ -6,6 +6,7 @@ import { Heart, LockKeyhole, LogIn, PackageCheck, ShieldCheck, UserPlus, UserRou
 import { FloatingMotifs } from "../components/floating-motifs";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
+import { PasswordField } from "../components/password-field";
 
 const fieldClass = "h-12 rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#3E1255] focus:bg-white focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)] user-invalid:border-[#CC632B]";
 
@@ -62,7 +63,7 @@ export default function AccountPage() {
           <p className="mt-2 text-sm leading-6 text-slate-500">Consulte pedidos, endereços, assinaturas e indicações.</p>
           {mode === "register" && <label className="mt-7 grid gap-2 text-xs font-bold text-slate-600">Nome completo<input name="name" autoComplete="name" required className={fieldClass} /></label>}
           <label className={`${mode === "login" ? "mt-7" : "mt-4"} grid gap-2 text-xs font-bold text-slate-600`}>E-mail<input name="email" type="email" autoComplete="email" required className={fieldClass} /></label>
-          <label className="mt-4 grid gap-2 text-xs font-bold text-slate-600">Senha<input name="password" type="password" minLength={mode === "register" ? 10 : undefined} autoComplete={mode === "login" ? "current-password" : "new-password"} required className={fieldClass} /></label>
+          <label className="mt-4 grid gap-2 text-xs font-bold text-slate-600">Senha<PasswordField name="password" minLength={mode === "register" ? 10 : undefined} autoComplete={mode === "login" ? "current-password" : "new-password"} required inputClassName={`${fieldClass} w-full`} /></label>
           {message && <p role="alert" className="mt-5 rounded-md bg-orange-50 p-4 text-sm font-bold text-[#CC632B]">{message}</p>}
           <button type="submit" disabled={pending} className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-colors duration-300 hover:bg-[#CC632B] disabled:opacity-50">{mode === "login" ? <LogIn className="h-4 w-4" /> : <UserPlus className="h-4 w-4" />}{pending ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}</button>
           <div className="my-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.16em] text-slate-400"><span className="h-px flex-1 bg-slate-200" /> ou <span className="h-px flex-1 bg-slate-200" /></div>

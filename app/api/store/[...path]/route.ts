@@ -48,6 +48,13 @@ async function proxyStoreRequest(request: NextRequest, context: RouteParams) {
     if (token) headers.set("Cart-Token", token);
     const contentType = request.headers.get("content-type");
     if (contentType) headers.set("Content-Type", contentType);
+    const referral = request.cookies.get("nutzen_ref")?.value;
+    const affiliateLink = request.cookies.get("nutzen_affiliate_link")?.value;
+    const referralCookies = [
+      referral ? `nutzen_ref=${encodeURIComponent(referral)}` : "",
+      affiliateLink ? `nutzen_affiliate_link=${encodeURIComponent(affiliateLink)}` : "",
+    ].filter(Boolean);
+    if (referralCookies.length) headers.set("Cookie", referralCookies.join("; "));
 
     const body = request.method === "GET" || request.method === "HEAD" ? undefined : await request.text();
     const upstream = await fetch(target, {

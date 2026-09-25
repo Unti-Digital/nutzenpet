@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   ArrowRight,
   CalendarDays,
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { BrandButton } from "./components/brand-button";
 import { FloatingMotifs } from "./components/floating-motifs";
+import { ManagedHeroBanner } from "./components/managed-hero-banner";
 import { OpportunityBanners } from "./components/opportunity-banners";
 import { ProductCarousel } from "./components/product-carousel";
 import { SiteFooter } from "./components/site-footer";
@@ -33,8 +34,11 @@ const benefits = [
   { icon: ShieldCheck, value: "ALTO", label: "Teor de proteína" },
 ];
 
-const heroCampaigns = [
+const staticHeroCampaigns = [
   {
+    kind: "static" as const,
+    key: "club-kits",
+    label: "Nutzen Club + kits",
     eyebrow: "Nutzen Club + kits",
     title: "Monte seu kit e cuide do seu pet",
     accent: "todos os meses.",
@@ -48,6 +52,9 @@ const heroCampaigns = [
     icon: CalendarDays,
   },
   {
+    kind: "static" as const,
+    key: "nutrition",
+    label: "Nutrição que eles merecem",
     eyebrow: "Nutrição que eles merecem",
     title: "Nutrição de verdade para uma vida mais",
     accent: "feliz e saudável.",
@@ -61,6 +68,9 @@ const heroCampaigns = [
     icon: PawPrint,
   },
   {
+    kind: "static" as const,
+    key: "sizes",
+    label: "Novos tamanhos",
     eyebrow: "Novos tamanhos",
     title: "Mais opções para montar a rotina",
     accent: "do seu jeito.",
@@ -75,6 +85,37 @@ const heroCampaigns = [
   },
 ];
 
+type ManagedCampaign = {
+  kind: "managed";
+  key: string;
+  label: string;
+  title: string;
+  alt: string;
+  desktopImage: string;
+  mobileImage: string;
+  href: string;
+};
+
+type HeroCampaign = (typeof staticHeroCampaigns)[number] | ManagedCampaign;
+
+function HeroControls({ campaigns, active, onMove, onSelect, className = "" }: {
+  campaigns: HeroCampaign[];
+  active: number;
+  onMove: (direction: -1 | 1) => void;
+  onSelect: (index: number) => void;
+  className?: string;
+}) {
+  return (
+    <div className={`z-30 flex items-center gap-2 ${className}`} aria-label="Controles do destaque">
+      <button type="button" onClick={() => onMove(-1)} aria-label="Destaque anterior" className="grid h-10 w-10 place-items-center rounded-full border border-[#D9C7E3] bg-white text-[#3E1255] shadow-[0_8px_20px_rgba(62,18,85,.13)] transition-all duration-300 hover:scale-90 hover:bg-[#FE8C05] hover:text-white active:scale-75"><ChevronLeft className="h-5 w-5" /></button>
+      <div className="flex max-w-[180px] items-center gap-1.5 overflow-x-auto px-1 [scrollbar-width:none]">
+        {campaigns.map((item, index) => <button key={item.key} type="button" onClick={() => onSelect(index)} aria-label={`Mostrar ${item.label}`} aria-current={active === index} className={`h-2.5 shrink-0 rounded-full transition-all duration-300 ${active === index ? "w-8 bg-[#FE8C05]" : "w-2.5 bg-[#C9B7D3] hover:bg-[#8A5AA0]"}`} />)}
+      </div>
+      <button type="button" onClick={() => onMove(1)} aria-label="Próximo destaque" className="grid h-10 w-10 place-items-center rounded-full border border-[#D9C7E3] bg-white text-[#3E1255] shadow-[0_8px_20px_rgba(62,18,85,.13)] transition-all duration-300 hover:scale-90 hover:bg-[#FE8C05] hover:text-white active:scale-75"><ChevronRight className="h-5 w-5" /></button>
+    </div>
+  );
+}
+
 function Eyebrow({ children, centered = false }: { children: React.ReactNode; centered?: boolean }) {
   return (
     <p className={`flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-[#3E1255] ${centered ? "justify-center" : ""}`}>
@@ -86,18 +127,41 @@ function Eyebrow({ children, centered = false }: { children: React.ReactNode; ce
 
 export default function Home() {
   const [activeCampaign, setActiveCampaign] = useState(0);
+  const [managedCampaigns, setManagedCampaigns] = useState<ManagedCampaign[]>([]);
   const [newsletterSent, setNewsletterSent] = useState(false);
+  const heroCampaigns = useMemo<HeroCampaign[]>(() => [...managedCampaigns, ...staticHeroCampaigns], [managedCampaigns]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/content/banners", { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : { items: [] })
+      .then((payload: { items?: Array<{ id: number; title: string; alt: string; desktop_image: string; mobile_image: string; link: string }> }) => {
+        const items = Array.isArray(payload.items) ? payload.items : [];
+        setManagedCampaigns(items.map((item) => ({
+          kind: "managed",
+          key: `managed-${item.id}`,
+          label: item.title,
+          title: item.title,
+          alt: item.alt,
+          desktopImage: item.desktop_image,
+          mobileImage: item.mobile_image,
+          href: item.link,
+        })));
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (reducedMotion.matches) return;
 
-    const timer = window.setInterval(() => {
+    const timer = window.setTimeout(() => {
       setActiveCampaign((current) => (current + 1) % heroCampaigns.length);
-    }, 5200);
+    }, 8000);
 
-    return () => window.clearInterval(timer);
-  }, []);
+    return () => window.clearTimeout(timer);
+  }, [activeCampaign, heroCampaigns.length]);
 
   function handleNewsletter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -110,7 +174,7 @@ export default function Home() {
   }
 
   const campaign = heroCampaigns[activeCampaign];
-  const CampaignIcon = campaign.icon;
+  const StaticCampaignIcon = campaign.kind === "static" ? campaign.icon : Sparkles;
 
   return (
     <main className="min-h-screen bg-[#fffef9] text-slate-900">
@@ -118,7 +182,13 @@ export default function Home() {
 
       <section id="inicio" className="relative bg-[#F5EFF8] px-3 pb-8 pt-4 sm:px-5 sm:pt-6 lg:pb-10">
         <FloatingMotifs className="hidden text-[#D9C7E3] opacity-70 xl:block" />
-        <div className="relative mx-auto max-w-[1340px] overflow-hidden rounded-lg bg-[#3E1255] px-5 py-6 text-white shadow-[0_20px_55px_rgba(62,18,85,.16)] sm:px-8 sm:py-12 lg:py-14">
+        <div className={`relative mx-auto max-w-[1340px] overflow-hidden rounded-lg bg-[#3E1255] text-white shadow-[0_20px_55px_rgba(62,18,85,.16)] ${campaign.kind === "static" ? "px-5 py-6 sm:px-8 sm:py-12 lg:py-14" : ""}`}>
+          {campaign.kind === "managed" ? (
+            <div key={campaign.key} className="reveal-up relative aspect-[4/5] w-full bg-[#3E1255] sm:aspect-[16/7]">
+              <ManagedHeroBanner title={campaign.title} alt={campaign.alt} desktopImage={campaign.desktopImage} mobileImage={campaign.mobileImage} href={campaign.href} />
+            </div>
+          ) : (
+          <>
           <FloatingMotifs className="text-white opacity-10" />
           <div className="relative mx-auto grid max-w-[1240px] items-center gap-8 lg:grid-cols-[0.85fr_1.15fr]">
           <div key={campaign.eyebrow} className="relative z-10 text-center lg:text-left">
@@ -188,16 +258,14 @@ export default function Home() {
                 </>
               )}
             </div>
-            {campaign.visual !== "sizes" && <span className="sonar sonar-orange absolute right-[10%] top-[7%] z-20 grid h-11 w-11 place-items-center rounded-full bg-[#FE8C05] text-white"><CampaignIcon className="relative z-10 h-5 w-5" /></span>}
-            <div className="absolute bottom-0 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 sm:left-auto sm:right-[4%] sm:translate-x-0" aria-label="Controles do destaque">
-              <button type="button" onClick={() => moveCampaign(-1)} aria-label="Destaque anterior" className="grid h-10 w-10 place-items-center rounded-full border border-white/35 bg-white text-[#3E1255] shadow-[0_8px_20px_rgba(0,0,0,.16)] transition-all duration-300 hover:scale-90 hover:bg-[#FE8C05] hover:text-white active:scale-75"><ChevronLeft className="h-5 w-5" /></button>
-              <div className="flex items-center gap-1.5 px-1">
-                {heroCampaigns.map((item, index) => <button key={item.eyebrow} type="button" onClick={() => setActiveCampaign(index)} aria-label={`Mostrar ${item.eyebrow}`} aria-current={activeCampaign === index} className={`h-2.5 rounded-full transition-all duration-300 ${activeCampaign === index ? "w-8 bg-[#FE8C05]" : "w-2.5 bg-white/30 hover:bg-white/60"}`} />)}
-              </div>
-              <button type="button" onClick={() => moveCampaign(1)} aria-label="Próximo destaque" className="grid h-10 w-10 place-items-center rounded-full border border-white/35 bg-white text-[#3E1255] shadow-[0_8px_20px_rgba(0,0,0,.16)] transition-all duration-300 hover:scale-90 hover:bg-[#FE8C05] hover:text-white active:scale-75"><ChevronRight className="h-5 w-5" /></button>
-            </div>
+            {campaign.visual !== "sizes" && <span className="sonar sonar-orange absolute right-[10%] top-[7%] z-20 grid h-11 w-11 place-items-center rounded-full bg-[#FE8C05] text-white"><StaticCampaignIcon className="relative z-10 h-5 w-5" /></span>}
           </div>
         </div>
+          </>
+          )}
+        </div>
+        <div className="relative mx-auto mt-4 flex max-w-[1340px] justify-center">
+          <HeroControls campaigns={heroCampaigns} active={activeCampaign} onMove={moveCampaign} onSelect={setActiveCampaign} />
         </div>
       </section>
 
@@ -269,7 +337,7 @@ export default function Home() {
         <FloatingMotifs className="opacity-30" />
         <div className="reveal-up relative mx-auto grid max-w-[1240px] overflow-hidden rounded-lg bg-[#F5EFF8] md:grid-cols-[280px_1fr] lg:grid-cols-[360px_1fr]">
           <div className="relative min-h-[270px] lg:min-h-[340px]">
-            <Image src="/images/differentials-dog-v3.png" alt="Cachorro saudável" fill loading="eager" sizes="(max-width: 767px) 90vw, (max-width: 1024px) 280px, 360px" className="object-contain object-bottom" />
+            <Image src="/images/differentials-dog-v3.png" alt="Cachorro saudável" fill sizes="(max-width: 767px) 90vw, (max-width: 1024px) 280px, 360px" className="object-contain object-bottom" />
           </div>
           <div className="flex flex-col justify-center px-6 pb-10 pt-4 sm:px-9 md:py-10 lg:px-10 lg:py-12">
             <Eyebrow>Qualidade que você sente</Eyebrow>
@@ -309,7 +377,7 @@ export default function Home() {
             {posts.slice(0, 3).map((post, index) => (
               <article key={post.title} className="reveal-up group transition-transform duration-300 hover:-translate-y-2" style={{ animationDelay: `${index * 100}ms` }}>
                 <div className="relative aspect-[4/3] rounded-lg shadow-[0_8px_22px_rgba(18,63,85,.12)] transition-transform duration-300 group-hover:-translate-y-1">
-                  <Image src={post.image} alt={post.title} fill loading="eager" sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 310px" className="rounded-lg object-cover" />
+                  <Image src={post.image} alt={post.title} fill sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 310px" className="rounded-lg object-cover" />
                 </div>
                 <p className="mt-4 text-[10px] font-black uppercase tracking-[0.16em] text-[#3E1255]">{post.tag}</p>
                 <h3 className="mt-2 text-lg font-black leading-tight text-slate-950">{post.title}</h3>

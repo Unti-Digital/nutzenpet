@@ -88,6 +88,7 @@ function createGenericProduct(storeProduct: StoreApiProduct): Product {
   const priceValue = minorUnitValue(storeProduct.prices.price, storeProduct.prices.currency_minor_unit);
   const weight = getProductWeight(storeProduct);
   const remoteImages = storeProduct.images.map((image) => image.src).filter(Boolean);
+  const subscription = storeProduct.extensions?.["nutzen-subscriptions"];
   const lineNames: Record<ProductLine, string> = {
     "medium-large-dogs": "Médias e grandes",
     "small-dogs": "Raças pequenas",
@@ -119,7 +120,8 @@ function createGenericProduct(storeProduct: StoreApiProduct): Product {
     ingredients: fields?.ingredients || fields?.composition || "Informações em atualização.",
     directions: fields?.directions || "Consulte a embalagem e a orientação do profissional responsável.",
     storage: fields?.storage || "Conserve conforme as instruções da embalagem.",
-    feedingGuide: [],
+    feedingGuide: fields?.feeding_guide ?? [],
+    subscription: subscription ? { eligible: subscription.eligible, automaticRenewalAvailable: subscription.automatic_renewal_available, plans: subscription.plans.map((plan) => ({ id: plan.id, name: plan.name, interval: plan.interval, intervalUnit: plan.interval_unit, discountType: plan.discount_type, discountValue: plan.discount_value })) } : undefined,
   };
 }
 
@@ -130,6 +132,7 @@ export function mergeStoreProduct(storeProduct: StoreApiProduct): Product {
   const fields = storeProduct.extensions?.["nutzen-fields"];
   const priceValue = minorUnitValue(storeProduct.prices.price, storeProduct.prices.currency_minor_unit);
   const remoteImages = storeProduct.images.map((image) => image.src).filter(Boolean);
+  const subscription = storeProduct.extensions?.["nutzen-subscriptions"];
 
   return {
     ...visual,
@@ -146,7 +149,9 @@ export function mergeStoreProduct(storeProduct: StoreApiProduct): Product {
     directions: fields?.directions || visual.directions,
     storage: fields?.storage || visual.storage,
     nutrition: fields?.nutrition?.length ? fields.nutrition : visual.nutrition,
+    feedingGuide: fields?.feeding_guide?.length ? fields.feeding_guide : visual.feedingGuide,
     features: fields?.benefits?.length ? fields.benefits : visual.features,
+    subscription: subscription ? { eligible: subscription.eligible, automaticRenewalAvailable: subscription.automatic_renewal_available, plans: subscription.plans.map((plan) => ({ id: plan.id, name: plan.name, interval: plan.interval, intervalUnit: plan.interval_unit, discountType: plan.discount_type, discountValue: plan.discount_value })) } : undefined,
   };
 }
 
@@ -155,7 +160,8 @@ export async function getCommerceCatalog(): Promise<CommerceCatalog> {
 
   try {
     const storeProducts = await storeApiRequest<StoreApiProduct[]>("products?per_page=100", {
-      cache: "no-store",
+      revalidate: 300,
+      tags: ["woocommerce-products"],
     });
     const mapped = storeProducts.map(mergeStoreProduct);
     return mapped.length > 0
@@ -173,7 +179,8 @@ export async function getCommerceProduct(slug: string): Promise<Product | undefi
 
   try {
     const result = await storeApiRequest<StoreApiProduct[]>(`products?slug=${encodeURIComponent(slug)}`, {
-      cache: "no-store",
+      revalidate: 300,
+      tags: ["woocommerce-products", `woocommerce-product-${slug}`],
     });
     return result[0] ? mergeStoreProduct(result[0]) ?? fallback : fallback;
   } catch (error) {

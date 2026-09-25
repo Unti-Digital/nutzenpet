@@ -28,6 +28,16 @@ const localWordPressUploads = [
 ];
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  compress: true,
+  async headers() {
+    return [
+      {
+        source: "/:asset(produtos|images|logo)/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+    ];
+  },
   async redirects() {
     return [
       {

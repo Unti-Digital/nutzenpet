@@ -21,6 +21,7 @@ import { FloatingMotifs } from "../components/floating-motifs";
 import { ProductCarousel } from "../components/product-carousel";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
+import { SubscriptionApplication } from "../components/subscription-application";
 import { featuredProducts } from "../data/products";
 import clubPets from "../../public/images/hero-pets-v3.png";
 import kitPets from "../../fotos-sobre/cachorro-gato.jpg";
@@ -86,9 +87,9 @@ export default function NutzenClubPage() {
         <div className="relative mx-auto max-w-[1340px] overflow-hidden rounded-lg bg-[#3E1255] text-white shadow-[0_24px_70px_rgba(62,18,85,.2)]">
           <span className="absolute -right-[10%] top-[9%] h-[80%] w-[60%] rotate-[-7deg] rounded-[42%_58%_48%_52%] bg-[#5B2374]" aria-hidden="true" />
           <div className="relative grid min-h-[610px] lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="reveal-up relative z-20 flex flex-col justify-center px-6 pb-8 pt-12 text-center sm:px-10 sm:py-16 lg:px-16 lg:text-left">
+            <div className="reveal-up relative z-20 flex min-w-0 flex-col justify-center px-5 pb-8 pt-12 text-center sm:px-10 sm:py-16 lg:px-16 lg:text-left">
               <p className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#D9C7E3] lg:justify-start"><Crown className="h-4 w-4 text-[#FE8C05]" /> Nutzen Club</p>
-              <h1 className="mx-auto mt-5 max-w-2xl text-4xl font-black leading-[1.08] sm:text-6xl lg:mx-0">Cuidado constante, de um jeito <span className="text-[#FE8C05]">mais simples.</span></h1>
+              <h1 className="mx-auto mt-5 max-w-full break-words text-3xl font-black leading-[1.12] sm:max-w-2xl sm:text-6xl sm:leading-[1.08] lg:mx-0">Cuidado constante, de um jeito <span className="text-[#FE8C05]">mais simples.</span></h1>
               <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-white/75 lg:mx-0">Receba a nutrição do seu pet na frequência ideal, monte combinações e acompanhe tudo pela sua conta.</p>
               <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
                 <BrandButton href="#como-funciona" variant="orange">Conhecer o clube</BrandButton>
@@ -167,9 +168,11 @@ export default function NutzenClubPage() {
       <section id="kits" className="bg-white px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto grid max-w-[1240px] overflow-hidden rounded-lg bg-[#F5EFF8] lg:grid-cols-[0.68fr_1.32fr]">
           <div className="relative min-h-[250px] sm:min-h-[300px] lg:min-h-[350px]"><span className="absolute bottom-0 left-[8%] h-[78%] w-[84%] rounded-t-full bg-[#E2D4E9]" aria-hidden="true" /><Image src={kitPets} alt="Cachorro e gato ao lado da nutrição escolhida" fill sizes="(max-width: 1024px) 92vw, 460px" className="object-contain object-bottom p-3 mix-blend-multiply sm:p-5" /></div>
-          <div className="flex flex-col justify-center px-6 py-10 text-center sm:px-12 lg:text-left"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E1255]">Seu pet, sua combinação</p><h2 className="mt-4 text-3xl font-black leading-tight text-[#123F55] sm:text-5xl">Monte seu kit e faça parte do Nutzen Club.</h2><p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600">Escolha os produtos, combine tamanhos disponíveis e organize a frequência que melhor acompanha a rotina da casa.</p><BrandButton href="/produto#kits" variant="orange" className="mt-7 self-center lg:self-start">Quero montar meu kit</BrandButton></div>
+          <div className="flex flex-col justify-center px-6 py-10 text-center sm:px-12 lg:text-left"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3E1255]">Seu pet, sua combinação</p><h2 className="mt-4 text-3xl font-black leading-tight text-[#123F55] sm:text-5xl">Monte seu kit e faça parte do Nutzen Club.</h2><p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600">Escolha os produtos, combine tamanhos disponíveis e organize a frequência que melhor acompanha a rotina da casa.</p><BrandButton href="#cadastro-club" variant="orange" className="mt-7 self-center lg:self-start">Quero montar meu kit</BrandButton></div>
         </div>
       </section>
+
+      <SubscriptionApplication />
 
       <section id="faq" className="scroll-mt-24 bg-[#F5EFF8] px-5 py-16 sm:px-8 sm:py-24">
         <div className="mx-auto grid max-w-[1180px] gap-10 lg:grid-cols-[0.65fr_1.35fr] lg:gap-16">

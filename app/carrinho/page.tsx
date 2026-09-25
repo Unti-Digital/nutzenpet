@@ -10,7 +10,7 @@ import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 
 export default function CartPage() {
-  const { items, itemCount, subtotal, total, increment, decrement, removeItem, coupons, applyCoupon, removeCoupon, error, hasCalculatedShipping, shippingRates } = useCart();
+  const { items, itemCount, subtotal, total, purchaseType, increment, decrement, removeItem, coupons, applyCoupon, removeCoupon, error, hasCalculatedShipping, shippingRates } = useCart();
   const [coupon, setCoupon] = useState("");
   const [couponPending, setCouponPending] = useState(false);
   const selectedShipping = shippingRates.flatMap((group) => group.shipping_rates).find((rate) => rate.selected);
@@ -48,12 +48,13 @@ export default function CartPage() {
         ) : (
           <div className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1fr_360px]">
             <div className="space-y-4">
-              {items.map(({ product, quantity }, index) => (
+              {items.map(({ product, quantity, subscription }, index) => (
                 <article key={product.slug} className="reveal-up grid items-center gap-5 rounded-lg bg-white p-5 shadow-[0_12px_35px_rgba(18,63,85,.07)] sm:grid-cols-[140px_1fr_auto] sm:p-6" style={{ animationDelay: `${index * 80}ms` }}>
                   <Link href={`/produto/${product.slug}`} className="relative mx-auto h-36 w-full max-w-40 sm:mx-0"><Image src={product.images[0]} alt={product.name} fill sizes="160px" className="object-contain" /></Link>
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.16em]" style={{ color: product.accent }}>Linha Nutzen · {product.weight}</p>
                     <Link href={`/produto/${product.slug}`} className="mt-2 block text-lg font-black leading-6 text-[#123F55] transition-colors duration-300 hover:text-[#FE8C05]">{product.name}</Link>
+                    {subscription && <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-[0.1em]"><span className="rounded-full bg-[#F5EFF8] px-3 py-2 text-[#3E1255]">Assinatura</span><span className="rounded-full bg-orange-50 px-3 py-2 text-[#CC632B]">{subscription.frequencyLabel}</span></div>}
                     <div className="mt-5 flex w-fit items-center gap-3 rounded-full bg-slate-100 px-2 py-1">
                       <button type="button" onClick={() => decrement(product.slug)} aria-label={`Diminuir quantidade de ${product.name}`} className="grid h-8 w-8 place-items-center rounded-full transition-all duration-300 hover:scale-90 hover:bg-white hover:text-[#FE8C05]"><Minus className="h-4 w-4" /></button>
                       <strong className="min-w-5 text-center text-sm">{quantity}</strong>
@@ -61,7 +62,7 @@ export default function CartPage() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between gap-5 sm:block sm:text-right">
-                    <strong className="text-xl font-black text-[#3E1255]">{formatCurrency(product.priceValue * quantity)}</strong>
+                    <strong className="text-xl font-black text-[#3E1255]">{formatCurrency(product.priceValue * quantity)}{subscription && <small className="ml-1 text-xs font-bold text-slate-500">/ ciclo</small>}</strong>
                     <button type="button" onClick={() => removeItem(product.slug)} aria-label={`Remover ${product.name}`} className="grid h-9 w-9 place-items-center rounded-full text-slate-400 transition-all duration-300 hover:scale-90 hover:bg-orange-50 hover:text-[#CC632B] sm:ml-auto sm:mt-6"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </article>
@@ -78,12 +79,13 @@ export default function CartPage() {
             </div>
 
             <aside className="h-fit rounded-lg bg-[#3E1255] p-7 text-white shadow-[0_18px_45px_rgba(62,18,85,.18)] lg:sticky lg:top-28">
-              <h2 className="text-2xl font-black">Resumo do pedido</h2>
+              <h2 className="text-2xl font-black">{purchaseType === "subscription" ? "Resumo da assinatura" : "Resumo do pedido"}</h2>
               <div className="mt-6 grid gap-4 border-b border-white/15 pb-6 text-sm">
                 <div className="flex justify-between text-white/70"><span>Produtos ({itemCount})</span><span>{formatCurrency(subtotal)}</span></div>
                 <div className="flex justify-between gap-4 text-white/70"><span>Entrega</span><span className="text-right font-bold text-[#D9C7E3]">{hasCalculatedShipping ? selectedShipping?.name ?? "Selecione no checkout" : "Calculada no checkout"}</span></div>
               </div>
               <div className="flex items-end justify-between pt-6"><strong>Total</strong><strong className="text-2xl text-[#FE8C05]">{formatCurrency(total)}</strong></div>
+              {purchaseType === "subscription" && <div className="mt-4 rounded-md bg-white/10 p-4 text-xs leading-5 text-white/75"><strong className="block text-white">Total recorrente: {formatCurrency(total)}</strong><span>{items[0]?.subscription?.frequencyLabel}. A ativação e a primeira renovação dependem de um gateway recorrente compatível.</span></div>}
               <Link href="/checkout" className="group mt-7 flex h-13 items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black transition-all duration-300 hover:scale-[0.98] hover:bg-[#CC632B] active:scale-95">Ir para o checkout <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link>
               <div className="mt-7 grid gap-3 border-t border-white/15 pt-6 text-xs text-white/70">
                 <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#D9C7E3]" /> Totais calculados pelo WooCommerce</span>

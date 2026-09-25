@@ -22,8 +22,8 @@ export default async function ProductIndexPage() {
       <SiteHeader />
       <section className="relative overflow-hidden bg-[#3E1255] px-5 py-14 text-white sm:px-8 sm:py-20">
         <FloatingMotifs className="text-[#D9C7E3] opacity-35" />
-        <div className="relative mx-auto grid max-w-[1180px] items-center gap-8 md:grid-cols-[1fr_390px] lg:grid-cols-[1fr_460px]">
-          <div className="reveal-up"><p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#D9C7E3]"><Sparkles className="h-4 w-4" /> Nutrição para cada fase</p><h1 className="mt-4 max-w-3xl text-4xl font-black leading-tight sm:text-6xl">Conheça as linhas NutzenPet</h1><p className="mt-5 max-w-xl text-sm leading-7 text-white/70">Fórmulas completas para acompanhar cães e gatos com sabor, equilíbrio e cuidado todos os dias.</p></div>
+        <div className="relative mx-auto grid min-w-0 max-w-[1180px] grid-cols-1 items-center gap-8 md:grid-cols-[minmax(0,1fr)_390px] lg:grid-cols-[minmax(0,1fr)_460px]">
+          <div className="reveal-up min-w-0"><p className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#D9C7E3]"><Sparkles className="h-4 w-4" /> Nutrição para cada fase</p><h1 className="mt-4 max-w-3xl break-words text-4xl font-black leading-tight sm:text-6xl">Conheça as linhas NutzenPet</h1><p className="mt-5 max-w-xl text-sm leading-7 text-white/70">Fórmulas completas para acompanhar cães e gatos com sabor, equilíbrio e cuidado todos os dias.</p></div>
           <ProductHeroSlider />
         </div>
       </section>

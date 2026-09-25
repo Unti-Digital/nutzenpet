@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Fields
  * Description: Construtor de campos técnicos de produtos e integração com as APIs do WooCommerce.
- * Version: 0.2.0
+ * Version: 0.3.2
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -17,7 +17,7 @@ use Automattic\WooCommerce\StoreApi\Schemas\V1\ProductSchema;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Fields_Plugin {
-	private const VERSION      = '0.2.0';
+	private const VERSION      = '0.3.2';
 	private const OPTION       = 'nutzen_fields_definitions';
 	private const NONCE_ACTION = 'nutzen_fields_save_product';
 	private const NONCE_NAME   = 'nutzen_fields_nonce';
@@ -26,9 +26,10 @@ final class Nutzen_Fields_Plugin {
 	private const DEFAULT_FIELDS = array(
 		array( 'key' => '_nutzen_ingredients', 'label' => 'Ingredientes', 'type' => 'textarea', 'description' => 'Lista completa de ingredientes do alimento.', 'options' => '', 'public' => '1' ),
 		array( 'key' => '_nutzen_composition', 'label' => 'Composição', 'type' => 'textarea', 'description' => 'Composição básica ou garantida.', 'options' => '', 'public' => '1' ),
-		array( 'key' => '_nutzen_nutrition', 'label' => 'Informações nutricionais', 'type' => 'json', 'description' => 'JSON no formato [{"label":"Proteína","value":"23%"}].', 'options' => '', 'public' => '1' ),
+		array( 'key' => '_nutzen_nutrition', 'label' => 'Informações nutricionais', 'type' => 'json', 'description' => 'Adicione cada nutriente e seu respectivo valor.', 'options' => '', 'public' => '1' ),
 		array( 'key' => '_nutzen_benefits', 'label' => 'Benefícios', 'type' => 'lines', 'description' => 'Informe um benefício por linha.', 'options' => '', 'public' => '1' ),
 		array( 'key' => '_nutzen_directions', 'label' => 'Recomendações de uso', 'type' => 'textarea', 'description' => 'Orientações de consumo e adaptação.', 'options' => '', 'public' => '1' ),
+		array( 'key' => '_nutzen_feeding_guide', 'label' => 'Tabela de quantidade diária', 'type' => 'feeding_guide', 'description' => 'Adicione o peso do animal e a quantidade diária recomendada.', 'options' => '', 'public' => '1' ),
 		array( 'key' => '_nutzen_storage', 'label' => 'Armazenamento', 'type' => 'textarea', 'description' => 'Cuidados para conservação do produto.', 'options' => '', 'public' => '1' ),
 		array( 'key' => '_nutzen_pet_size', 'label' => 'Porte do animal', 'type' => 'text', 'description' => '', 'options' => '', 'public' => '1' ),
 		array( 'key' => '_nutzen_life_stage', 'label' => 'Faixa etária', 'type' => 'text', 'description' => '', 'options' => '', 'public' => '1' ),
@@ -70,7 +71,22 @@ final class Nutzen_Fields_Plugin {
 	/** @return array<int, array<string, string>> */
 	private static function fields(): array {
 		$stored = get_option( self::OPTION, null );
-		return is_array( $stored ) ? array_values( $stored ) : self::DEFAULT_FIELDS;
+		$fields = is_array( $stored ) ? array_values( $stored ) : self::DEFAULT_FIELDS;
+		$has_feeding_guide = false;
+		foreach ( $fields as &$field ) {
+			if ( '_nutzen_nutrition' === ( $field['key'] ?? '' ) && 'json' === ( $field['type'] ?? '' ) && str_contains( (string) ( $field['description'] ?? '' ), 'JSON' ) ) {
+				$field['description'] = 'Adicione cada nutriente e seu respectivo valor.';
+			}
+			if ( '_nutzen_feeding_guide' === ( $field['key'] ?? '' ) ) $has_feeding_guide = true;
+		}
+		unset( $field );
+		if ( ! $has_feeding_guide ) {
+			$definition = array( 'key' => '_nutzen_feeding_guide', 'label' => 'Tabela de quantidade diária', 'type' => 'feeding_guide', 'description' => 'Adicione o peso do animal e a quantidade diária recomendada.', 'options' => '', 'public' => '1' );
+			$position   = count( $fields );
+			foreach ( $fields as $index => $field ) if ( '_nutzen_directions' === ( $field['key'] ?? '' ) ) $position = $index + 1;
+			array_splice( $fields, $position, 0, array( $definition ) );
+		}
+		return $fields;
 	}
 
 	public static function register_meta(): void {
@@ -100,7 +116,7 @@ final class Nutzen_Fields_Plugin {
 		if ( 'nutzen-switch_page_nutzen-fields' === $hook || 'product' === $post_type ) {
 			wp_enqueue_style( 'nutzen-fields-admin', plugins_url( 'assets/admin-fields.css', __FILE__ ), array(), self::VERSION );
 		}
-		if ( 'nutzen-switch_page_nutzen-fields' === $hook ) {
+		if ( 'nutzen-switch_page_nutzen-fields' === $hook || 'product' === $post_type ) {
 			wp_enqueue_script( 'nutzen-fields-admin', plugins_url( 'assets/admin-fields.js', __FILE__ ), array(), self::VERSION, true );
 		}
 	}
@@ -131,7 +147,7 @@ final class Nutzen_Fields_Plugin {
 		$key = sanitize_key( preg_replace( '/^_?nutzen_/', '', (string) ( $definition['key'] ?? '' ) ) );
 		if ( '' === $key ) $key = 'campo_' . wp_generate_password( 6, false, false );
 		$type = sanitize_key( (string) ( $definition['type'] ?? 'text' ) );
-		$allowed = array( 'text', 'textarea', 'number', 'url', 'select', 'lines', 'json' );
+		$allowed = array( 'text', 'textarea', 'number', 'url', 'select', 'lines', 'json', 'feeding_guide' );
 		return array(
 			'key'         => '_nutzen_' . $key,
 			'label'       => sanitize_text_field( (string) ( $definition['label'] ?? '' ) ),
@@ -166,7 +182,7 @@ final class Nutzen_Fields_Plugin {
 	/** @param array<string, string> $field @param int|string $index */
 	private static function render_definition_row( array $field, $index ): void {
 		$name = 'nutzen_fields[' . $index . ']';
-		$types = array( 'text' => 'Texto curto', 'textarea' => 'Texto longo', 'number' => 'Número', 'url' => 'URL / arquivo', 'select' => 'Lista de opções', 'lines' => 'Lista (um item por linha)', 'json' => 'Tabela nutricional (JSON)' );
+		$types = array( 'text' => 'Texto curto', 'textarea' => 'Texto longo', 'number' => 'Número', 'url' => 'URL / arquivo', 'select' => 'Lista de opções', 'lines' => 'Lista (um item por linha)', 'json' => 'Tabela repetível (nome e valor)', 'feeding_guide' => 'Tabela de porções (peso e quantidade)' );
 		?>
 		<article class="nutzen-field-row" data-field-row>
 			<div class="nutzen-field-row__top"><span class="dashicons dashicons-move" aria-hidden="true"></span><strong data-field-title><?php echo esc_html( $field['label'] ); ?></strong><div><button type="button" class="button-link" data-move-up aria-label="Mover para cima">↑</button><button type="button" class="button-link" data-move-down aria-label="Mover para baixo">↓</button><button type="button" class="button-link" data-duplicate-field>Duplicar</button><button type="button" class="button-link-delete" data-remove-field>Remover</button></div></div>
@@ -191,7 +207,9 @@ final class Nutzen_Fields_Plugin {
 		echo '<div class="nutzen-product-fields">';
 		foreach ( self::fields() as $field ) {
 			$value = (string) get_post_meta( $post->ID, $field['key'], true );
-			echo '<div class="nutzen-product-field"><label for="' . esc_attr( $field['key'] ) . '"><strong>' . esc_html( $field['label'] ) . '</strong></label>';
+			$classes = 'nutzen-product-field';
+			if ( in_array( $field['type'], array( 'json', 'feeding_guide' ), true ) ) $classes .= ' nutzen-product-field--wide nutzen-product-field--repeater';
+			echo '<div class="' . esc_attr( $classes ) . '"><label for="' . esc_attr( $field['key'] ) . '"><strong>' . esc_html( $field['label'] ) . '</strong></label>';
 			self::render_product_input( $field, $value );
 			if ( $field['description'] ) echo '<p class="description">' . esc_html( $field['description'] ) . '</p>';
 			echo '</div>';
@@ -202,7 +220,26 @@ final class Nutzen_Fields_Plugin {
 	/** @param array<string, string> $field */
 	private static function render_product_input( array $field, string $value ): void {
 		$key = $field['key'];
-		if ( in_array( $field['type'], array( 'textarea', 'json', 'lines' ), true ) ) {
+		if ( in_array( $field['type'], array( 'json', 'feeding_guide' ), true ) ) {
+			$rows = json_decode( $value, true );
+			$is_feeding = 'feeding_guide' === $field['type'];
+			$first_key  = $is_feeding ? 'weight' : 'label';
+			$second_key = $is_feeding ? 'amount' : 'value';
+			if ( ! is_array( $rows ) || array() === $rows ) $rows = array( array( $first_key => '', $second_key => '' ) );
+			echo '<div class="nutzen-repeater" data-nutzen-repeater data-first-key="' . esc_attr( $first_key ) . '" data-second-key="' . esc_attr( $second_key ) . '">';
+			echo '<input type="hidden" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" data-nutzen-repeater-value>';
+			echo '<div class="nutzen-repeater__rows" data-nutzen-repeater-rows>';
+			foreach ( $rows as $row ) {
+				if ( ! is_array( $row ) ) continue;
+				self::render_repeater_row( (string) ( $row[ $first_key ] ?? '' ), (string) ( $row[ $second_key ] ?? '' ), $is_feeding );
+			}
+			echo '</div><button type="button" class="button" data-nutzen-repeater-add>Adicionar item</button>';
+			echo '<template data-nutzen-repeater-template>';
+			self::render_repeater_row( '', '', $is_feeding );
+			echo '</template></div>';
+			return;
+		}
+		if ( in_array( $field['type'], array( 'textarea', 'lines' ), true ) ) {
 			echo '<textarea class="widefat" rows="5" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '">' . esc_textarea( $value ) . '</textarea>';
 			return;
 		}
@@ -214,6 +251,16 @@ final class Nutzen_Fields_Plugin {
 		}
 		$type = in_array( $field['type'], array( 'url', 'number' ), true ) ? $field['type'] : 'text';
 		echo '<input class="widefat" type="' . esc_attr( $type ) . '" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '"' . ( 'number' === $type ? ' step="any"' : '' ) . '>';
+	}
+
+	private static function render_repeater_row( string $first, string $second, bool $is_feeding = false ): void {
+		?>
+		<div class="nutzen-repeater__row" data-nutzen-repeater-row>
+			<label><span class="nutzen-repeater__label"><?php echo esc_html( $is_feeding ? 'Peso do animal' : 'Item nutricional' ); ?></span><input type="text" value="<?php echo esc_attr( $first ); ?>" placeholder="<?php echo esc_attr( $is_feeding ? 'Ex.: 5 a 6 kg' : 'Ex.: Proteína bruta' ); ?>" data-nutzen-repeater-first></label>
+			<label><span class="nutzen-repeater__label"><?php echo esc_html( $is_feeding ? 'Quantidade diária' : 'Valor' ); ?></span><input type="text" value="<?php echo esc_attr( $second ); ?>" placeholder="<?php echo esc_attr( $is_feeding ? 'Ex.: 70 a 80 g' : 'Ex.: 32% mín.' ); ?>" data-nutzen-repeater-second></label>
+			<div class="nutzen-repeater__actions"><button type="button" class="button-link" data-nutzen-repeater-up aria-label="Mover item para cima">↑</button><button type="button" class="button-link" data-nutzen-repeater-down aria-label="Mover item para baixo">↓</button><button type="button" class="button-link-delete" data-nutzen-repeater-remove>Remover</button></div>
+		</div>
+		<?php
 	}
 
 	public static function save_product( int $post_id, WP_Post $post ): void {
@@ -230,11 +277,17 @@ final class Nutzen_Fields_Plugin {
 		if ( 'url' === $type ) return esc_url_raw( $value );
 		if ( 'number' === $type ) return '' === trim( $value ) ? '' : (string) (float) str_replace( ',', '.', $value );
 		if ( 'select' === $type ) return array_key_exists( $value, self::parse_options( $options ) ) ? sanitize_text_field( $value ) : '';
-		if ( 'json' === $type ) {
+		if ( in_array( $type, array( 'json', 'feeding_guide' ), true ) ) {
 			$decoded = json_decode( $value, true );
 			if ( ! is_array( $decoded ) ) return '';
 			$clean = array();
-			foreach ( $decoded as $row ) if ( is_array( $row ) && isset( $row['label'], $row['value'] ) ) $clean[] = array( 'label' => sanitize_text_field( $row['label'] ), 'value' => sanitize_text_field( $row['value'] ) );
+			$first_key  = 'feeding_guide' === $type ? 'weight' : 'label';
+			$second_key = 'feeding_guide' === $type ? 'amount' : 'value';
+			foreach ( $decoded as $row ) if ( is_array( $row ) && isset( $row[ $first_key ], $row[ $second_key ] ) ) {
+				$first  = sanitize_text_field( $row[ $first_key ] );
+				$second = sanitize_text_field( $row[ $second_key ] );
+				if ( '' !== $first || '' !== $second ) $clean[] = array( $first_key => $first, $second_key => $second );
+			}
 			return wp_json_encode( $clean, JSON_UNESCAPED_UNICODE );
 		}
 		return in_array( $type, array( 'textarea', 'lines' ), true ) ? sanitize_textarea_field( $value ) : sanitize_text_field( $value );
@@ -261,6 +314,7 @@ final class Nutzen_Fields_Plugin {
 	public static function store_api_data( WC_Product $product ): array {
 		$post_id   = $product->get_id();
 		$nutrition = json_decode( (string) get_post_meta( $post_id, '_nutzen_nutrition', true ), true );
+		$feeding    = json_decode( (string) get_post_meta( $post_id, '_nutzen_feeding_guide', true ), true );
 		$benefits  = preg_split( '/\R/', (string) get_post_meta( $post_id, '_nutzen_benefits', true ) );
 		$custom    = array();
 		foreach ( self::fields() as $field ) {
@@ -272,6 +326,7 @@ final class Nutzen_Fields_Plugin {
 		return array(
 			'ingredients' => (string) get_post_meta( $post_id, '_nutzen_ingredients', true ), 'composition' => (string) get_post_meta( $post_id, '_nutzen_composition', true ),
 			'nutrition' => is_array( $nutrition ) ? $nutrition : array(), 'benefits' => array_values( array_filter( array_map( 'trim', is_array( $benefits ) ? $benefits : array() ) ) ),
+			'feeding_guide' => is_array( $feeding ) ? $feeding : array(),
 			'directions' => (string) get_post_meta( $post_id, '_nutzen_directions', true ), 'storage' => (string) get_post_meta( $post_id, '_nutzen_storage', true ),
 			'pet_size' => (string) get_post_meta( $post_id, '_nutzen_pet_size', true ), 'life_stage' => (string) get_post_meta( $post_id, '_nutzen_life_stage', true ),
 			'package_weight' => (string) get_post_meta( $post_id, '_nutzen_package_weight', true ), 'technical_information' => (string) get_post_meta( $post_id, '_nutzen_technical_information', true ),
@@ -287,6 +342,7 @@ final class Nutzen_Fields_Plugin {
 			'ingredients' => $text, 'composition' => $text, 'directions' => $text, 'storage' => $text, 'pet_size' => $text, 'life_stage' => $text, 'package_weight' => $text, 'technical_information' => $text, 'complementary_information' => $text, 'product_line' => $text,
 			'pdf_url' => array( 'description' => 'Technical PDF URL.', 'type' => 'string', 'format' => 'uri', 'readonly' => true ),
 			'nutrition' => array( 'description' => 'Nutrition rows.', 'type' => 'array', 'readonly' => true, 'items' => array( 'type' => 'object' ) ),
+			'feeding_guide' => array( 'description' => 'Daily feeding guide rows.', 'type' => 'array', 'readonly' => true, 'items' => array( 'type' => 'object' ) ),
 			'benefits' => array( 'description' => 'Product benefits.', 'type' => 'array', 'readonly' => true, 'items' => array( 'type' => 'string' ) ),
 			'custom_fields' => array( 'description' => 'Configurable public product fields.', 'type' => 'array', 'readonly' => true, 'items' => array( 'type' => 'object' ) ),
 		);

@@ -22,7 +22,7 @@ export function ProductHeroSlider() {
   }, []);
 
   return (
-    <div className="relative mx-auto h-[270px] w-full max-w-[460px] sm:h-[330px] lg:h-[360px]">
+    <div className="relative mx-auto h-[270px] min-w-0 w-full max-w-[460px] sm:h-[330px] lg:h-[360px]">
       <span className="absolute inset-y-[8%] left-1/2 aspect-square -translate-x-1/2 rounded-full bg-[#F5EFF8]" aria-hidden="true" />
       <span className="absolute bottom-[4%] left-1/2 h-4 w-[62%] -translate-x-1/2 rounded-[50%] bg-black/15 blur-md" aria-hidden="true" />
 

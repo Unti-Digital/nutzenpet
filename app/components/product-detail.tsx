@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, CalendarClock, Check, Info, Leaf, Minus, PackageOpen, Plus, RefreshCw, ShoppingBag, Utensils } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 import type { Product } from "../data/products";
@@ -17,14 +18,30 @@ const informationTabs = [
 ];
 
 export function ProductDetail({ product }: { product: Product }) {
+  const router = useRouter();
   const [active, setActive] = useState(0);
   const [activeInformation, setActiveInformation] = useState<InformationTab>("nutrition");
-  const { addItem, decrement, increment, items } = useCart();
+  const [selectedPlanId, setSelectedPlanId] = useState(product.subscription?.plans[0]?.id ?? 0);
+  const [subscriptionPending, setSubscriptionPending] = useState(false);
+  const [replaceCartPrompt, setReplaceCartPrompt] = useState(false);
+  const { addItem, addSubscription, decrement, increment, items } = useCart();
   const cartItem = items.find((item) => item.product.slug === product.slug);
   const isInCart = Boolean(cartItem);
 
   function handleAddToCart() {
     if (product.availableForPurchase && !isInCart) addItem(product, 1);
+  }
+
+  async function handleSubscribe(replaceExisting = false) {
+    if (!selectedPlanId) return;
+    setSubscriptionPending(true);
+    const result = await addSubscription(product, selectedPlanId, replaceExisting);
+    setSubscriptionPending(false);
+    if (result === "requires_replacement") {
+      setReplaceCartPrompt(true);
+      return;
+    }
+    if (result === "added") router.push("/checkout");
   }
 
   return (
@@ -122,7 +139,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-2" />
             </Link>
           </div>
-          <section className="mt-5 rounded-lg border border-[#E2D4E9] bg-[#F5EFF8] p-5 sm:p-6" aria-labelledby={`subscription-${product.slug}`}>
+          {product.subscription?.eligible && <section className="mt-5 rounded-lg border border-[#E2D4E9] bg-[#F5EFF8] p-5 sm:p-6" aria-labelledby={`subscription-${product.slug}`}>
             <div className="flex items-start gap-4">
               <span className="sonar sonar-purple relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#6F3B85] text-white">
                 <RefreshCw className="relative z-10 h-5 w-5" />
@@ -136,14 +153,27 @@ export function ProductDetail({ product }: { product: Product }) {
                 <CalendarClock className="h-4 w-4 text-[#FE8C05]" /> Frequência flexível
               </span>
             </div>
-            <Link href="/nutzen-club" className="group mt-5 flex min-h-16 w-full items-center justify-center gap-3 rounded-full bg-[#FE8C05] px-6 text-sm font-black text-white transition-all duration-300 hover:scale-[0.99] hover:bg-[#CC632B] active:scale-95">
+            {product.subscription.plans.length > 0 ? <div className="mt-4 flex flex-wrap gap-2" aria-label="Frequência da assinatura">{product.subscription.plans.map((plan) => <button type="button" key={plan.id} onClick={() => setSelectedPlanId(plan.id)} className={`rounded-full border px-3 py-2 text-[10px] font-black transition-colors ${selectedPlanId === plan.id ? "border-[#3E1255] bg-[#3E1255] text-white" : "border-[#D9C7E3] bg-white text-[#3E1255] hover:border-[#3E1255]"}`}>{plan.name}</button>)}</div> : <p className="mt-4 rounded-md border border-[#E2D4E9] bg-white px-4 py-3 text-xs font-bold leading-5 text-[#3E1255]">As frequências deste produto estão sendo configuradas no WooCommerce.</p>}
+            <button type="button" onClick={() => void handleSubscribe()} disabled={!selectedPlanId || subscriptionPending} className="group mt-5 flex min-h-16 w-full items-center justify-center gap-3 rounded-full bg-[#FE8C05] px-6 text-sm font-black text-white transition-all duration-300 enabled:hover:scale-[0.99] enabled:hover:bg-[#CC632B] enabled:active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-300">
               <RefreshCw className="h-5 w-5 shrink-0" />
-              <span>Assinar este produto</span>
+              <span>{subscriptionPending ? "Preparando assinatura..." : "Quero assinar este produto"}</span>
               <ArrowRight className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:translate-x-2" />
-            </Link>
-          </section>
+            </button>
+          </section>}
         </div>
       </div>
+
+      {replaceCartPrompt && <div className="fixed inset-0 z-[90] grid place-items-center bg-[#071E2A]/65 px-5" role="dialog" aria-modal="true" aria-labelledby="replace-cart-title">
+        <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-2xl sm:p-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#FE8C05]">Finalizações separadas</p>
+          <h2 id="replace-cart-title" className="mt-2 text-2xl font-black text-[#123F55]">Seu carrinho possui uma compra avulsa.</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">Para manter valores, recorrência e entrega claros, a assinatura precisa ser finalizada separadamente. Deseja substituir os itens atuais por esta assinatura?</p>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <button type="button" onClick={() => setReplaceCartPrompt(false)} className="h-12 rounded-full border-2 border-[#3E1255] text-sm font-black text-[#3E1255] transition-colors hover:bg-[#F5EFF8]">Manter meu carrinho</button>
+            <button type="button" onClick={() => { setReplaceCartPrompt(false); void handleSubscribe(true); }} className="h-12 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-colors hover:bg-[#CC632B]">Assinar separadamente</button>
+          </div>
+        </div>
+      </div>}
 
       <section className="reveal-up overflow-hidden rounded-lg bg-[#F5EFF8]" aria-labelledby="product-information-title">
         <div className="px-5 pb-7 pt-9 text-center sm:px-8">
@@ -199,7 +229,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <div className="bg-white p-5 sm:p-6">
                 <h3 className="text-sm font-black text-[#123F55]">Quantidade diária sugerida</h3>
                 <div className="mt-4 divide-y divide-slate-100">
-                  {product.feedingGuide.map((row) => <div key={row.weight} className="flex justify-between gap-4 py-3 text-sm"><span className="text-slate-500">{row.weight}</span><strong className="text-[#3E1255]">{row.amount}</strong></div>)}
+                  {product.feedingGuide.map((row, index) => <div key={`${row.weight}-${index}`} className="flex justify-between gap-4 py-3 text-sm"><span className="text-slate-500">{row.weight}</span><strong className="text-[#3E1255]">{row.amount}</strong></div>)}
                 </div>
               </div>
             </div>

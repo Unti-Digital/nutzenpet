@@ -44,6 +44,11 @@ export type Product = {
   storage: string;
   feedingGuide: Array<{ weight: string; amount: string }>;
   banner?: Partial<ProductBanner>;
+  subscription?: {
+    eligible: boolean;
+    automaticRenewalAvailable: boolean;
+    plans: Array<{ id: number; name: string; interval: number; intervalUnit: string; discountType: string; discountValue: number }>;
+  };
 };
 
 const bannerDefaults: Record<ProductSpecies, ProductBanner> = {

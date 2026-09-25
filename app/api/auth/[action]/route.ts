@@ -12,6 +12,11 @@ const routes: Record<string, { endpoint: string; methods: string[] }> = {
   subscriptions: { endpoint: "subscription/me", methods: ["GET"] },
   affiliate: { endpoint: "affiliate/me", methods: ["GET"] },
   commissions: { endpoint: "affiliate/commissions", methods: ["GET"] },
+  withdrawals: { endpoint: "affiliate/withdrawals", methods: ["GET", "POST"] },
+  "affiliate-dashboard": { endpoint: "affiliate/dashboard", methods: ["GET"] },
+  "affiliate-campaigns": { endpoint: "affiliate/campaigns", methods: ["GET", "POST"] },
+  "affiliate-links": { endpoint: "affiliate/links", methods: ["GET", "POST"] },
+  "affiliate-pix": { endpoint: "affiliate/pix", methods: ["GET", "POST"] },
 };
 
 type RouteParams = { params: Promise<{ action: string }> };

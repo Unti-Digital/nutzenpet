@@ -87,10 +87,25 @@ const fieldClass =
 
 export default function RepresentativePage() {
   const [sent, setSent] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
+    setPending(true);
+    setMessage(null);
+    const form = new FormData(formElement);
+    const response = await fetch("/api/applications/retailer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(form.entries())) });
+    const payload = await response.json().catch(() => null) as { message?: string } | null;
+    setPending(false);
+    if (!response.ok) {
+      setMessage(payload?.message ?? "Não foi possível enviar sua candidatura.");
+      return;
+    }
     setSent(true);
+    setMessage(payload?.message ?? "Candidatura recebida para análise.");
+    formElement.reset();
   }
 
   return (
@@ -222,19 +237,21 @@ export default function RepresentativePage() {
           <div className="mt-10 grid gap-8 lg:grid-cols-[1.35fr_0.65fr]">
             <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 shadow-[0_18px_50px_rgba(62,18,85,.09)] sm:p-9">
               <div className="grid gap-5 sm:grid-cols-2">
-                <label className="grid gap-2 text-xs font-bold text-slate-600">Nome completo<input required placeholder="Digite seu nome" className={fieldClass} /></label>
-                <label className="grid gap-2 text-xs font-bold text-slate-600">E-mail<input required type="email" placeholder="seuemail@exemplo.com" className={fieldClass} /></label>
-                <label className="grid gap-2 text-xs font-bold text-slate-600">WhatsApp<input required type="tel" placeholder="(00) 00000-0000" className={fieldClass} /></label>
-                <label className="grid gap-2 text-xs font-bold text-slate-600">Cidade<input required placeholder="Sua cidade" className={fieldClass} /></label>
-                <label className="grid gap-2 text-xs font-bold text-slate-600">Estado<select required defaultValue="" className={fieldClass}><option value="" disabled>Selecione</option><option>Acre</option><option>Alagoas</option><option>Amapá</option><option>Amazonas</option><option>Bahia</option><option>Ceará</option><option>Distrito Federal</option><option>Espírito Santo</option><option>Goiás</option><option>Maranhão</option><option>Mato Grosso</option><option>Mato Grosso do Sul</option><option>Minas Gerais</option><option>Pará</option><option>Paraíba</option><option>Paraná</option><option>Pernambuco</option><option>Piauí</option><option>Rio de Janeiro</option><option>Rio Grande do Norte</option><option>Rio Grande do Sul</option><option>Rondônia</option><option>Roraima</option><option>Santa Catarina</option><option>São Paulo</option><option>Sergipe</option><option>Tocantins</option></select></label>
-                <fieldset className="grid gap-3 text-xs font-bold text-slate-600"><legend>Possui experiência comercial?</legend><div className="flex min-h-12 items-center gap-6"><label className="flex items-center gap-2 font-normal"><input required type="radio" name="experience" value="sim" className="accent-[#3E1255]" /> Sim</label><label className="flex items-center gap-2 font-normal"><input required type="radio" name="experience" value="nao" className="accent-[#3E1255]" /> Não</label></div></fieldset>
-                <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Conte um pouco sobre sua experiência<textarea required rows={5} placeholder="Fale sobre sua atuação profissional" className={`${fieldClass} h-auto resize-y py-3`} /></label>
-                <label className="flex items-start gap-3 text-xs leading-5 text-slate-500 sm:col-span-2"><input required type="checkbox" className="mt-1 accent-[#3E1255]" /> <span>Concordo com o tratamento dos meus dados conforme a <Link href="/politica-de-privacidade" className="font-bold text-[#3E1255] underline underline-offset-2">Política de Privacidade</Link>.</span></label>
+                <label className="grid gap-2 text-xs font-bold text-slate-600">Nome completo<input name="name" required placeholder="Digite seu nome" className={fieldClass} /></label>
+                <label className="grid gap-2 text-xs font-bold text-slate-600">E-mail<input name="email" required type="email" placeholder="seuemail@exemplo.com" className={fieldClass} /></label>
+                <label className="grid gap-2 text-xs font-bold text-slate-600">WhatsApp<input name="phone" required type="tel" placeholder="(00) 00000-0000" className={fieldClass} /></label>
+                <label className="grid gap-2 text-xs font-bold text-slate-600">Loja / empresa<input name="company" required placeholder="Nome da empresa" className={fieldClass} /></label>
+                <label className="grid gap-2 text-xs font-bold text-slate-600">CNPJ<input name="cnpj" placeholder="00.000.000/0000-00" className={fieldClass} /></label>
+                <label className="grid gap-2 text-xs font-bold text-slate-600">Cidade<input name="city" required placeholder="Sua cidade" className={fieldClass} /></label>
+                <label className="grid gap-2 text-xs font-bold text-slate-600">Estado<select name="state" required defaultValue="" className={fieldClass}><option value="" disabled>Selecione</option><option>Acre</option><option>Alagoas</option><option>Amapá</option><option>Amazonas</option><option>Bahia</option><option>Ceará</option><option>Distrito Federal</option><option>Espírito Santo</option><option>Goiás</option><option>Maranhão</option><option>Mato Grosso</option><option>Mato Grosso do Sul</option><option>Minas Gerais</option><option>Pará</option><option>Paraíba</option><option>Paraná</option><option>Pernambuco</option><option>Piauí</option><option>Rio de Janeiro</option><option>Rio Grande do Norte</option><option>Rio Grande do Sul</option><option>Rondônia</option><option>Roraima</option><option>Santa Catarina</option><option>São Paulo</option><option>Sergipe</option><option>Tocantins</option></select></label>
+                <fieldset className="grid gap-3 text-xs font-bold text-slate-600"><legend>Possui experiência comercial?</legend><div className="flex min-h-12 items-center gap-6"><label className="flex items-center gap-2 font-normal"><input required type="radio" name="experience" value="Sim" className="accent-[#3E1255]" /> Sim</label><label className="flex items-center gap-2 font-normal"><input required type="radio" name="experience" value="Não" className="accent-[#3E1255]" /> Não</label></div></fieldset>
+                <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Conte um pouco sobre sua experiência<textarea name="message" required rows={5} placeholder="Fale sobre sua atuação profissional" className={`${fieldClass} h-auto resize-y py-3`} /></label>
+                <label className="flex items-start gap-3 text-xs leading-5 text-slate-500 sm:col-span-2"><input name="consent" value="true" required type="checkbox" className="mt-1 accent-[#3E1255]" /> <span>Concordo com o tratamento dos meus dados conforme a <Link href="/politica-de-privacidade" className="font-bold text-[#3E1255] underline underline-offset-2">Política de Privacidade</Link>.</span></label>
               </div>
               {sent ? (
-                <p role="status" className="mt-6 flex items-center gap-3 rounded-md bg-[#F5EFF8] p-4 text-sm font-bold text-[#3E1255]"><CheckCircle2 className="h-5 w-5" /> Cadastro registrado neste protótipo.</p>
+                <p role="status" className="mt-6 flex items-center gap-3 rounded-md bg-[#F5EFF8] p-4 text-sm font-bold text-[#3E1255]"><CheckCircle2 className="h-5 w-5" /> {message}</p>
               ) : (
-                <button type="submit" className="group mt-6 flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-[#FE8C05] px-7 text-sm font-black text-white transition-colors duration-300 hover:bg-[#CC632B]">Enviar candidatura <Send className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></button>
+                <><button type="submit" disabled={pending} className="group mt-6 flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-[#FE8C05] px-7 text-sm font-black text-white transition-colors duration-300 hover:bg-[#CC632B] disabled:opacity-50">{pending ? "Enviando..." : "Enviar candidatura"} <Send className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></button>{message && <p role="alert" className="mt-4 text-sm font-bold text-[#CC632B]">{message}</p>}</>
               )}
             </form>
 

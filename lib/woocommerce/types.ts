@@ -29,6 +29,7 @@ export type NutzenProductFields = {
   ingredients?: string;
   composition?: string;
   nutrition?: Array<{ label: string; value: string }>;
+  feeding_guide?: Array<{ weight: string; amount: string }>;
   benefits?: string[];
   directions?: string;
   storage?: string;
@@ -74,6 +75,11 @@ export type StoreApiProduct = {
   add_to_cart: { text: string; description: string; url: string };
   extensions?: {
     "nutzen-fields"?: NutzenProductFields;
+    "nutzen-subscriptions"?: {
+      eligible: boolean;
+      automatic_renewal_available: boolean;
+      plans: Array<{ id: number; name: string; interval: number; interval_unit: string; discount_type: string; discount_value: number }>;
+    };
   };
 };
 
@@ -107,6 +113,19 @@ export type StoreApiCartItem = {
     currency_code: string;
     currency_symbol: string;
     currency_minor_unit: number;
+  };
+  extensions?: {
+    "nutzen-subscriptions"?: {
+      purchase_type: "one_time" | "subscription";
+      plan_id?: number;
+      plan_name?: string;
+      interval?: number;
+      interval_unit?: string;
+      frequency_label?: string;
+      discount_type?: string;
+      discount_value?: number;
+      unit_total?: number;
+    };
   };
 };
 

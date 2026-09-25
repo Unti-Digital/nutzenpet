@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Switch
  * Description: Central de diagnóstico, módulos e conexões da plataforma NutzenPet.
- * Version: 0.2.0
+ * Version: 0.4.1
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -16,16 +16,26 @@ defined( 'ABSPATH' ) || exit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Switch_Plugin {
-	private const VERSION = '0.2.0';
+	private const VERSION = '0.4.1';
 	private const OPTION = 'nutzen_switch_settings';
 	private const LOG    = 'nutzen_switch_log';
 
 	/** @var string[] */
-	private const MODULES = array( 'fields', 'affiliates', 'subscriptions' );
+	private const MODULES = array( 'fields', 'affiliates', 'subscriptions', 'banners' );
 
 	public static function bootstrap(): void {
 		register_activation_hook( __FILE__, array( __CLASS__, 'activate' ) );
 		add_action( 'before_woocommerce_init', array( __CLASS__, 'declare_compatibility' ) );
+		add_action( 'init', array( __CLASS__, 'register_application_type' ) );
+		add_action( 'add_meta_boxes_nutzen_banner', array( __CLASS__, 'banner_meta_box' ) );
+		add_action( 'save_post_nutzen_banner', array( __CLASS__, 'save_banner' ), 10, 2 );
+		add_action( 'transition_post_status', array( __CLASS__, 'banner_status_changed' ), 10, 3 );
+		add_filter( 'manage_nutzen_banner_posts_columns', array( __CLASS__, 'banner_columns' ) );
+		add_action( 'manage_nutzen_banner_posts_custom_column', array( __CLASS__, 'banner_column' ), 10, 2 );
+		add_action( 'add_meta_boxes_nutzen_application', array( __CLASS__, 'application_meta_box' ) );
+		add_action( 'save_post_nutzen_application', array( __CLASS__, 'save_application' ), 10, 2 );
+		add_filter( 'manage_nutzen_application_posts_columns', array( __CLASS__, 'application_columns' ) );
+		add_action( 'manage_nutzen_application_posts_custom_column', array( __CLASS__, 'application_column' ), 10, 2 );
 		add_filter( 'nutzen_module_enabled', array( __CLASS__, 'module_enabled' ), 10, 2 );
 		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register_settings' ) );
@@ -36,6 +46,7 @@ final class Nutzen_Switch_Plugin {
 		add_filter( 'login_headertext', static fn(): string => 'NutzenPet' );
 		add_filter( 'login_headerurl', static fn(): string => home_url( '/' ) );
 		add_action( 'save_post_product', array( __CLASS__, 'product_changed' ), 30, 3 );
+		add_action( 'save_post_nutzen_plan', array( __CLASS__, 'subscription_plan_changed' ), 30, 3 );
 		add_action( 'edited_product_cat', array( __CLASS__, 'category_changed' ) );
 		add_action( 'created_product_cat', array( __CLASS__, 'category_changed' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_routes' ) );
@@ -65,6 +76,197 @@ final class Nutzen_Switch_Plugin {
 		}
 	}
 
+	public static function register_application_type(): void {
+		register_post_type(
+			'nutzen_application',
+			array(
+				'labels' => array(
+					'name'          => 'Candidaturas',
+					'singular_name' => 'Candidatura',
+					'add_new_item'  => 'Adicionar candidatura',
+					'edit_item'     => 'Analisar candidatura',
+				),
+				'public'       => false,
+				'show_ui'      => true,
+				'show_in_menu' => 'nutzen-switch',
+				'supports'     => array( 'title' ),
+				'capability_type' => 'product',
+				'map_meta_cap' => true,
+				'menu_icon'    => 'dashicons-forms',
+			)
+		);
+
+		register_post_type(
+			'nutzen_banner',
+			array(
+				'labels' => array(
+					'name'          => 'Banners rotativos',
+					'singular_name' => 'Banner rotativo',
+					'add_new_item'  => 'Adicionar banner',
+					'edit_item'     => 'Editar banner',
+					'new_item'      => 'Novo banner',
+					'view_item'     => 'Visualizar banner',
+					'search_items'  => 'Buscar banners',
+				),
+				'public'          => false,
+				'show_ui'         => true,
+				'show_in_menu'    => 'nutzen-switch',
+				'show_in_rest'    => false,
+				'supports'        => array( 'title' ),
+				'capability_type' => 'product',
+				'map_meta_cap'    => true,
+				'menu_icon'       => 'dashicons-images-alt2',
+			)
+		);
+	}
+
+	public static function banner_meta_box(): void {
+		add_meta_box( 'nutzen-banner-data', 'Arte e destino do banner', array( __CLASS__, 'render_banner_meta_box' ), 'nutzen_banner', 'normal', 'high' );
+	}
+
+	public static function render_banner_meta_box( WP_Post $post ): void {
+		wp_nonce_field( 'nutzen_banner_save', 'nutzen_banner_nonce' );
+		$desktop_id = absint( get_post_meta( $post->ID, '_nutzen_banner_desktop_id', true ) );
+		$mobile_id  = absint( get_post_meta( $post->ID, '_nutzen_banner_mobile_id', true ) );
+		$link       = (string) get_post_meta( $post->ID, '_nutzen_banner_link', true );
+		$order      = (int) get_post_meta( $post->ID, '_nutzen_banner_order', true );
+		?>
+		<div class="nutzen-banner-editor">
+			<p class="description">Envie a arte completa do banner. Recomendado: desktop 1920 x 840 px e mobile 1080 x 1350 px.</p>
+			<div class="nutzen-banner-grid">
+				<?php self::render_banner_image_field( 'desktop', 'Imagem desktop', $desktop_id ); ?>
+				<?php self::render_banner_image_field( 'mobile', 'Imagem mobile', $mobile_id ); ?>
+			</div>
+			<div class="nutzen-form-grid nutzen-banner-options">
+				<label class="is-wide"><span>Link do banner</span><input type="url" name="nutzen_banner[link]" value="<?php echo esc_attr( $link ); ?>" placeholder="https://... ou /produto"><small>Opcional. A arte inteira ficará clicável.</small></label>
+				<label><span>Ordem</span><input type="number" min="0" step="1" name="nutzen_banner[order]" value="<?php echo esc_attr( (string) $order ); ?>"><small>Menores números aparecem primeiro entre os banners publicados.</small></label>
+			</div>
+			<p class="description"><strong>Publicação:</strong> use o painel lateral do WordPress para salvar como rascunho, publicar imediatamente ou agendar.</p>
+		</div>
+		<?php
+	}
+
+	private static function render_banner_image_field( string $key, string $label, int $attachment_id ): void {
+		$image = $attachment_id ? wp_get_attachment_image_url( $attachment_id, 'large' ) : '';
+		?>
+		<div class="nutzen-banner-media" data-banner-media>
+			<strong><?php echo esc_html( $label ); ?></strong>
+			<div class="nutzen-banner-preview <?php echo $image ? 'has-image' : ''; ?>" data-banner-preview>
+				<?php if ( $image ) : ?><img src="<?php echo esc_url( $image ); ?>" alt=""><?php else : ?><span>Nenhuma imagem selecionada</span><?php endif; ?>
+			</div>
+			<input type="hidden" name="nutzen_banner[<?php echo esc_attr( $key ); ?>_id]" value="<?php echo esc_attr( (string) $attachment_id ); ?>" data-banner-image-id>
+			<div class="nutzen-banner-media__actions">
+				<button type="button" class="button button-primary" data-banner-select>Selecionar imagem</button>
+				<button type="button" class="button" data-banner-remove <?php echo $attachment_id ? '' : 'hidden'; ?>>Remover</button>
+			</div>
+		</div>
+		<?php
+	}
+
+	public static function save_banner( int $post_id, WP_Post $post ): void {
+		$nonce = isset( $_POST['nutzen_banner_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nutzen_banner_nonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $nonce, 'nutzen_banner_save' ) || wp_is_post_autosave( $post_id ) || wp_is_post_revision( $post_id ) || ! current_user_can( 'edit_product', $post_id ) ) {
+			return;
+		}
+		$data = isset( $_POST['nutzen_banner'] ) && is_array( $_POST['nutzen_banner'] ) ? wp_unslash( $_POST['nutzen_banner'] ) : array();
+		update_post_meta( $post_id, '_nutzen_banner_desktop_id', absint( $data['desktop_id'] ?? 0 ) );
+		update_post_meta( $post_id, '_nutzen_banner_mobile_id', absint( $data['mobile_id'] ?? 0 ) );
+		update_post_meta( $post_id, '_nutzen_banner_link', esc_url_raw( (string) ( $data['link'] ?? '' ) ) );
+		update_post_meta( $post_id, '_nutzen_banner_order', max( 0, absint( $data['order'] ?? 0 ) ) );
+		self::send_webhook( array( 'nutzen-banners' ) );
+	}
+
+	/** @param array<string, string> $columns @return array<string, string> */
+	public static function banner_columns( array $columns ): array {
+		return array( 'cb' => $columns['cb'], 'banner_preview' => 'Arte', 'title' => 'Banner', 'banner_devices' => 'Versões', 'banner_link' => 'Link', 'banner_order' => 'Ordem', 'date' => 'Publicação' );
+	}
+
+	public static function banner_column( string $column, int $post_id ): void {
+		$desktop_id = absint( get_post_meta( $post_id, '_nutzen_banner_desktop_id', true ) );
+		$mobile_id  = absint( get_post_meta( $post_id, '_nutzen_banner_mobile_id', true ) );
+		if ( 'banner_preview' === $column ) echo $desktop_id ? wp_get_attachment_image( $desktop_id, array( 120, 54 ), false, array( 'class' => 'nutzen-banner-list-preview' ) ) : '<span aria-hidden="true">—</span>';
+		if ( 'banner_devices' === $column ) echo esc_html( $desktop_id ? ( $mobile_id ? 'Desktop + mobile' : 'Desktop' ) : 'Incompleto' );
+		if ( 'banner_link' === $column ) { $link = (string) get_post_meta( $post_id, '_nutzen_banner_link', true ); echo $link ? '<a href="' . esc_url( $link ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( wp_html_excerpt( $link, 42, '…' ) ) . '</a>' : '<span aria-hidden="true">—</span>'; }
+		if ( 'banner_order' === $column ) echo esc_html( (string) (int) get_post_meta( $post_id, '_nutzen_banner_order', true ) );
+	}
+
+	/** @return array<string, string> */
+	private static function application_fields(): array {
+		return array(
+			'_nutzen_application_type'       => 'Tipo',
+			'_nutzen_application_status'     => 'Status',
+			'_nutzen_application_user_id'    => 'ID do usuário',
+			'_nutzen_application_name'       => 'Nome completo',
+			'_nutzen_application_email'      => 'E-mail',
+			'_nutzen_application_phone'      => 'Telefone / WhatsApp',
+			'_nutzen_application_company'    => 'Empresa / loja',
+			'_nutzen_application_cnpj'       => 'CNPJ',
+			'_nutzen_application_city'       => 'Cidade',
+			'_nutzen_application_state'      => 'Estado',
+			'_nutzen_application_website'    => 'Site',
+			'_nutzen_application_social'     => 'Rede social',
+			'_nutzen_application_audience'   => 'Público / audiência',
+			'_nutzen_application_experience' => 'Experiência',
+			'_nutzen_application_message'    => 'Apresentação',
+		);
+	}
+
+	public static function application_meta_box(): void {
+		add_meta_box( 'nutzen-application-data', 'Dados da candidatura', array( __CLASS__, 'render_application_meta_box' ), 'nutzen_application', 'normal', 'high' );
+	}
+
+	public static function render_application_meta_box( WP_Post $post ): void {
+		wp_nonce_field( 'nutzen_application_save', 'nutzen_application_nonce' );
+		$type   = (string) get_post_meta( $post->ID, '_nutzen_application_type', true ) ?: 'retailer';
+		$status = (string) get_post_meta( $post->ID, '_nutzen_application_status', true ) ?: 'pending';
+		?>
+		<div class="nutzen-application-editor">
+			<div class="nutzen-application-grid">
+				<label><span>Tipo</span><select name="nutzen_application[type]"><option value="retailer" <?php selected( $type, 'retailer' ); ?>>Lojista parceiro</option><option value="affiliate" <?php selected( $type, 'affiliate' ); ?>>Afiliado</option><option value="subscription" <?php selected( $type, 'subscription' ); ?>>Interesse em assinatura</option></select></label>
+				<label><span>Status</span><select name="nutzen_application[status]"><option value="pending" <?php selected( $status, 'pending' ); ?>>Pendente</option><option value="in_review" <?php selected( $status, 'in_review' ); ?>>Em análise</option><option value="approved" <?php selected( $status, 'approved' ); ?>>Aprovada</option><option value="rejected" <?php selected( $status, 'rejected' ); ?>>Rejeitada</option></select></label>
+				<?php foreach ( self::application_fields() as $key => $label ) : if ( in_array( $key, array( '_nutzen_application_type', '_nutzen_application_status' ), true ) ) continue; $name = substr( $key, strlen( '_nutzen_application_' ) ); $value = (string) get_post_meta( $post->ID, $key, true ); ?>
+					<label class="<?php echo in_array( $name, array( 'experience', 'message' ), true ) ? 'is-wide' : ''; ?>"><span><?php echo esc_html( $label ); ?></span><?php if ( in_array( $name, array( 'experience', 'message' ), true ) ) : ?><textarea name="nutzen_application[<?php echo esc_attr( $name ); ?>]" rows="4"><?php echo esc_textarea( $value ); ?></textarea><?php else : ?><input type="<?php echo 'user_id' === $name ? 'number' : 'text'; ?>" name="nutzen_application[<?php echo esc_attr( $name ); ?>]" value="<?php echo esc_attr( $value ); ?>"><?php endif; ?></label>
+				<?php endforeach; ?>
+			</div>
+			<p class="description">A aprovação de uma candidatura de afiliado ativa o programa para o usuário vinculado. Nenhuma assinatura ou pagamento é criado automaticamente.</p>
+		</div>
+		<?php
+	}
+
+	public static function save_application( int $post_id, WP_Post $post ): void {
+		$nonce = isset( $_POST['nutzen_application_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['nutzen_application_nonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $nonce, 'nutzen_application_save' ) || wp_is_post_autosave( $post_id ) || ! current_user_can( 'edit_product', $post_id ) ) return;
+		$data = isset( $_POST['nutzen_application'] ) && is_array( $_POST['nutzen_application'] ) ? wp_unslash( $_POST['nutzen_application'] ) : array();
+		$previous = (string) get_post_meta( $post_id, '_nutzen_application_status', true ) ?: 'pending';
+		self::save_application_meta( $post_id, $data );
+		$current = (string) get_post_meta( $post_id, '_nutzen_application_status', true );
+		if ( $previous !== $current ) do_action( 'nutzen_application_status_changed', $post_id, $current, $previous );
+	}
+
+	/** @param array<string, mixed> $data */
+	private static function save_application_meta( int $post_id, array $data ): void {
+		$type = sanitize_key( (string) ( $data['type'] ?? 'retailer' ) );
+		$status = sanitize_key( (string) ( $data['status'] ?? 'pending' ) );
+		update_post_meta( $post_id, '_nutzen_application_type', in_array( $type, array( 'retailer', 'affiliate', 'subscription' ), true ) ? $type : 'retailer' );
+		update_post_meta( $post_id, '_nutzen_application_status', in_array( $status, array( 'pending', 'in_review', 'approved', 'rejected' ), true ) ? $status : 'pending' );
+		foreach ( array( 'name', 'phone', 'company', 'cnpj', 'city', 'state', 'audience', 'experience', 'message' ) as $field ) update_post_meta( $post_id, '_nutzen_application_' . $field, sanitize_textarea_field( (string) ( $data[ $field ] ?? '' ) ) );
+		update_post_meta( $post_id, '_nutzen_application_email', sanitize_email( (string) ( $data['email'] ?? '' ) ) );
+		update_post_meta( $post_id, '_nutzen_application_website', esc_url_raw( (string) ( $data['website'] ?? '' ) ) );
+		update_post_meta( $post_id, '_nutzen_application_social', esc_url_raw( (string) ( $data['social'] ?? '' ) ) );
+		update_post_meta( $post_id, '_nutzen_application_user_id', absint( $data['user_id'] ?? 0 ) );
+	}
+
+	/** @param array<string, string> $columns @return array<string, string> */
+	public static function application_columns( array $columns ): array {
+		return array( 'cb' => $columns['cb'], 'title' => 'Candidato', 'application_type' => 'Tipo', 'application_contact' => 'Contato', 'application_status' => 'Status', 'date' => 'Recebida em' );
+	}
+
+	public static function application_column( string $column, int $post_id ): void {
+		if ( 'application_type' === $column ) echo esc_html( array( 'retailer' => 'Lojista parceiro', 'affiliate' => 'Afiliado', 'subscription' => 'Assinatura' )[ get_post_meta( $post_id, '_nutzen_application_type', true ) ] ?? '—' );
+		if ( 'application_contact' === $column ) echo esc_html( get_post_meta( $post_id, '_nutzen_application_email', true ) . ' · ' . get_post_meta( $post_id, '_nutzen_application_phone', true ) );
+		if ( 'application_status' === $column ) echo '<span class="nutzen-status nutzen-status--' . esc_attr( (string) get_post_meta( $post_id, '_nutzen_application_status', true ) ) . '">' . esc_html( ucfirst( (string) get_post_meta( $post_id, '_nutzen_application_status', true ) ?: 'pending' ) ) . '</span>';
+	}
+
 	/** @param mixed $enabled */
 	public static function module_enabled( $enabled, string $module ): bool {
 		if ( ! in_array( $module, self::MODULES, true ) ) {
@@ -80,6 +282,7 @@ final class Nutzen_Switch_Plugin {
 			'module_fields'        => '1',
 			'module_affiliates'    => '1',
 			'module_subscriptions' => '1',
+			'module_banners'       => '1',
 			'frontend_url'         => 'http://localhost:3000',
 			'wordpress_url'        => home_url(),
 			'webhook_secret'       => '',
@@ -103,6 +306,7 @@ final class Nutzen_Switch_Plugin {
 			'module_fields'        => isset( $input['module_fields'] ) ? '1' : '0',
 			'module_affiliates'    => isset( $input['module_affiliates'] ) ? '1' : '0',
 			'module_subscriptions' => isset( $input['module_subscriptions'] ) ? '1' : '0',
+			'module_banners'       => isset( $input['module_banners'] ) ? '1' : '0',
 			'frontend_url'         => esc_url_raw( (string) ( $input['frontend_url'] ?? '' ) ),
 			'wordpress_url'        => esc_url_raw( (string) ( $input['wordpress_url'] ?? home_url() ) ),
 			'webhook_secret'       => $current['webhook_secret'],
@@ -119,6 +323,11 @@ final class Nutzen_Switch_Plugin {
 
 	public static function admin_assets(): void {
 		wp_enqueue_style( 'nutzen-admin', plugins_url( 'assets/admin.css', __FILE__ ), array(), self::VERSION );
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( $screen && 'nutzen_banner' === $screen->post_type ) {
+			wp_enqueue_media();
+			wp_enqueue_script( 'nutzen-banner-admin', plugins_url( 'assets/admin-banners.js', __FILE__ ), array(), self::VERSION, true );
+		}
 	}
 
 	public static function login_assets(): void {
@@ -145,12 +354,16 @@ final class Nutzen_Switch_Plugin {
 		$subscription_table = $wpdb->prefix . 'nutzen_subscriptions';
 		$affiliates = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $affiliate_table ) ) === $affiliate_table ? (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$affiliate_table} WHERE status='approved'" ) : 0;
 		$subscriptions = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $subscription_table ) ) === $subscription_table ? (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$subscription_table} WHERE status IN ('active','paused','pending_gateway')" ) : 0;
+		$applications = (int) ( wp_count_posts( 'nutzen_application' )->private ?? 0 );
+		$banner_counts = wp_count_posts( 'nutzen_banner' );
 		return array(
 			'products'      => (int) ( $product_counts->publish ?? 0 ),
 			'orders'        => is_object( $order_query ) && isset( $order_query->total ) ? (int) $order_query->total : 0,
 			'customers'     => (int) ( $user_counts['avail_roles']['customer'] ?? 0 ),
 			'affiliates'    => $affiliates,
 			'subscriptions' => $subscriptions,
+			'applications'  => $applications,
+			'banners'       => (int) ( $banner_counts->publish ?? 0 ),
 		);
 	}
 
@@ -165,6 +378,8 @@ final class Nutzen_Switch_Plugin {
 				<a href="<?php echo esc_url( admin_url( 'users.php?role=customer' ) ); ?>"><strong><?php echo (int) $stats['customers']; ?></strong><span>Clientes</span></a>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=nutzen-affiliates' ) ); ?>"><strong><?php echo (int) $stats['affiliates']; ?></strong><span>Afiliados</span></a>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=nutzen-subscriptions' ) ); ?>"><strong><?php echo (int) $stats['subscriptions']; ?></strong><span>Assinaturas</span></a>
+				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=nutzen_application' ) ); ?>"><strong><?php echo (int) $stats['applications']; ?></strong><span>Candidaturas</span></a>
+				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=nutzen_banner' ) ); ?>"><strong><?php echo (int) $stats['banners']; ?></strong><span>Banners</span></a>
 			</div>
 			<div class="nutzen-quick-actions"><a class="button button-primary" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=product' ) ); ?>">Adicionar produto</a><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=nutzen-switch' ) ); ?>">Abrir central Nutzen</a></div>
 		</div>
@@ -185,7 +400,8 @@ final class Nutzen_Switch_Plugin {
 		<div class="wrap nutzen-admin">
 			<section class="nutzen-admin-hero"><div><span class="nutzen-kicker">CENTRAL HEADLESS</span><h1>Nutzen Switch</h1><p>Produtos, clientes e integrações reunidos em uma visão clara da operação.</p></div><a class="button button-primary" href="<?php echo esc_url( $settings['frontend_url'] ); ?>" target="_blank" rel="noopener noreferrer">Abrir loja</a></section>
 			<?php $stats = self::dashboard_stats(); ?>
-			<div class="nutzen-stat-grid nutzen-stat-grid--page"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>"><strong><?php echo (int) $stats['products']; ?></strong><span>Produtos publicados</span></a><a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-orders' ) ); ?>"><strong><?php echo (int) $stats['orders']; ?></strong><span>Pedidos</span></a><a href="<?php echo esc_url( admin_url( 'users.php?role=customer' ) ); ?>"><strong><?php echo (int) $stats['customers']; ?></strong><span>Clientes</span></a><a href="<?php echo esc_url( admin_url( 'admin.php?page=nutzen-affiliates' ) ); ?>"><strong><?php echo (int) $stats['affiliates']; ?></strong><span>Afiliados ativos</span></a><a href="<?php echo esc_url( admin_url( 'admin.php?page=nutzen-subscriptions' ) ); ?>"><strong><?php echo (int) $stats['subscriptions']; ?></strong><span>Assinaturas</span></a></div>
+			<div class="nutzen-stat-grid nutzen-stat-grid--page"><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=product' ) ); ?>"><strong><?php echo (int) $stats['products']; ?></strong><span>Produtos publicados</span></a><a href="<?php echo esc_url( admin_url( 'admin.php?page=wc-orders' ) ); ?>"><strong><?php echo (int) $stats['orders']; ?></strong><span>Pedidos</span></a><a href="<?php echo esc_url( admin_url( 'users.php?role=customer' ) ); ?>"><strong><?php echo (int) $stats['customers']; ?></strong><span>Clientes</span></a><a href="<?php echo esc_url( admin_url( 'admin.php?page=nutzen-affiliates' ) ); ?>"><strong><?php echo (int) $stats['affiliates']; ?></strong><span>Afiliados ativos</span></a><a href="<?php echo esc_url( admin_url( 'admin.php?page=nutzen-subscriptions' ) ); ?>"><strong><?php echo (int) $stats['subscriptions']; ?></strong><span>Assinaturas</span></a><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=nutzen_application' ) ); ?>"><strong><?php echo (int) $stats['applications']; ?></strong><span>Candidaturas</span></a><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=nutzen_banner' ) ); ?>"><strong><?php echo (int) $stats['banners']; ?></strong><span>Banners publicados</span></a></div>
+			<div class="nutzen-quick-actions nutzen-quick-actions--page"><a class="button button-primary" href="<?php echo esc_url( admin_url( 'post-new.php?post_type=nutzen_banner' ) ); ?>">Adicionar banner</a><a class="button" href="<?php echo esc_url( admin_url( 'edit.php?post_type=nutzen_banner' ) ); ?>">Gerenciar banners rotativos</a></div>
 			<h2>Saúde dos módulos</h2>
 			<table class="widefat striped nutzen-status-table">
 				<thead><tr><th>Módulo</th><th>Plugin</th><th>Estado</th></tr></thead>
@@ -228,6 +444,17 @@ final class Nutzen_Switch_Plugin {
 		self::send_webhook( array( 'woocommerce-products', 'woocommerce-categories' ) );
 	}
 
+	public static function subscription_plan_changed( int $post_id, WP_Post $post ): void {
+		if ( wp_is_post_revision( $post_id ) || 'nutzen_plan' !== $post->post_type ) return;
+		self::send_webhook( array( 'woocommerce-products' ) );
+	}
+
+	public static function banner_status_changed( string $new_status, string $old_status, WP_Post $post ): void {
+		if ( 'nutzen_banner' === $post->post_type && $new_status !== $old_status ) {
+			self::send_webhook( array( 'nutzen-banners' ) );
+		}
+	}
+
 	/** @param string[] $tags */
 	private static function send_webhook( array $tags ): void {
 		$settings = self::settings();
@@ -256,12 +483,110 @@ final class Nutzen_Switch_Plugin {
 	}
 
 	public static function register_rest_routes(): void {
+		register_rest_route( 'nutzen/v1', '/banners', array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'rest_banners' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'nutzen/v1', '/auth/register', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'rest_register' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'nutzen/v1', '/auth/login', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'rest_login' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'nutzen/v1', '/auth/logout', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'rest_logout' ), 'permission_callback' => array( __CLASS__, 'authenticate_request' ) ) );
 		register_rest_route( 'nutzen/v1', '/auth/me', array( 'methods' => array( 'GET', 'POST' ), 'callback' => array( __CLASS__, 'rest_me' ), 'permission_callback' => array( __CLASS__, 'authenticate_request' ) ) );
 		register_rest_route( 'nutzen/v1', '/customer/orders', array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'rest_orders' ), 'permission_callback' => array( __CLASS__, 'authenticate_request' ) ) );
 		register_rest_route( 'nutzen/v1', '/customer/addresses', array( 'methods' => array( 'GET', 'POST' ), 'callback' => array( __CLASS__, 'rest_addresses' ), 'permission_callback' => array( __CLASS__, 'authenticate_request' ) ) );
+		register_rest_route( 'nutzen/v1', '/applications/(?P<type>retailer|affiliate|subscription)', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'rest_application' ), 'permission_callback' => '__return_true' ) );
+	}
+
+	public static function rest_banners(): WP_REST_Response {
+		if ( ! self::module_enabled( true, 'banners' ) ) {
+			return new WP_REST_Response( array( 'items' => array() ) );
+		}
+		$posts = get_posts(
+			array(
+				'post_type'      => 'nutzen_banner',
+				'post_status'    => 'publish',
+				'posts_per_page' => 30,
+				'meta_key'       => '_nutzen_banner_order',
+				'orderby'        => array( 'meta_value_num' => 'ASC', 'date' => 'DESC' ),
+				'order'          => 'ASC',
+			)
+		);
+		$items = array();
+		foreach ( $posts as $post ) {
+			$desktop_id = absint( get_post_meta( $post->ID, '_nutzen_banner_desktop_id', true ) );
+			$mobile_id  = absint( get_post_meta( $post->ID, '_nutzen_banner_mobile_id', true ) );
+			$desktop    = $desktop_id ? wp_get_attachment_image_url( $desktop_id, 'full' ) : '';
+			$mobile     = $mobile_id ? wp_get_attachment_image_url( $mobile_id, 'full' ) : '';
+			if ( ! $desktop ) continue;
+			$items[] = array(
+				'id'            => (int) $post->ID,
+				'title'         => get_the_title( $post ),
+				'alt'           => (string) get_post_meta( $desktop_id, '_wp_attachment_image_alt', true ) ?: get_the_title( $post ),
+				'desktop_image' => esc_url_raw( $desktop ),
+				'mobile_image'  => esc_url_raw( $mobile ?: $desktop ),
+				'link'          => esc_url_raw( (string) get_post_meta( $post->ID, '_nutzen_banner_link', true ) ),
+				'order'         => (int) get_post_meta( $post->ID, '_nutzen_banner_order', true ),
+			);
+		}
+		return new WP_REST_Response( array( 'items' => $items ) );
+	}
+
+	public static function rest_application( WP_REST_Request $request ) {
+		$type    = sanitize_key( (string) $request['type'] );
+		if ( ! apply_filters( 'nutzen_application_enabled', true, $type ) ) return new WP_Error( 'nutzen_application_disabled', 'Novas candidaturas estão temporariamente desativadas.', array( 'status' => 403 ) );
+		$email   = sanitize_email( (string) $request->get_param( 'email' ) );
+		$name    = sanitize_text_field( (string) $request->get_param( 'name' ) );
+		$phone   = sanitize_text_field( (string) $request->get_param( 'phone' ) );
+		$consent = rest_sanitize_boolean( $request->get_param( 'consent' ) );
+		$ip      = sanitize_text_field( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+		if ( ! self::rate_limit( 'application:' . $type . ':' . $ip, 5, HOUR_IN_SECONDS ) ) return new WP_Error( 'nutzen_rate_limited', 'Muitas solicitações. Tente novamente mais tarde.', array( 'status' => 429 ) );
+		if ( ! is_email( $email ) || '' === $name || '' === $phone || ! $consent ) return new WP_Error( 'nutzen_invalid_application', 'Preencha os dados obrigatórios e aceite a Política de Privacidade.', array( 'status' => 400 ) );
+
+		$user_id = 0;
+		$session = array();
+		if ( 'affiliate' === $type || 'subscription' === $type ) {
+			$authorization = isset( $_SERVER['HTTP_AUTHORIZATION'] ) ? trim( (string) $_SERVER['HTTP_AUTHORIZATION'] ) : '';
+			if ( $authorization ) {
+				$authenticated = self::authenticate_request();
+				if ( is_wp_error( $authenticated ) ) return $authenticated;
+				$user_id = get_current_user_id();
+				$user = get_user_by( 'id', $user_id );
+				if ( $user && strtolower( $user->user_email ) !== strtolower( $email ) ) return new WP_Error( 'nutzen_email_mismatch', 'Use o e-mail da conta conectada.', array( 'status' => 409 ) );
+			} else {
+				$existing = get_user_by( 'email', $email );
+				if ( $existing ) return new WP_Error( 'nutzen_login_required', 'Este e-mail já possui conta. Entre antes de enviar a candidatura.', array( 'status' => 409 ) );
+				$password = (string) $request->get_param( 'password' );
+				if ( strlen( $password ) < 10 ) return new WP_Error( 'nutzen_weak_password', 'Use uma senha com pelo menos 10 caracteres.', array( 'status' => 400 ) );
+				$user_id = wc_create_new_customer( $email, '', $password, array( 'first_name' => $name, 'display_name' => $name ) );
+				if ( is_wp_error( $user_id ) ) return $user_id;
+				$session = self::issue_session( (int) $user_id );
+			}
+		}
+
+		$existing = get_posts(
+			array(
+				'post_type'      => 'nutzen_application',
+				'post_status'    => 'private',
+				'posts_per_page' => 1,
+				'fields'         => 'ids',
+				'meta_query'     => array(
+					'relation' => 'AND',
+					array( 'key' => '_nutzen_application_type', 'value' => $type ),
+					array( 'key' => '_nutzen_application_email', 'value' => $email ),
+					array( 'key' => '_nutzen_application_status', 'value' => array( 'pending', 'in_review', 'approved' ), 'compare' => 'IN' ),
+				),
+			)
+		);
+		if ( $existing ) return new WP_Error( 'nutzen_application_exists', 'Já existe uma candidatura ativa para este e-mail.', array( 'status' => 409 ) );
+
+		$post_id = wp_insert_post( array( 'post_type' => 'nutzen_application', 'post_status' => 'private', 'post_title' => $name . ' — ' . $email ), true );
+		if ( is_wp_error( $post_id ) ) return $post_id;
+		self::save_application_meta(
+			(int) $post_id,
+			array(
+				'type' => $type, 'status' => 'pending', 'user_id' => $user_id, 'name' => $name, 'email' => $email, 'phone' => $phone,
+				'company' => $request->get_param( 'company' ), 'cnpj' => $request->get_param( 'cnpj' ), 'city' => $request->get_param( 'city' ), 'state' => $request->get_param( 'state' ),
+				'website' => $request->get_param( 'website' ), 'social' => $request->get_param( 'social' ), 'audience' => $request->get_param( 'audience' ),
+				'experience' => $request->get_param( 'experience' ), 'message' => $request->get_param( 'message' ),
+			)
+		);
+		return new WP_REST_Response( array_merge( array( 'id' => (int) $post_id, 'status' => 'pending', 'message' => 'Candidatura recebida para análise.' ), $session ), 201 );
 	}
 
 	private static function rate_limit( string $bucket, int $limit = 8, int $window = 900 ): bool {

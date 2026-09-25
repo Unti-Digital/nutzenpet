@@ -8,6 +8,16 @@ type CartItem = {
   key?: string;
   product: Product;
   quantity: number;
+  subscription?: {
+    planId: number;
+    planName: string;
+    interval: number;
+    intervalUnit: string;
+    frequencyLabel: string;
+    discountType: string;
+    discountValue: number;
+    unitTotal: number;
+  };
 };
 
 type CartMode = "loading" | "woocommerce" | "fallback";
@@ -24,7 +34,9 @@ type CartContextValue = {
   shippingRates: StoreApiCart["shipping_rates"];
   needsShipping: boolean;
   hasCalculatedShipping: boolean;
+  purchaseType: "empty" | "one_time" | "subscription";
   addItem: (product: Product, quantity?: number) => void;
+  addSubscription: (product: Product, planId: number, replaceExisting?: boolean) => Promise<"added" | "requires_replacement" | "unavailable">;
   increment: (slug: string) => void;
   decrement: (slug: string) => void;
   removeItem: (slug: string) => void;
@@ -43,6 +55,16 @@ export function formatCurrency(value: number) {
     style: "currency",
     currency: "BRL",
   }).format(value);
+}
+
+export function formatFrequency(interval: number, unit: string) {
+  const labels: Record<string, [string, string]> = {
+    day: ["dia", "dias"],
+    week: ["semana", "semanas"],
+    month: ["mês", "meses"],
+  };
+  const [singular, plural] = labels[unit] ?? labels.month;
+  return interval === 1 ? `A cada 1 ${singular}` : `A cada ${interval} ${plural}`;
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
@@ -79,7 +101,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setStoreCart(nextCart);
     setItems(nextCart.items.flatMap((item) => {
       const product = productForStoreItem(item, currentCatalog);
-      return product ? [{ key: item.key, product, quantity: item.quantity }] : [];
+      if (!product) return [];
+      const details = item.extensions?.["nutzen-subscriptions"];
+      const subscription = details?.purchase_type === "subscription"
+        ? {
+            planId: details.plan_id ?? 0,
+            planName: details.plan_name ?? "Plano Nutzen Club",
+            interval: details.interval ?? 1,
+            intervalUnit: details.interval_unit ?? "month",
+            frequencyLabel: details.frequency_label ?? "Recorrencia programada",
+            discountType: details.discount_type ?? "percentage",
+            discountValue: details.discount_value ?? 0,
+            unitTotal: details.unit_total ?? product.priceValue,
+          }
+        : undefined;
+      return [{ key: item.key, product, quantity: item.quantity, subscription }];
     }));
     setMode("woocommerce");
     setError(null);
@@ -181,6 +217,74 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    const addSubscription = async (
+      product: Product,
+      planId: number,
+      replaceExisting = false,
+    ): Promise<"added" | "requires_replacement" | "unavailable"> => {
+      const connectedProduct = catalog.find((candidate) => candidate.slug === product.slug) ?? product;
+      const plan = connectedProduct.subscription?.plans.find((candidate) => candidate.id === planId);
+      if (!connectedProduct.subscription?.eligible || !plan) {
+        setError("Este produto ainda não possui uma frequência de assinatura configurada.");
+        return "unavailable";
+      }
+
+      const hasOneTimeItems = items.some((item) => !item.subscription);
+      if (hasOneTimeItems && !replaceExisting) return "requires_replacement";
+
+      setError(null);
+      if (mode === "woocommerce") {
+        if (!connectedProduct.wooId) {
+          setError("Este produto ainda não está sincronizado com o WooCommerce.");
+          return "unavailable";
+        }
+        try {
+          if (replaceExisting) {
+            for (const item of items) {
+              if (item.key) await requestCart("cart/remove-item", { method: "POST", body: JSON.stringify({ key: item.key }) });
+            }
+          }
+          const nextCart = await requestCart("cart/add-item", {
+            method: "POST",
+            body: JSON.stringify({
+              id: connectedProduct.wooId,
+              quantity: 1,
+              extensions: {
+                "nutzen-subscriptions": { purchase_type: "subscription", plan_id: planId },
+              },
+            }),
+          });
+          applyStoreCart(nextCart, catalog);
+          return "added";
+        } catch (reason) {
+          setError(reason instanceof Error ? reason.message : "Não foi possível iniciar a assinatura.");
+          return "unavailable";
+        }
+      }
+
+      const discounted = plan.discountType === "fixed"
+        ? Math.max(0, connectedProduct.priceValue - plan.discountValue)
+        : Math.max(0, connectedProduct.priceValue * (1 - Math.min(100, plan.discountValue) / 100));
+      setItems((current) => {
+        const subscriptionItem: CartItem = {
+          product: { ...connectedProduct, priceValue: discounted, price: formatCurrency(discounted) },
+          quantity: 1,
+          subscription: {
+            planId,
+            planName: plan.name,
+            interval: plan.interval,
+            intervalUnit: plan.intervalUnit,
+            frequencyLabel: formatFrequency(plan.interval, plan.intervalUnit),
+            discountType: plan.discountType,
+            discountValue: plan.discountValue,
+            unitTotal: discounted,
+          },
+        };
+        return replaceExisting ? [subscriptionItem] : [...current, subscriptionItem];
+      });
+      return "added";
+    };
+
     const minorValue = (value: string | null | undefined, unit = 2) => Number(value ?? 0) / 10 ** unit;
     const currencyUnit = storeCart?.totals.currency_minor_unit ?? 2;
 
@@ -196,6 +300,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       shippingRates: storeCart?.shipping_rates ?? [],
       needsShipping: storeCart?.needs_shipping ?? items.length > 0,
       hasCalculatedShipping: storeCart?.has_calculated_shipping ?? false,
+      purchaseType: items.length === 0 ? "empty" : items.some((item) => item.subscription) ? "subscription" : "one_time",
       addItem: (product, quantity = 1) => {
         const connectedProduct = catalog.find((candidate) => candidate.slug === product.slug) ?? product;
         if (mode === "woocommerce" && connectedProduct.wooId) {
@@ -212,6 +317,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           );
         });
       },
+      addSubscription,
       increment: (slug) => { void mutateWooItem(slug, 1); },
       decrement: (slug) => { void mutateWooItem(slug, -1); },
       removeItem: (slug) => {
