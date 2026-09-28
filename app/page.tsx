@@ -255,11 +255,11 @@ export default function Home() {
                   <span className="absolute inset-x-[4%] bottom-[10%] top-[10%] rounded-full bg-white/10" aria-hidden="true" />
                   <div className="absolute inset-x-[3%] bottom-[11%] top-[5%] grid grid-cols-3 gap-1 sm:gap-3">
                     {sizeShowcaseProducts.map((product, index) => (
-                      <div key={product.slug} className={`relative flex min-w-0 flex-col items-center ${index === 1 ? "sm:-translate-y-5" : ""}`}>
+                      <div key={product.slug} className="relative flex min-w-0 flex-col items-center">
                         <span className="relative z-10 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.12em] text-white sm:text-[10px]">
                           {index === 2 ? <><span className="sm:hidden">{product.weight}</span><span className="hidden sm:inline">Família · {product.weight}</span></> : product.weight}
                         </span>
-                        <div className="float-soft relative w-full flex-1"><Image src={index === 2 ? product.images[1] : product.images[0]} alt={`${product.name} - ${product.weight}`} fill loading="eager" sizes="(max-width: 1024px) 30vw, 250px" className={`object-contain object-bottom drop-shadow-[0_18px_16px_rgba(0,0,0,.24)] ${index === 0 ? "scale-[1.28] sm:scale-[1.48]" : index === 1 ? "scale-[1.34] sm:scale-[1.62]" : "scale-100 sm:scale-[1.08]"}`} /></div>
+                        <div className="float-soft relative w-full flex-1"><Image src={index === 2 ? product.images[1] : product.images[0]} alt={`${product.name} - ${product.weight}`} fill loading="eager" sizes="(max-width: 1024px) 30vw, 250px" className={`origin-bottom object-contain object-bottom drop-shadow-[0_18px_16px_rgba(0,0,0,.24)] ${index === 2 ? "translate-y-4 scale-[1.05] sm:translate-y-5 sm:scale-[1.08]" : "scale-[1.45] sm:scale-[1.75]"}`} /></div>
                       </div>
                     ))}
                   </div>
