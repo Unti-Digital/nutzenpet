@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, ExternalLink, FileText } from "lucide-react";
+import { AlertCircle, CheckCircle2, FileText } from "lucide-react";
 import { SiteFooter } from "../../components/site-footer";
 import { SiteHeader } from "../../components/site-header";
 import { getWordPressUrl } from "@/lib/woocommerce/config";
+import { BoletoActions } from "./boleto-actions";
 
 type BoletoPageProps = {
-  searchParams: Promise<{ pedido?: string; chave?: string }>;
+  searchParams: Promise<{ pedido?: string; chave?: string; retorno?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -24,35 +25,51 @@ function decodeAttribute(value: string) {
     .replaceAll("&quot;", "\"");
 }
 
-async function getBoleto(orderId: string, orderKey: string) {
+function getReceiptUrl(orderId: string, orderKey: string, returnUrl: string) {
+  const wordpressUrl = new URL(getWordPressUrl());
+
+  try {
+    const receiptUrl = new URL(returnUrl);
+    const belongsToWordPress = receiptUrl.origin === wordpressUrl.origin;
+    const belongsToOrder = receiptUrl.pathname.split("/").includes(orderId);
+    const hasCorrectKey = receiptUrl.searchParams.get("key") === orderKey;
+    if (belongsToWordPress && belongsToOrder && hasCorrectKey) return receiptUrl;
+  } catch {
+    // A URL de retorno e validada antes de ser usada pelo servidor.
+  }
+
+  return null;
+}
+
+async function getBoleto(orderId: string, orderKey: string, returnUrl: string) {
   if (!/^\d+$/.test(orderId) || !/^wc_order_[A-Za-z0-9]+$/.test(orderKey)) return null;
 
-  const wordpressUrl = new URL(getWordPressUrl());
-  const receiptUrl = new URL(`${wordpressUrl.pathname.replace(/\/$/, "")}/finalizar-compra/order-received/${orderId}/`, wordpressUrl.origin);
-  receiptUrl.searchParams.set("key", orderKey);
+  const receiptUrl = getReceiptUrl(orderId, orderKey, returnUrl);
+  if (!receiptUrl) return null;
 
   try {
     const response = await fetch(receiptUrl, {
       cache: "no-store",
       headers: { Accept: "text/html", "User-Agent": "NutzenCheckout/1.0" },
     });
-    if (!response.ok) return { receiptUrl: receiptUrl.toString(), ticketUrl: null };
+    if (!response.ok) return { ticketUrl: null };
 
     const html = await response.text();
-    const match = html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
-    if (!match?.[1]) return { receiptUrl: receiptUrl.toString(), ticketUrl: null };
+    const match = html.match(/<a[^>]+id=["']submit-payment["'][^>]+href=["']([^"']+)["']/i)
+      ?? html.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+    if (!match?.[1]) return { ticketUrl: null };
 
-    const ticketUrl = new URL(decodeAttribute(match[1]), wordpressUrl.origin);
-    if (ticketUrl.protocol !== "https:") return { receiptUrl: receiptUrl.toString(), ticketUrl: null };
-    return { receiptUrl: receiptUrl.toString(), ticketUrl: ticketUrl.toString() };
+    const ticketUrl = new URL(decodeAttribute(match[1]), receiptUrl.origin);
+    if (ticketUrl.protocol !== "https:") return { ticketUrl: null };
+    return { ticketUrl: ticketUrl.toString() };
   } catch {
-    return { receiptUrl: receiptUrl.toString(), ticketUrl: null };
+    return { ticketUrl: null };
   }
 }
 
 export default async function BoletoPage({ searchParams }: BoletoPageProps) {
-  const { pedido = "", chave = "" } = await searchParams;
-  const boleto = await getBoleto(pedido, chave);
+  const { pedido = "", chave = "", retorno = "" } = await searchParams;
+  const boleto = await getBoleto(pedido, chave, retorno);
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -67,7 +84,7 @@ export default async function BoletoPage({ searchParams }: BoletoPageProps) {
                     <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-emerald-50"><CheckCircle2 className="h-6 w-6 text-emerald-600" /></span>
                     <div><p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-600">Pedido recebido</p><h1 className="mt-1 text-3xl font-black text-[#123F55]">Seu boleto foi gerado</h1><p className="mt-2 text-sm leading-6 text-slate-600">Pedido #{pedido}. O pagamento pode levar até dois dias úteis para ser confirmado.</p></div>
                   </div>
-                  {boleto.ticketUrl && <a href={boleto.ticketUrl} target="_blank" rel="noreferrer" className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-[#FE8C05] px-6 text-sm font-black text-white hover:bg-[#CC632B]">Abrir para imprimir <ExternalLink className="h-4 w-4" /></a>}
+                  {boleto.ticketUrl && <BoletoActions />}
                 </div>
 
                 {boleto.ticketUrl ? (
@@ -75,7 +92,7 @@ export default async function BoletoPage({ searchParams }: BoletoPageProps) {
                     <iframe src={boleto.ticketUrl} title={`Boleto do pedido ${pedido}`} className="h-[900px] w-full" />
                   </div>
                 ) : (
-                  <div className="mt-8 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-5 text-sm text-[#8A451F]"><AlertCircle className="mt-0.5 h-5 w-5 shrink-0" /><div><strong className="block">O boleto foi gerado, mas a visualização ainda está carregando.</strong><a href={boleto.receiptUrl} className="mt-2 inline-flex font-black underline">Abrir os dados do pedido</a></div></div>
+                  <div className="mt-8 flex items-start gap-3 rounded-lg border border-orange-200 bg-orange-50 p-5 text-sm text-[#8A451F]"><AlertCircle className="mt-0.5 h-5 w-5 shrink-0" /><div><strong className="block">O boleto foi gerado, mas a visualização ainda está carregando.</strong><p className="mt-2 leading-6">Atualize esta página em alguns instantes. Você também pode acompanhar o pedido sem sair da Nutzen.</p></div></div>
                 )}
               </>
             ) : (

@@ -135,7 +135,11 @@ export default function CheckoutPage() {
         setProcessingPayment(false);
         return;
       }
-      const query = new URLSearchParams({ pedido: String(checkout.order_id), chave: checkout.order_key });
+      const query = new URLSearchParams({
+        pedido: String(checkout.order_id),
+        chave: checkout.order_key,
+        retorno: checkout.payment_result.redirect_url,
+      });
       router.push(`/pedido/boleto?${query.toString()}`);
       return;
     }
