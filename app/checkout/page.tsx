@@ -2,13 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard, ExternalLink, LoaderCircle, LockKeyhole, MapPin, PackageCheck, ShoppingBag, Truck, UserRound } from "lucide-react";
-import { formatCurrency, useCart, type CheckoutAddress } from "../components/cart-provider";
+import { formatCurrency, useCart, type CheckoutAddress, type MercadoPagoCardPayment } from "../components/cart-provider";
+import { MercadoPagoCardForm, type MercadoPagoCardFormHandle } from "../components/mercado-pago-card-form";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 
 const fieldClass = "h-12 w-full rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#3E1255] focus:bg-white focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)] user-invalid:border-[#CC632B]";
+const mercadoPagoPublicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY ?? "";
+const addressFields = new Set(["full_name", "email", "phone", "postcode", "city", "state", "address_1", "address_2"]);
 
 function getCheckoutAddress(formElement: HTMLFormElement): CheckoutAddress {
   const form = new FormData(formElement);
@@ -28,38 +31,88 @@ function getCheckoutAddress(formElement: HTMLFormElement): CheckoutAddress {
 }
 
 export default function CheckoutPage() {
-  const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, checkoutWithMercadoPago, shippingRates, hasCalculatedShipping, error } = useCart();
+  const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, checkoutWithMercadoPago, checkoutWithMercadoPagoCard, shippingRates, hasCalculatedShipping, error } = useCart();
   const formRef = useRef<HTMLFormElement>(null);
+  const cardFormRef = useRef<MercadoPagoCardFormHandle>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "pro">("card");
+  const [cardReady, setCardReady] = useState(false);
   const selectedShipping = shippingRates.flatMap((group) => group.shipping_rates).find((rate) => rate.selected);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleAddressUpdate() {
+    const form = formRef.current;
+    if (!form || !form.reportValidity()) return;
     setSubmitting(true);
     setPaymentError(null);
-    const saved = await updateCustomer(getCheckoutAddress(event.currentTarget));
+    const saved = await updateCustomer(getCheckoutAddress(form));
     setSubmitted(saved);
     setSubmitting(false);
   }
 
-  async function handlePayment() {
+  function validatePaymentPrerequisites() {
     const form = formRef.current;
-    if (!form || !form.reportValidity()) return;
+    if (!form || !form.reportValidity()) return null;
     if (!submitted || !selectedShipping) {
       setPaymentError("Calcule a entrega e selecione uma modalidade antes de continuar.");
-      return;
+      return null;
     }
     if (!acceptedTerms) {
       setPaymentError("Confirme a política de privacidade para continuar.");
+      return null;
+    }
+    return form;
+  }
+
+  async function handleCardPayment(card: MercadoPagoCardPayment) {
+    const form = validatePaymentPrerequisites();
+    if (!form) {
+      setProcessingPayment(false);
       return;
     }
 
+    const checkout = await checkoutWithMercadoPagoCard(getCheckoutAddress(form), card);
+    if (!checkout?.payment_result) {
+      setPaymentError("O pagamento por cartão não pôde ser processado. Tente novamente ou use o Mercado Pago.");
+      setProcessingPayment(false);
+      return;
+    }
+
+    const details = Object.fromEntries(checkout.payment_result.payment_details.map(({ key, value }) => [key, value]));
+    if (details.three_ds_flow === "true" || details.three_ds_flow === "1") {
+      setPaymentError("Seu banco solicitou uma autenticação adicional. Nesta primeira versão, escolha “Mercado Pago” abaixo para concluir com essa validação.");
+      setProcessingPayment(false);
+      return;
+    }
+
+    if (checkout.payment_result.payment_status === "success") {
+      const status = checkout.status === "pending" || checkout.status === "on-hold" ? "pendente" : "aprovado";
+      window.location.assign(`/pedido/${status}?pedido=${checkout.order_id}`);
+      return;
+    }
+
+    setPaymentError(details.message || "O cartão não foi aprovado. Confira os dados ou tente outra forma de pagamento.");
+    setProcessingPayment(false);
+  }
+
+  async function handlePayment() {
+    const form = validatePaymentPrerequisites();
+    if (!form) return;
+
     setProcessingPayment(true);
     setPaymentError(null);
+
+    if (paymentMethod === "card") {
+      if (!cardFormRef.current?.submit()) {
+        setPaymentError("Aguarde os campos seguros do cartão terminarem de carregar.");
+        setProcessingPayment(false);
+      }
+      return;
+    }
+
     const checkout = await checkoutWithMercadoPago(getCheckoutAddress(form));
     const redirectUrl = checkout?.payment_result?.redirect_url;
     if (!checkout || !redirectUrl) {
@@ -92,9 +145,9 @@ export default function CheckoutPage() {
         {items.length === 0 ? (
           <div className="mx-auto max-w-lg py-16 text-center"><ShoppingBag className="mx-auto h-12 w-12 text-[#3E1255]" /><h2 className="mt-5 text-3xl font-black text-[#123F55]">Adicione produtos primeiro</h2><p className="mt-3 text-sm leading-6 text-slate-500">Seu resumo de compra aparecerá aqui assim que você escolher os produtos.</p><Link href="/produto" className="mt-7 inline-flex h-12 items-center rounded-full bg-[#FE8C05] px-7 text-sm font-black text-white">Ver produtos</Link></div>
         ) : (
-          <form ref={formRef} onSubmit={handleSubmit} onChange={(event) => {
+          <form id="nutzen-checkout-form" ref={formRef} onSubmit={(event) => event.preventDefault()} onChange={(event) => {
             const fieldName = event.target instanceof HTMLInputElement ? event.target.name : "";
-            if (fieldName !== "privacy_consent" && fieldName !== "payment_method") setSubmitted(false);
+            if (addressFields.has(fieldName)) setSubmitted(false);
           }} className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1fr_390px]">
             {submitted && <div role="status" className="reveal-up flex items-center gap-3 rounded-lg border border-[#D9C7E3] bg-[#F5EFF8] p-5 text-sm font-bold text-[#3E1255] lg:col-span-2"><CheckCircle2 className="h-5 w-5 shrink-0 text-[#FE8C05]" /> Endereço atualizado no WooCommerce. Confira os métodos de entrega disponíveis.</div>}
             {error && <div role="alert" className="flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 p-5 text-sm font-bold text-[#CC632B] lg:col-span-2"><AlertCircle className="h-5 w-5 shrink-0" />{error}</div>}
@@ -117,7 +170,7 @@ export default function CheckoutPage() {
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Endereço e número<input name="address_1" className={fieldClass} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Complemento<input name="address_2" className={fieldClass} /></label>
                 </div>
-                <button type="submit" disabled={submitting} className="mt-6 h-12 rounded-full bg-[#3E1255] px-7 text-sm font-black text-white transition-colors duration-300 hover:bg-[#5B2674] disabled:opacity-50">{submitting ? "Consultando entrega..." : "Calcular entrega"}</button>
+                <button type="button" onClick={() => void handleAddressUpdate()} disabled={submitting} className="mt-6 h-12 rounded-full bg-[#3E1255] px-7 text-sm font-black text-white transition-colors duration-300 hover:bg-[#5B2674] disabled:opacity-50">{submitting ? "Consultando entrega..." : "Calcular entrega"}</button>
               </section>
 
               <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8" style={{ animationDelay: "160ms" }}>
@@ -132,9 +185,26 @@ export default function CheckoutPage() {
               ) : (
                 <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8" style={{ animationDelay: "220ms" }}>
                   <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><CreditCard className="h-5 w-5 text-[#FE8C05]" />Pagamento</h2>
-                  <label className="mt-5 flex cursor-pointer items-start gap-4 rounded-md border-2 border-[#3E1255] bg-[#F5EFF8] p-4">
-                    <input type="radio" name="payment_method" value="woo-mercado-pago-basic" checked readOnly className="mt-1 accent-[#3E1255]" />
-                    <span><strong className="block text-sm text-[#123F55]">Mercado Pago</strong><small className="mt-1 block leading-5 text-slate-500">Pix, cartão, boleto ou saldo, conforme as opções habilitadas na sua conta. Você será direcionado ao ambiente seguro do Mercado Pago.</small></span>
+                  <label className={`mt-5 flex cursor-pointer items-start gap-4 rounded-md border-2 p-4 ${paymentMethod === "card" ? "border-[#3E1255] bg-[#F5EFF8]" : "border-slate-200"}`}>
+                    <input type="radio" name="payment_method" value="woo-mercado-pago-custom" checked={paymentMethod === "card"} onChange={() => setPaymentMethod("card")} className="mt-1 accent-[#3E1255]" />
+                    <span><strong className="block text-sm text-[#123F55]">Cartão de crédito</strong><small className="mt-1 block leading-5 text-slate-500">Preencha e conclua o pagamento sem sair do site.</small></span>
+                  </label>
+                  {paymentMethod === "card" && (
+                    <MercadoPagoCardForm
+                      ref={cardFormRef}
+                      amount={total}
+                      publicKey={mercadoPagoPublicKey}
+                      onPayment={handleCardPayment}
+                      onReadyChange={setCardReady}
+                      onError={(message) => {
+                        setPaymentError(message);
+                        setProcessingPayment(false);
+                      }}
+                    />
+                  )}
+                  <label className={`mt-5 flex cursor-pointer items-start gap-4 rounded-md border-2 p-4 ${paymentMethod === "pro" ? "border-[#3E1255] bg-[#F5EFF8]" : "border-slate-200"}`}>
+                    <input type="radio" name="payment_method" value="woo-mercado-pago-basic" checked={paymentMethod === "pro"} onChange={() => setPaymentMethod("pro")} className="mt-1 accent-[#3E1255]" />
+                    <span><strong className="block text-sm text-[#123F55]">Mercado Pago</strong><small className="mt-1 block leading-5 text-slate-500">Pix, boleto, saldo ou cartão no ambiente seguro do Mercado Pago. Esta opção permanece disponível como alternativa.</small></span>
                   </label>
                   <label className="mt-5 flex items-start gap-3 text-xs leading-5 text-slate-600">
                     <input type="checkbox" name="privacy_consent" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} className="mt-1 accent-[#3E1255]" />
@@ -156,8 +226,8 @@ export default function CheckoutPage() {
                 <div className="mt-5 flex items-end justify-between border-t border-white/15 pt-5"><strong>Total</strong><strong className="text-2xl text-[#FE8C05]">{formatCurrency(total)}</strong></div>
                 {purchaseType === "subscription" && <div className="mt-5 grid gap-2 border-t border-white/15 pt-5 text-xs text-white/70"><div className="flex justify-between gap-4"><span>Total recorrente</span><strong className="text-[#FE8C05]">{formatCurrency(total)} / ciclo</strong></div><div className="flex justify-between gap-4"><span>Frequência</span><strong className="text-right text-white">{items[0]?.subscription?.frequencyLabel}</strong></div><div className="flex justify-between gap-4"><span>Primeira renovação</span><strong className="text-right text-white">Definida após o pagamento</strong></div></div>}
                 <Link href="/carrinho" className="mt-7 flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-white/70 text-sm font-black text-white transition-colors duration-300 hover:bg-white hover:text-[#3E1255]"><ShoppingBag className="h-4 w-4" />Conferir carrinho</Link>
-                <button type="button" onClick={() => void handlePayment()} disabled={processingPayment || purchaseType === "subscription" || !submitted || !selectedShipping || !acceptedTerms} className="mt-3 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-colors hover:bg-[#CC632B] disabled:cursor-not-allowed disabled:bg-slate-400">
-                  {processingPayment ? <><LoaderCircle className="h-4 w-4 animate-spin" />Abrindo Mercado Pago...</> : <><span>Ir para o Mercado Pago</span><ExternalLink className="h-4 w-4" /></>}
+                <button type="button" onClick={() => void handlePayment()} disabled={processingPayment || purchaseType === "subscription" || !submitted || !selectedShipping || !acceptedTerms || (paymentMethod === "card" && !cardReady)} className="mt-3 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-colors hover:bg-[#CC632B] disabled:cursor-not-allowed disabled:bg-slate-400">
+                  {processingPayment ? <><LoaderCircle className="h-4 w-4 animate-spin" />Processando pagamento...</> : paymentMethod === "card" ? <><span>Finalizar pedido</span><LockKeyhole className="h-4 w-4" /></> : <><span>Ir para o Mercado Pago</span><ExternalLink className="h-4 w-4" /></>}
                 </button>
                 {!submitted && purchaseType === "one_time" && <p className="mt-3 text-center text-[11px] leading-5 text-white/55">Calcule a entrega para liberar o pagamento.</p>}
               </div>

@@ -22,6 +22,17 @@ type CartItem = {
 
 type CartMode = "loading" | "woocommerce" | "fallback";
 
+export type MercadoPagoCardPayment = {
+  token: string;
+  paymentMethodId: string;
+  paymentTypeId: string;
+  issuerId?: string;
+  installments: number;
+  identificationType: string;
+  identificationNumber: string;
+  deviceSessionId?: string;
+};
+
 export type CheckoutAddress = {
   first_name: string;
   last_name: string;
@@ -59,6 +70,7 @@ type CartContextValue = {
   updateCustomer: (data: CheckoutAddress) => Promise<boolean>;
   selectShippingRate: (packageId: number, rateId: string) => Promise<boolean>;
   checkoutWithMercadoPago: (address: CheckoutAddress) => Promise<StoreApiCheckout | null>;
+  checkoutWithMercadoPagoCard: (address: CheckoutAddress, card: MercadoPagoCardPayment) => Promise<StoreApiCheckout | null>;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -395,6 +407,67 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           return payload;
         } catch (reason) {
           setError(reason instanceof Error ? reason.message : "Não foi possível iniciar o pagamento.");
+          return null;
+        }
+      },
+      checkoutWithMercadoPagoCard: async (address, card) => {
+        if (mode !== "woocommerce" || !storeCart) {
+          setError("O checkout do WooCommerce não está disponível no momento.");
+          return null;
+        }
+
+        const shippingAddress = {
+          first_name: address.first_name,
+          last_name: address.last_name,
+          postcode: address.postcode,
+          city: address.city,
+          state: address.state,
+          country: address.country,
+          address_1: address.address_1,
+          address_2: address.address_2,
+        };
+        const amount = (Number(storeCart.totals.total_price) / 10 ** storeCart.totals.currency_minor_unit).toFixed(2);
+        const paymentData = [
+          ["mercadopago_custom[amount]", amount],
+          ["mercadopago_custom[currency_ratio]", "1"],
+          ["mercadopago_custom[payment_method_id]", card.paymentMethodId],
+          ["mercadopago_custom[checkout_type]", "custom"],
+          ["mercadopago_custom[token]", card.token],
+          ["mercadopago_custom[installments]", String(card.installments)],
+          ["mercadopago_custom[session_id]", card.deviceSessionId ?? ""],
+          ["mercadopago_custom[payment_type_id]", card.paymentTypeId || "credit_card"],
+          ["mercadopago_custom[doc_number]", card.identificationNumber],
+          ["mercadopago_custom[doc_type]", card.identificationType],
+          ["mercadopago_custom[super_token_validation]", "false"],
+          ["mercadopago_custom[authorized_pseudotoken]", ""],
+          ["mercadopago_checkout_session[_mp_flow_id]", crypto.randomUUID()],
+        ].map(([key, value]) => ({ key, value }));
+
+        if (card.issuerId) {
+          paymentData.push({ key: "mercadopago_custom[issuer]", value: card.issuerId });
+        }
+
+        try {
+          const response = await fetch("/api/store/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({
+              billing_address: address,
+              shipping_address: shippingAddress,
+              payment_method: "woo-mercado-pago-custom",
+              payment_data: paymentData,
+              expected_total: storeCart.totals.total_price,
+            }),
+          });
+          const payload = await response.json().catch(() => null) as StoreApiCheckout | { message?: string } | null;
+          if (!response.ok || !payload || !("order_id" in payload)) {
+            throw new Error(payload && "message" in payload ? payload.message : "Não foi possível processar o cartão.");
+          }
+          setError(null);
+          return payload;
+        } catch (reason) {
+          setError(reason instanceof Error ? reason.message : "Não foi possível processar o cartão.");
           return null;
         }
       },
