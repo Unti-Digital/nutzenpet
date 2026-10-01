@@ -33,6 +33,13 @@ export type MercadoPagoCardPayment = {
   deviceSessionId?: string;
 };
 
+export type MercadoPagoTicketPayment = {
+  identificationNumber: string;
+  streetName: string;
+  streetNumber: string;
+  neighborhood: string;
+};
+
 export type CheckoutAddress = {
   first_name: string;
   last_name: string;
@@ -71,6 +78,7 @@ type CartContextValue = {
   selectShippingRate: (packageId: number, rateId: string) => Promise<boolean>;
   checkoutWithMercadoPago: (address: CheckoutAddress) => Promise<StoreApiCheckout | null>;
   checkoutWithMercadoPagoCard: (address: CheckoutAddress, card: MercadoPagoCardPayment) => Promise<StoreApiCheckout | null>;
+  checkoutWithMercadoPagoTicket: (address: CheckoutAddress, ticket: MercadoPagoTicketPayment) => Promise<StoreApiCheckout | null>;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -468,6 +476,64 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           return payload;
         } catch (reason) {
           setError(reason instanceof Error ? reason.message : "Não foi possível processar o cartão.");
+          return null;
+        }
+      },
+      checkoutWithMercadoPagoTicket: async (address, ticket) => {
+        if (mode !== "woocommerce" || !storeCart) {
+          setError("O checkout do WooCommerce não está disponível no momento.");
+          return null;
+        }
+
+        const shippingAddress = {
+          first_name: address.first_name,
+          last_name: address.last_name,
+          postcode: address.postcode,
+          city: address.city,
+          state: address.state,
+          country: address.country,
+          address_1: address.address_1,
+          address_2: address.address_2,
+        };
+        const amount = (Number(storeCart.totals.total_price) / 10 ** storeCart.totals.currency_minor_unit).toFixed(2);
+        const paymentData = [
+          ["mercadopago_ticket[site_id]", "MLB"],
+          ["mercadopago_ticket[amount]", amount],
+          ["mercadopago_ticket[currency_ratio]", "1"],
+          ["mercadopago_ticket[payment_method_id]", "bolbradesco"],
+          ["mercadopago_ticket[doc_type]", "CPF"],
+          ["mercadopago_ticket[doc_number]", ticket.identificationNumber],
+          ["mercadopago_ticket[address_city]", address.city],
+          ["mercadopago_ticket[address_federal_unit]", address.state],
+          ["mercadopago_ticket[address_zip_code]", address.postcode],
+          ["mercadopago_ticket[address_street_name]", ticket.streetName],
+          ["mercadopago_ticket[address_street_number]", ticket.streetNumber],
+          ["mercadopago_ticket[address_neighborhood]", ticket.neighborhood],
+          ["mercadopago_ticket[address_complement]", address.address_2],
+          ["mercadopago_checkout_session[_mp_flow_id]", crypto.randomUUID()],
+        ].map(([key, value]) => ({ key, value }));
+
+        try {
+          const response = await fetch("/api/store/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({
+              billing_address: address,
+              shipping_address: shippingAddress,
+              payment_method: "woo-mercado-pago-ticket",
+              payment_data: paymentData,
+              expected_total: storeCart.totals.total_price,
+            }),
+          });
+          const payload = await response.json().catch(() => null) as StoreApiCheckout | { message?: string } | null;
+          if (!response.ok || !payload || !("order_id" in payload)) {
+            throw new Error(payload && "message" in payload ? payload.message : "Não foi possível gerar o boleto.");
+          }
+          setError(null);
+          return payload;
+        } catch (reason) {
+          setError(reason instanceof Error ? reason.message : "Não foi possível gerar o boleto.");
           return null;
         }
       },

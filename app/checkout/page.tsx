@@ -2,16 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard, ExternalLink, LoaderCircle, LockKeyhole, MapPin, PackageCheck, ShoppingBag, Truck, UserRound } from "lucide-react";
-import { formatCurrency, useCart, type CheckoutAddress, type MercadoPagoCardPayment } from "../components/cart-provider";
+import { formatCurrency, useCart, type CheckoutAddress, type MercadoPagoCardPayment, type MercadoPagoTicketPayment } from "../components/cart-provider";
 import { MercadoPagoCardForm, type MercadoPagoCardFormHandle } from "../components/mercado-pago-card-form";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 
 const fieldClass = "h-12 w-full rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#3E1255] focus:bg-white focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)] user-invalid:border-[#CC632B]";
 const mercadoPagoPublicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY ?? "";
-const addressFields = new Set(["full_name", "email", "phone", "postcode", "city", "state", "address_1", "address_2"]);
+const addressFields = new Set(["full_name", "email", "phone", "postcode", "city", "state", "street_name", "street_number", "neighborhood", "address_2"]);
 
 function getCheckoutAddress(formElement: HTMLFormElement): CheckoutAddress {
   const form = new FormData(formElement);
@@ -25,13 +26,24 @@ function getCheckoutAddress(formElement: HTMLFormElement): CheckoutAddress {
     city: String(form.get("city") ?? "").trim(),
     state: String(form.get("state") ?? "").trim().toUpperCase(),
     country: "BR",
-    address_1: String(form.get("address_1") ?? "").trim(),
+    address_1: [String(form.get("street_name") ?? "").trim(), String(form.get("street_number") ?? "").trim()].filter(Boolean).join(", "),
     address_2: String(form.get("address_2") ?? "").trim(),
   };
 }
 
+function getTicketPayment(formElement: HTMLFormElement): MercadoPagoTicketPayment {
+  const form = new FormData(formElement);
+  return {
+    identificationNumber: String(form.get("boleto_document") ?? "").replace(/\D/g, ""),
+    streetName: String(form.get("street_name") ?? "").trim(),
+    streetNumber: String(form.get("street_number") ?? "").trim(),
+    neighborhood: String(form.get("neighborhood") ?? "").trim(),
+  };
+}
+
 export default function CheckoutPage() {
-  const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, checkoutWithMercadoPago, checkoutWithMercadoPagoCard, shippingRates, hasCalculatedShipping, error } = useCart();
+  const router = useRouter();
+  const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, checkoutWithMercadoPago, checkoutWithMercadoPagoCard, checkoutWithMercadoPagoTicket, shippingRates, hasCalculatedShipping, error } = useCart();
   const formRef = useRef<HTMLFormElement>(null);
   const cardFormRef = useRef<MercadoPagoCardFormHandle>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -39,7 +51,7 @@ export default function CheckoutPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "pro">("card");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "ticket" | "pro">("card");
   const [cardReady, setCardReady] = useState(false);
   const selectedShipping = shippingRates.flatMap((group) => group.shipping_rates).find((rate) => rate.selected);
 
@@ -90,7 +102,7 @@ export default function CheckoutPage() {
 
     if (checkout.payment_result.payment_status === "success") {
       const status = checkout.status === "pending" || checkout.status === "on-hold" ? "pendente" : "aprovado";
-      window.location.assign(`/pedido/${status}?pedido=${checkout.order_id}`);
+      router.push(`/pedido/${status}?pedido=${checkout.order_id}`);
       return;
     }
 
@@ -110,6 +122,21 @@ export default function CheckoutPage() {
         setPaymentError("Aguarde os campos seguros do cartão terminarem de carregar.");
         setProcessingPayment(false);
       }
+      return;
+    }
+
+    if (paymentMethod === "ticket") {
+      const checkout = await checkoutWithMercadoPagoTicket(getCheckoutAddress(form), getTicketPayment(form));
+      if (!checkout?.payment_result || checkout.payment_result.payment_status !== "success") {
+        const details = checkout?.payment_result
+          ? Object.fromEntries(checkout.payment_result.payment_details.map(({ key, value }) => [key, value]))
+          : {};
+        setPaymentError(details.message || "O Mercado Pago não conseguiu gerar o boleto. Confira os dados e tente novamente.");
+        setProcessingPayment(false);
+        return;
+      }
+      const query = new URLSearchParams({ pedido: String(checkout.order_id), chave: checkout.order_key });
+      router.push(`/pedido/boleto?${query.toString()}`);
       return;
     }
 
@@ -167,7 +194,9 @@ export default function CheckoutPage() {
                   <label className="grid gap-2 text-xs font-bold text-slate-600">CEP<input name="postcode" inputMode="numeric" className={fieldClass} pattern="[0-9]{5}-?[0-9]{3}" title="Informe um CEP válido" required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600">Estado<input name="state" className={fieldClass} placeholder="SP" maxLength={2} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Cidade<input name="city" className={fieldClass} required /></label>
-                  <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Endereço e número<input name="address_1" className={fieldClass} required /></label>
+                  <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Endereço<input name="street_name" className={fieldClass} placeholder="Rua ou avenida" required /></label>
+                  <label className="grid gap-2 text-xs font-bold text-slate-600">Número<input name="street_number" className={fieldClass} required /></label>
+                  <label className="grid gap-2 text-xs font-bold text-slate-600">Bairro<input name="neighborhood" className={fieldClass} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Complemento<input name="address_2" className={fieldClass} /></label>
                 </div>
                 <button type="button" onClick={() => void handleAddressUpdate()} disabled={submitting} className="mt-6 h-12 rounded-full bg-[#3E1255] px-7 text-sm font-black text-white transition-colors duration-300 hover:bg-[#5B2674] disabled:opacity-50">{submitting ? "Consultando entrega..." : "Calcular entrega"}</button>
@@ -202,6 +231,17 @@ export default function CheckoutPage() {
                       }}
                     />
                   )}
+                  <label className={`mt-5 flex cursor-pointer items-start gap-4 rounded-md border-2 p-4 ${paymentMethod === "ticket" ? "border-[#3E1255] bg-[#F5EFF8]" : "border-slate-200"}`}>
+                    <input type="radio" name="payment_method" value="woo-mercado-pago-ticket" checked={paymentMethod === "ticket"} onChange={() => setPaymentMethod("ticket")} className="mt-1 accent-[#3E1255]" />
+                    <span><strong className="block text-sm text-[#123F55]">Boleto bancário</strong><small className="mt-1 block leading-5 text-slate-500">Gere o boleto diretamente no site. O vencimento será em até 3 dias.</small></span>
+                  </label>
+                  {paymentMethod === "ticket" && (
+                    <label className="mt-4 grid gap-2 text-xs font-bold text-slate-600">
+                      CPF do comprador
+                      <input name="boleto_document" className={fieldClass} inputMode="numeric" pattern="[0-9.\-]{11,14}" title="Informe um CPF válido" required />
+                      <small className="font-normal leading-5 text-slate-500">O CPF é obrigatório para a emissão do boleto.</small>
+                    </label>
+                  )}
                   <label className={`mt-5 flex cursor-pointer items-start gap-4 rounded-md border-2 p-4 ${paymentMethod === "pro" ? "border-[#3E1255] bg-[#F5EFF8]" : "border-slate-200"}`}>
                     <input type="radio" name="payment_method" value="woo-mercado-pago-basic" checked={paymentMethod === "pro"} onChange={() => setPaymentMethod("pro")} className="mt-1 accent-[#3E1255]" />
                     <span><strong className="block text-sm text-[#123F55]">Mercado Pago</strong><small className="mt-1 block leading-5 text-slate-500">Pix, boleto, saldo ou cartão no ambiente seguro do Mercado Pago. Esta opção permanece disponível como alternativa.</small></span>
@@ -227,7 +267,7 @@ export default function CheckoutPage() {
                 {purchaseType === "subscription" && <div className="mt-5 grid gap-2 border-t border-white/15 pt-5 text-xs text-white/70"><div className="flex justify-between gap-4"><span>Total recorrente</span><strong className="text-[#FE8C05]">{formatCurrency(total)} / ciclo</strong></div><div className="flex justify-between gap-4"><span>Frequência</span><strong className="text-right text-white">{items[0]?.subscription?.frequencyLabel}</strong></div><div className="flex justify-between gap-4"><span>Primeira renovação</span><strong className="text-right text-white">Definida após o pagamento</strong></div></div>}
                 <Link href="/carrinho" className="mt-7 flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-white/70 text-sm font-black text-white transition-colors duration-300 hover:bg-white hover:text-[#3E1255]"><ShoppingBag className="h-4 w-4" />Conferir carrinho</Link>
                 <button type="button" onClick={() => void handlePayment()} disabled={processingPayment || purchaseType === "subscription" || !submitted || !selectedShipping || !acceptedTerms || (paymentMethod === "card" && !cardReady)} className="mt-3 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-colors hover:bg-[#CC632B] disabled:cursor-not-allowed disabled:bg-slate-400">
-                  {processingPayment ? <><LoaderCircle className="h-4 w-4 animate-spin" />Processando pagamento...</> : paymentMethod === "card" ? <><span>Finalizar pedido</span><LockKeyhole className="h-4 w-4" /></> : <><span>Ir para o Mercado Pago</span><ExternalLink className="h-4 w-4" /></>}
+                  {processingPayment ? <><LoaderCircle className="h-4 w-4 animate-spin" />Processando pagamento...</> : paymentMethod === "card" ? <><span>Finalizar pedido</span><LockKeyhole className="h-4 w-4" /></> : paymentMethod === "ticket" ? <><span>Gerar boleto</span><LockKeyhole className="h-4 w-4" /></> : <><span>Ir para o Mercado Pago</span><ExternalLink className="h-4 w-4" /></>}
                 </button>
                 {!submitted && purchaseType === "one_time" && <p className="mt-3 text-center text-[11px] leading-5 text-white/55">Calcule a entrega para liberar o pagamento.</p>}
               </div>
