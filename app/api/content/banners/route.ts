@@ -18,7 +18,7 @@ export async function GET() {
   try {
     const response = await fetch(getWordPressApiUrl("nutzen/v1/banners"), {
       headers: { Accept: "application/json" },
-      next: { revalidate: 300, tags: ["nutzen-banners"] },
+      cache: "no-store",
     });
     if (!response.ok) return Response.json({ items: [] });
 

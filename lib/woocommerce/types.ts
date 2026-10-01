@@ -173,3 +173,16 @@ export type StoreApiCart = {
   payment_requirements: string[];
   extensions: Record<string, unknown>;
 };
+
+export type StoreApiCheckout = {
+  order_id: number;
+  order_number?: string;
+  order_key: string;
+  status: string;
+  payment_method: string;
+  payment_result: {
+    payment_status: string;
+    payment_details: Array<{ key: string; value: string }>;
+    redirect_url: string;
+  } | null;
+};

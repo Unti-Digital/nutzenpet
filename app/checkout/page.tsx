@@ -2,39 +2,80 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
-import { AlertCircle, ArrowLeft, CheckCircle2, LockKeyhole, MapPin, PackageCheck, ShoppingBag, Truck, UserRound } from "lucide-react";
-import { formatCurrency, useCart } from "../components/cart-provider";
+import { useRef, useState, type FormEvent } from "react";
+import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard, ExternalLink, LoaderCircle, LockKeyhole, MapPin, PackageCheck, ShoppingBag, Truck, UserRound } from "lucide-react";
+import { formatCurrency, useCart, type CheckoutAddress } from "../components/cart-provider";
 import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 
 const fieldClass = "h-12 w-full rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#3E1255] focus:bg-white focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)] user-invalid:border-[#CC632B]";
 
+function getCheckoutAddress(formElement: HTMLFormElement): CheckoutAddress {
+  const form = new FormData(formElement);
+  const fullName = String(form.get("full_name") ?? "").trim().split(/\s+/);
+  return {
+    first_name: fullName.shift() ?? "",
+    last_name: fullName.join(" "),
+    email: String(form.get("email") ?? "").trim(),
+    phone: String(form.get("phone") ?? "").trim(),
+    postcode: String(form.get("postcode") ?? "").replace(/\D/g, ""),
+    city: String(form.get("city") ?? "").trim(),
+    state: String(form.get("state") ?? "").trim().toUpperCase(),
+    country: "BR",
+    address_1: String(form.get("address_1") ?? "").trim(),
+    address_2: String(form.get("address_2") ?? "").trim(),
+  };
+}
+
 export default function CheckoutPage() {
-  const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, shippingRates, hasCalculatedShipping, error } = useCart();
+  const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, checkoutWithMercadoPago, shippingRates, hasCalculatedShipping, error } = useCart();
+  const formRef = useRef<HTMLFormElement>(null);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const selectedShipping = shippingRates.flatMap((group) => group.shipping_rates).find((rate) => rate.selected);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
-    const form = new FormData(event.currentTarget);
-    const fullName = String(form.get("full_name") ?? "").trim().split(/\s+/);
-    const saved = await updateCustomer({
-      first_name: fullName.shift() ?? "",
-      last_name: fullName.join(" "),
-      email: String(form.get("email") ?? ""),
-      phone: String(form.get("phone") ?? ""),
-      postcode: String(form.get("postcode") ?? ""),
-      city: String(form.get("city") ?? ""),
-      state: String(form.get("state") ?? "").toUpperCase(),
-      country: "BR",
-      address_1: String(form.get("address_1") ?? ""),
-      address_2: String(form.get("address_2") ?? ""),
-    });
+    setPaymentError(null);
+    const saved = await updateCustomer(getCheckoutAddress(event.currentTarget));
     setSubmitted(saved);
     setSubmitting(false);
+  }
+
+  async function handlePayment() {
+    const form = formRef.current;
+    if (!form || !form.reportValidity()) return;
+    if (!submitted || !selectedShipping) {
+      setPaymentError("Calcule a entrega e selecione uma modalidade antes de continuar.");
+      return;
+    }
+    if (!acceptedTerms) {
+      setPaymentError("Confirme a política de privacidade para continuar.");
+      return;
+    }
+
+    setProcessingPayment(true);
+    setPaymentError(null);
+    const checkout = await checkoutWithMercadoPago(getCheckoutAddress(form));
+    const redirectUrl = checkout?.payment_result?.redirect_url;
+    if (!checkout || !redirectUrl) {
+      setPaymentError("O Mercado Pago não iniciou o pagamento. Confira se o Checkout Pro está ativo no WooCommerce.");
+      setProcessingPayment(false);
+      return;
+    }
+
+    try {
+      const target = new URL(redirectUrl, window.location.origin);
+      if (target.protocol !== "https:") throw new Error("Invalid payment redirect");
+      window.location.assign(target.toString());
+    } catch {
+      setPaymentError("O Mercado Pago retornou um endereço de pagamento inválido.");
+      setProcessingPayment(false);
+    }
   }
 
   return (
@@ -51,14 +92,17 @@ export default function CheckoutPage() {
         {items.length === 0 ? (
           <div className="mx-auto max-w-lg py-16 text-center"><ShoppingBag className="mx-auto h-12 w-12 text-[#3E1255]" /><h2 className="mt-5 text-3xl font-black text-[#123F55]">Adicione produtos primeiro</h2><p className="mt-3 text-sm leading-6 text-slate-500">Seu resumo de compra aparecerá aqui assim que você escolher os produtos.</p><Link href="/produto" className="mt-7 inline-flex h-12 items-center rounded-full bg-[#FE8C05] px-7 text-sm font-black text-white">Ver produtos</Link></div>
         ) : (
-          <form onSubmit={handleSubmit} className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1fr_390px]">
+          <form ref={formRef} onSubmit={handleSubmit} onChange={(event) => {
+            const fieldName = event.target instanceof HTMLInputElement ? event.target.name : "";
+            if (fieldName !== "privacy_consent" && fieldName !== "payment_method") setSubmitted(false);
+          }} className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1fr_390px]">
             {submitted && <div role="status" className="reveal-up flex items-center gap-3 rounded-lg border border-[#D9C7E3] bg-[#F5EFF8] p-5 text-sm font-bold text-[#3E1255] lg:col-span-2"><CheckCircle2 className="h-5 w-5 shrink-0 text-[#FE8C05]" /> Endereço atualizado no WooCommerce. Confira os métodos de entrega disponíveis.</div>}
             {error && <div role="alert" className="flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 p-5 text-sm font-bold text-[#CC632B] lg:col-span-2"><AlertCircle className="h-5 w-5 shrink-0" />{error}</div>}
             <div className="space-y-6">
               <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8">
                 <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><UserRound className="h-5 w-5 text-[#FE8C05]" />Dados pessoais</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Nome completo<input name="full_name" className={fieldClass} required /></label>
+                  <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Nome completo<input name="full_name" className={fieldClass} pattern=".*\s+.*" title="Informe nome e sobrenome" required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600">E-mail<input name="email" type="email" className={fieldClass} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600">Telefone<input name="phone" type="tel" className={fieldClass} required /></label>
                 </div>
@@ -67,7 +111,7 @@ export default function CheckoutPage() {
               <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8" style={{ animationDelay: "80ms" }}>
                 <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><MapPin className="h-5 w-5 text-[#FE8C05]" />Endereço de entrega</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <label className="grid gap-2 text-xs font-bold text-slate-600">CEP<input name="postcode" inputMode="numeric" className={fieldClass} required /></label>
+                  <label className="grid gap-2 text-xs font-bold text-slate-600">CEP<input name="postcode" inputMode="numeric" className={fieldClass} pattern="[0-9]{5}-?[0-9]{3}" title="Informe um CEP válido" required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600">Estado<input name="state" className={fieldClass} placeholder="SP" maxLength={2} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Cidade<input name="city" className={fieldClass} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Endereço e número<input name="address_1" className={fieldClass} required /></label>
@@ -83,7 +127,22 @@ export default function CheckoutPage() {
                 <div className="mt-5 grid gap-3">{shippingRates.flatMap((group) => group.shipping_rates.map((rate) => <button key={rate.rate_id} type="button" onClick={() => void selectShippingRate(group.package_id, rate.rate_id)} className={`flex items-center justify-between rounded-md border-2 p-4 text-left text-sm ${rate.selected ? "border-[#3E1255] bg-[#F5EFF8]" : "border-slate-200"}`}><span><strong className="block text-[#123F55]">{rate.name}</strong>{rate.delivery_time && <small className="text-slate-500">{rate.delivery_time}</small>}</span><strong className="text-[#3E1255]">{formatCurrency(Number(rate.price) / 10 ** rate.currency_minor_unit)}</strong></button>))}</div>
               </section>
 
-              <section className="rounded-lg border border-[#E2D4E9] bg-[#F5EFF8] p-6 sm:p-8"><h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><PackageCheck className="h-5 w-5 text-[#FE8C05]" />Pagamento pendente</h2><p className="mt-3 text-sm leading-6 text-slate-600">{purchaseType === "subscription" ? "A assinatura será registrada como pendente até a instalação e homologação de um gateway WooCommerce compatível com cobranças recorrentes. Nenhuma renovação automática será simulada." : "A finalização será habilitada após a instalação e homologação de um gateway WooCommerce compatível com checkout headless. Nenhuma cobrança ou pedido pago é simulado nesta etapa."}</p></section>
+              {purchaseType === "subscription" ? (
+                <section className="rounded-lg border border-[#E2D4E9] bg-[#F5EFF8] p-6 sm:p-8"><h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><PackageCheck className="h-5 w-5 text-[#FE8C05]" />Pagamento recorrente pendente</h2><p className="mt-3 text-sm leading-6 text-slate-600">A assinatura permanecerá indisponível até a homologação de cobranças recorrentes. Nenhuma renovação automática será simulada.</p></section>
+              ) : (
+                <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8" style={{ animationDelay: "220ms" }}>
+                  <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><CreditCard className="h-5 w-5 text-[#FE8C05]" />Pagamento</h2>
+                  <label className="mt-5 flex cursor-pointer items-start gap-4 rounded-md border-2 border-[#3E1255] bg-[#F5EFF8] p-4">
+                    <input type="radio" name="payment_method" value="woo-mercado-pago-basic" checked readOnly className="mt-1 accent-[#3E1255]" />
+                    <span><strong className="block text-sm text-[#123F55]">Mercado Pago</strong><small className="mt-1 block leading-5 text-slate-500">Pix, cartão, boleto ou saldo, conforme as opções habilitadas na sua conta. Você será direcionado ao ambiente seguro do Mercado Pago.</small></span>
+                  </label>
+                  <label className="mt-5 flex items-start gap-3 text-xs leading-5 text-slate-600">
+                    <input type="checkbox" name="privacy_consent" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} className="mt-1 accent-[#3E1255]" />
+                    <span>Li e concordo com a <Link href="/politica-de-privacidade" target="_blank" className="font-black text-[#3E1255] underline">política de privacidade</Link> e autorizo o processamento dos dados necessários ao pedido.</span>
+                  </label>
+                  {paymentError && <div role="alert" className="mt-5 flex items-start gap-3 rounded-md border border-orange-200 bg-orange-50 p-4 text-sm font-bold text-[#CC632B]"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{paymentError}</div>}
+                </section>
+              )}
               <Link href="/carrinho" className="group inline-flex items-center gap-2 text-sm font-black text-[#3E1255]"><ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-2" /> Voltar ao carrinho</Link>
             </div>
 
@@ -97,7 +156,10 @@ export default function CheckoutPage() {
                 <div className="mt-5 flex items-end justify-between border-t border-white/15 pt-5"><strong>Total</strong><strong className="text-2xl text-[#FE8C05]">{formatCurrency(total)}</strong></div>
                 {purchaseType === "subscription" && <div className="mt-5 grid gap-2 border-t border-white/15 pt-5 text-xs text-white/70"><div className="flex justify-between gap-4"><span>Total recorrente</span><strong className="text-[#FE8C05]">{formatCurrency(total)} / ciclo</strong></div><div className="flex justify-between gap-4"><span>Frequência</span><strong className="text-right text-white">{items[0]?.subscription?.frequencyLabel}</strong></div><div className="flex justify-between gap-4"><span>Primeira renovação</span><strong className="text-right text-white">Definida após o pagamento</strong></div></div>}
                 <Link href="/carrinho" className="mt-7 flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-white/70 text-sm font-black text-white transition-colors duration-300 hover:bg-white hover:text-[#3E1255]"><ShoppingBag className="h-4 w-4" />Conferir carrinho</Link>
-                <button type="button" disabled className="mt-3 h-13 w-full cursor-not-allowed rounded-full bg-slate-400 text-sm font-black text-white">Pagamento ainda não configurado</button>
+                <button type="button" onClick={() => void handlePayment()} disabled={processingPayment || purchaseType === "subscription" || !submitted || !selectedShipping || !acceptedTerms} className="mt-3 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-colors hover:bg-[#CC632B] disabled:cursor-not-allowed disabled:bg-slate-400">
+                  {processingPayment ? <><LoaderCircle className="h-4 w-4 animate-spin" />Abrindo Mercado Pago...</> : <><span>Ir para o Mercado Pago</span><ExternalLink className="h-4 w-4" /></>}
+                </button>
+                {!submitted && purchaseType === "one_time" && <p className="mt-3 text-center text-[11px] leading-5 text-white/55">Calcule a entrega para liberar o pagamento.</p>}
               </div>
             </aside>
           </form>

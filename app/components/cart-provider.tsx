@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { getProduct, products as fallbackProducts, type Product } from "../data/products";
-import type { StoreApiCart, StoreApiCartItem } from "@/lib/woocommerce/types";
+import type { StoreApiCart, StoreApiCartItem, StoreApiCheckout } from "@/lib/woocommerce/types";
 
 type CartItem = {
   key?: string;
@@ -21,6 +21,19 @@ type CartItem = {
 };
 
 type CartMode = "loading" | "woocommerce" | "fallback";
+
+export type CheckoutAddress = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  postcode: string;
+  city: string;
+  state: string;
+  country: string;
+  address_1: string;
+  address_2: string;
+};
 
 type CartContextValue = {
   items: CartItem[];
@@ -43,8 +56,9 @@ type CartContextValue = {
   clearCart: () => void;
   applyCoupon: (code: string) => Promise<boolean>;
   removeCoupon: (code: string) => Promise<boolean>;
-  updateCustomer: (data: Record<string, string>) => Promise<boolean>;
+  updateCustomer: (data: CheckoutAddress) => Promise<boolean>;
   selectShippingRate: (packageId: number, rateId: string) => Promise<boolean>;
+  checkoutWithMercadoPago: (address: CheckoutAddress) => Promise<StoreApiCheckout | null>;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -339,6 +353,51 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removeCoupon: (code) => runCartAction("cart/remove-coupon", { code }),
       updateCustomer: (data) => runCartAction("cart/update-customer", { shipping_address: data, billing_address: data }),
       selectShippingRate: (packageId, rateId) => runCartAction("cart/select-shipping-rate", { package_id: packageId, rate_id: rateId }),
+      checkoutWithMercadoPago: async (address) => {
+        if (mode !== "woocommerce" || !storeCart) {
+          setError("O checkout do WooCommerce não está disponível no momento.");
+          return null;
+        }
+
+        const shippingAddress = {
+          first_name: address.first_name,
+          last_name: address.last_name,
+          postcode: address.postcode,
+          city: address.city,
+          state: address.state,
+          country: address.country,
+          address_1: address.address_1,
+          address_2: address.address_2,
+        };
+        try {
+          const response = await fetch("/api/store/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({
+              billing_address: address,
+              shipping_address: shippingAddress,
+              payment_method: "woo-mercado-pago-basic",
+              payment_data: [
+                {
+                  key: "mercadopago_checkout_session[_mp_flow_id]",
+                  value: crypto.randomUUID(),
+                },
+              ],
+              expected_total: storeCart.totals.total_price,
+            }),
+          });
+          const payload = await response.json().catch(() => null) as StoreApiCheckout | { message?: string } | null;
+          if (!response.ok || !payload || !("order_id" in payload)) {
+            throw new Error(payload && "message" in payload ? payload.message : "Não foi possível iniciar o pagamento.");
+          }
+          setError(null);
+          return payload;
+        } catch (reason) {
+          setError(reason instanceof Error ? reason.message : "Não foi possível iniciar o pagamento.");
+          return null;
+        }
+      },
     };
   }, [applyStoreCart, catalog, error, items, mode, requestCart, storeCart]);
 
