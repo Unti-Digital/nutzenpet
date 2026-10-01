@@ -16,8 +16,10 @@ export async function GET() {
   if (!isWordPressConfigured()) return Response.json({ items: [] });
 
   try {
-    const response = await fetch(getWordPressApiUrl("nutzen/v1/banners"), {
-      headers: { Accept: "application/json" },
+    const bannersUrl = getWordPressApiUrl("nutzen/v1/banners");
+    bannersUrl.searchParams.set("_fresh", Date.now().toString());
+    const response = await fetch(bannersUrl, {
+      headers: { Accept: "application/json", "Cache-Control": "no-cache" },
       cache: "no-store",
     });
     if (!response.ok) return Response.json({ items: [] });
@@ -31,3 +33,6 @@ export async function GET() {
     return Response.json({ items: [] });
   }
 }
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
