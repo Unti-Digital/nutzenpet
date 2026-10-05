@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Switch
  * Description: Central de diagnóstico, módulos e conexões da plataforma NutzenPet.
- * Version: 0.4.6
+ * Version: 0.4.7
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Switch_Plugin {
-	private const VERSION = '0.4.6';
+	private const VERSION = '0.4.7';
 	private const OPTION = 'nutzen_switch_settings';
 	private const LOG    = 'nutzen_switch_log';
 
@@ -693,20 +693,24 @@ final class Nutzen_Switch_Plugin {
 
 			$rate->set_cost( 0 );
 			$taxes = array();
-			foreach ( (array) $rate->get_taxes() as $tax_id => $amount ) {
+			foreach ( array_keys( (array) $rate->get_taxes() ) as $tax_id ) {
 				$taxes[ $tax_id ] = 0;
 			}
 			$rate->set_taxes( $taxes );
 
-			if ( self::is_sp_capital_flat_rate( $rate, $package ) && method_exists( $rate, 'set_delivery_time' ) ) {
-				$now             = new DateTimeImmutable( 'now', new DateTimeZone( 'America/Sao_Paulo' ) );
-				$is_business_day = (int) $now->format( 'N' ) <= 5;
+			if ( self::is_sp_capital_flat_rate( $rate, $package ) ) {
+				$now              = new DateTimeImmutable( 'now', new DateTimeZone( 'America/Sao_Paulo' ) );
+				$is_business_day  = (int) $now->format( 'N' ) <= 5;
 				$is_before_cutoff = (int) $now->format( 'Hi' ) < 1100;
-				$rate->set_delivery_time(
-					$is_business_day && $is_before_cutoff
-						? 'Entrega hoje para pagamentos aprovados até 11h'
-						: 'Entrega no próximo dia útil após a aprovação do pagamento'
-				);
+				$delivery_time    = $is_business_day && $is_before_cutoff
+					? 'Entrega hoje para pagamentos aprovados até 11h'
+					: 'Entrega no próximo dia útil após a aprovação do pagamento';
+
+				// Some Store API versions omit delivery_time, so keep the promise visible in the label too.
+				$rate->set_label( 'Entrega própria — São Paulo capital — ' . $delivery_time );
+				if ( method_exists( $rate, 'set_delivery_time' ) ) {
+					$rate->set_delivery_time( $delivery_time );
+				}
 			}
 		}
 
