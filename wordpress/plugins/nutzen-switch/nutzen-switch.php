@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Switch
  * Description: Central de diagnóstico, módulos e conexões da plataforma NutzenPet.
- * Version: 0.4.7
+ * Version: 0.4.8
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Switch_Plugin {
-	private const VERSION = '0.4.7';
+	private const VERSION = '0.4.8';
 	private const OPTION = 'nutzen_switch_settings';
 	private const LOG    = 'nutzen_switch_log';
 
@@ -311,7 +311,7 @@ final class Nutzen_Switch_Plugin {
 			'module_affiliates'    => isset( $input['module_affiliates'] ) ? '1' : '0',
 			'module_subscriptions' => isset( $input['module_subscriptions'] ) ? '1' : '0',
 			'module_banners'       => isset( $input['module_banners'] ) ? '1' : '0',
-			'subsidize_shipping'   => isset( $input['subsidize_shipping'] ) ? '1' : '0',
+			'subsidize_shipping'   => '1' === (string) ( $input['subsidize_shipping'] ?? '0' ) ? '1' : '0',
 			'frontend_url'         => esc_url_raw( (string) ( $input['frontend_url'] ?? '' ) ),
 			'wordpress_url'        => esc_url_raw( (string) ( $input['wordpress_url'] ?? home_url() ) ),
 			'webhook_secret'       => $current['webhook_secret'],
@@ -327,6 +327,7 @@ final class Nutzen_Switch_Plugin {
 
 	public static function admin_menu(): void {
 		add_menu_page( 'Nutzen Switch', 'Nutzen Switch', 'manage_woocommerce', 'nutzen-switch', array( __CLASS__, 'render_page' ), 'dashicons-pets', 56 );
+		add_submenu_page( 'nutzen-switch', 'Configurações Nutzen', 'Configurações', 'manage_woocommerce', 'nutzen-switch', array( __CLASS__, 'render_page' ), 0 );
 	}
 
 	public static function admin_assets(): void {
@@ -428,8 +429,12 @@ final class Nutzen_Switch_Plugin {
 					<label style="display:block;margin:10px 0"><input type="checkbox" name="<?php echo esc_attr( self::OPTION . '[' . $key . ']' ); ?>" value="1" <?php checked( '1', $settings[ $key ] ); ?>> <?php echo esc_html( ucfirst( $module ) ); ?></label>
 				<?php endforeach; ?>
 				<h2>Entrega</h2>
-				<label style="display:block;margin:10px 0"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[subsidize_shipping]" value="1" <?php checked( '1', $settings['subsidize_shipping'] ); ?>> Oferecer frete gr&aacute;tis em todas as cota&ccedil;&otilde;es</label>
-				<p class="description">A loja absorve o custo. Os m&eacute;todos e prazos do Melhor Envio continuam vis&iacute;veis, mas o cliente paga R$ 0,00 pelo frete. Na taxa fixa destinada aos CEPs da capital de S&atilde;o Paulo, o prazo muda automaticamente conforme o corte das 11h.</p>
+				<label for="nutzen_subsidize_shipping" style="display:block;margin:10px 0 6px"><strong>Frete gr&aacute;tis em todas as cota&ccedil;&otilde;es</strong></label>
+				<select id="nutzen_subsidize_shipping" name="<?php echo esc_attr( self::OPTION ); ?>[subsidize_shipping]">
+					<option value="0" <?php selected( '0', $settings['subsidize_shipping'] ); ?>>N&atilde;o &mdash; cobrar normalmente fora de SP Capital</option>
+					<option value="1" <?php selected( '1', $settings['subsidize_shipping'] ); ?>>Sim &mdash; a loja absorve todos os fretes</option>
+				</select>
+				<p class="description">A entrega pr&oacute;pria de SP Capital permanece gr&aacute;tis quando sua Taxa Fixa estiver em R$ 0,00. O prazo muda automaticamente conforme o corte das 11h.</p>
 				<h2>Conexões</h2>
 				<table class="form-table">
 					<tr><th><label for="nutzen_frontend_url">URL do frontend</label></th><td><input class="regular-text" type="url" id="nutzen_frontend_url" name="<?php echo esc_attr( self::OPTION ); ?>[frontend_url]" value="<?php echo esc_attr( $settings['frontend_url'] ); ?>"></td></tr>
@@ -674,7 +679,7 @@ final class Nutzen_Switch_Plugin {
 	}
 
 	/**
-	 * Mantem a transportadora e o prazo calculados, mas transfere o custo do frete para a loja.
+	 * Mantém o prazo da entrega própria e, opcionalmente, transfere o custo do frete para a loja.
 	 *
 	 * @param array<string, WC_Shipping_Rate> $rates
 	 * @param array<string, mixed>            $package
@@ -682,21 +687,21 @@ final class Nutzen_Switch_Plugin {
 	 */
 	public static function subsidize_shipping_rates( array $rates, array $package ): array {
 		$settings = self::settings();
-		if ( '1' !== ( $settings['subsidize_shipping'] ?? '0' ) ) {
-			return $rates;
-		}
+		$subsidize_all = '1' === ( $settings['subsidize_shipping'] ?? '0' );
 
 		foreach ( $rates as $rate ) {
 			if ( ! $rate instanceof WC_Shipping_Rate ) {
 				continue;
 			}
 
-			$rate->set_cost( 0 );
-			$taxes = array();
-			foreach ( array_keys( (array) $rate->get_taxes() ) as $tax_id ) {
-				$taxes[ $tax_id ] = 0;
+			if ( $subsidize_all ) {
+				$rate->set_cost( 0 );
+				$taxes = array();
+				foreach ( array_keys( (array) $rate->get_taxes() ) as $tax_id ) {
+					$taxes[ $tax_id ] = 0;
+				}
+				$rate->set_taxes( $taxes );
 			}
-			$rate->set_taxes( $taxes );
 
 			if ( self::is_sp_capital_flat_rate( $rate, $package ) ) {
 				$now              = new DateTimeImmutable( 'now', new DateTimeZone( 'America/Sao_Paulo' ) );
