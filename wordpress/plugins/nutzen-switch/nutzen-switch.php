@@ -429,7 +429,7 @@ final class Nutzen_Switch_Plugin {
 				<?php endforeach; ?>
 				<h2>Entrega</h2>
 				<label style="display:block;margin:10px 0"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[subsidize_shipping]" value="1" <?php checked( '1', $settings['subsidize_shipping'] ); ?>> Oferecer frete gr&aacute;tis em todas as cota&ccedil;&otilde;es</label>
-				<p class="description">A loja absorve o custo. Os m&eacute;todos e prazos do Melhor Envio continuam vis&iacute;veis, mas o cliente paga R$ 0,00 pelo frete.</p>
+				<p class="description">A loja absorve o custo. Os m&eacute;todos e prazos do Melhor Envio continuam vis&iacute;veis, mas o cliente paga R$ 0,00 pelo frete. Na taxa fixa destinada aos CEPs da capital de S&atilde;o Paulo, o prazo muda automaticamente conforme o corte das 11h.</p>
 				<h2>Conexões</h2>
 				<table class="form-table">
 					<tr><th><label for="nutzen_frontend_url">URL do frontend</label></th><td><input class="regular-text" type="url" id="nutzen_frontend_url" name="<?php echo esc_attr( self::OPTION ); ?>[frontend_url]" value="<?php echo esc_attr( $settings['frontend_url'] ); ?>"></td></tr>
@@ -674,9 +674,38 @@ final class Nutzen_Switch_Plugin {
 				$taxes[ $tax_id ] = 0;
 			}
 			$rate->set_taxes( $taxes );
+
+			if ( self::is_sp_capital_flat_rate( $rate, $package ) && method_exists( $rate, 'set_delivery_time' ) ) {
+				$now             = new DateTimeImmutable( 'now', new DateTimeZone( 'America/Sao_Paulo' ) );
+				$is_business_day = (int) $now->format( 'N' ) <= 5;
+				$is_before_cutoff = (int) $now->format( 'Hi' ) < 1100;
+				$rate->set_delivery_time(
+					$is_business_day && $is_before_cutoff
+						? 'Entrega hoje para pagamentos aprovados até 11h'
+						: 'Entrega no próximo dia útil após a aprovação do pagamento'
+				);
+			}
 		}
 
 		return $rates;
+	}
+
+	/** @param array<string, mixed> $package */
+	private static function is_sp_capital_flat_rate( WC_Shipping_Rate $rate, array $package ): bool {
+		if ( 'flat_rate' !== $rate->get_method_id() ) {
+			return false;
+		}
+
+		$destination = is_array( $package['destination'] ?? null ) ? $package['destination'] : array();
+		$state       = strtoupper( (string) ( $destination['state'] ?? '' ) );
+		$postcode    = preg_replace( '/\D+/', '', (string) ( $destination['postcode'] ?? '' ) );
+		if ( 'SP' !== $state || 8 !== strlen( $postcode ) ) {
+			return false;
+		}
+
+		$postcode_number = (int) $postcode;
+		return ( $postcode_number >= 1000001 && $postcode_number <= 5999999 )
+			|| ( $postcode_number >= 8000000 && $postcode_number <= 8499999 );
 	}
 
 	public static function authenticate_request() {
