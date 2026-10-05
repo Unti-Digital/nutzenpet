@@ -10,20 +10,28 @@ import { PasswordField } from "../components/password-field";
 
 const fieldClass = "h-12 rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#3E1255] focus:bg-white focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)] user-invalid:border-[#CC632B]";
 
+function getSafeReturnPath() {
+  if (typeof window === "undefined") return "/minha-conta";
+  return new URLSearchParams(window.location.search).get("retorno") === "/checkout" ? "/checkout" : "/minha-conta";
+}
+
 export default function AccountPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [returningToCheckout, setReturningToCheckout] = useState(false);
 
   useEffect(() => {
     const modeFrame = window.requestAnimationFrame(() => {
-      if (new URLSearchParams(window.location.search).get("modo") === "cadastro") setMode("register");
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get("modo") === "cadastro") setMode("register");
+      setReturningToCheckout(searchParams.get("retorno") === "/checkout");
     });
     const controller = new AbortController();
     void fetch("/api/auth/me", { cache: "no-store", signal: controller.signal })
       .then((response) => {
-        if (response.ok) router.replace("/minha-conta");
+        if (response.ok) router.replace(getSafeReturnPath());
       })
       .catch(() => undefined);
     return () => {
@@ -48,7 +56,7 @@ export default function AccountPage() {
       setMessage(payload?.message ?? "Não foi possível acessar sua conta.");
       return;
     }
-    router.push("/minha-conta");
+    router.push(getSafeReturnPath());
     router.refresh();
   }
 
@@ -61,6 +69,7 @@ export default function AccountPage() {
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#3E1255]">{mode === "login" ? "Bem-vindo de volta" : "Novo cliente"}</p>
           <h2 className="mt-3 text-3xl font-black text-[#123F55]">{mode === "login" ? "Acesse sua conta" : "Crie sua conta"}</h2>
           <p className="mt-2 text-sm leading-6 text-slate-500">Consulte pedidos, endereços, assinaturas e indicações.</p>
+          {returningToCheckout && <p className="mt-3 rounded-md bg-[#F5EFF8] p-3 text-sm font-bold text-[#3E1255]">Entre ou crie sua conta para finalizar a compra.</p>}
           {mode === "register" && <label className="mt-7 grid gap-2 text-xs font-bold text-slate-600">Nome completo<input name="name" autoComplete="name" required className={fieldClass} /></label>}
           <label className={`${mode === "login" ? "mt-7" : "mt-4"} grid gap-2 text-xs font-bold text-slate-600`}>E-mail<input name="email" type="email" autoComplete="email" required className={fieldClass} /></label>
           <label className="mt-4 grid gap-2 text-xs font-bold text-slate-600">Senha<PasswordField name="password" minLength={mode === "register" ? 10 : undefined} autoComplete={mode === "login" ? "current-password" : "new-password"} required inputClassName={`${fieldClass} w-full`} /></label>

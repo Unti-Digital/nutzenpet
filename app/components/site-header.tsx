@@ -302,7 +302,7 @@ export function SiteHeader() {
                   <div className="flex items-center justify-between"><span className="text-sm font-bold text-slate-500">Subtotal</span><strong className="text-xl font-black text-[#123F55]">{formatCurrency(subtotal)}</strong></div>
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
                     <Link href="/carrinho" onClick={() => setCartOpen(false)} className="flex h-12 items-center justify-center rounded-full border-2 border-[#3E1255] text-xs font-black text-[#3E1255] transition-all duration-300 hover:scale-[0.97] hover:bg-white active:scale-95">Ver carrinho</Link>
-                    <Link href="/checkout" onClick={() => setCartOpen(false)} className="group flex h-12 items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-xs font-black text-white transition-all duration-300 hover:scale-[0.97] hover:bg-[#CC632B] active:scale-95">Finalizar compra <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link>
+                    <Link href="/conta?retorno=%2Fcheckout" onClick={() => setCartOpen(false)} className="group flex h-12 items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-xs font-black text-white transition-all duration-300 hover:scale-[0.97] hover:bg-[#CC632B] active:scale-95">Entrar e finalizar <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link>
                   </div>
                 </div>
               </>

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getWordPressApiUrl, isWordPressConfigured } from "@/lib/woocommerce/config";
 
 const cartCookie = "nutzen_wc_cart_token";
+const sessionCookie = "nutzen_session";
 const allowedRoutes = new Set([
   "cart",
   "cart/add-item",
@@ -46,6 +47,11 @@ async function proxyStoreRequest(request: NextRequest, context: RouteParams) {
 
     const headers = new Headers({ Accept: "application/json" });
     if (token) headers.set("Cart-Token", token);
+    const sessionToken = request.cookies.get(sessionCookie)?.value;
+    if (route === "checkout" && request.method === "POST" && !sessionToken) {
+      return NextResponse.json({ code: "nutzen_auth_required", message: "Entre ou crie sua conta para finalizar a compra." }, { status: 401 });
+    }
+    if (sessionToken) headers.set("Authorization", `Bearer ${sessionToken}`);
     const contentType = request.headers.get("content-type");
     if (contentType) headers.set("Content-Type", contentType);
     const referral = request.cookies.get("nutzen_ref")?.value;

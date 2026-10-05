@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard, ExternalLink, LoaderCircle, LockKeyhole, MapPin, PackageCheck, ShoppingBag, Truck, UserRound } from "lucide-react";
 import { formatCurrency, useCart, type CheckoutAddress, type MercadoPagoCardPayment, type MercadoPagoTicketPayment } from "../components/cart-provider";
 import { MercadoPagoCardForm, type MercadoPagoCardFormHandle } from "../components/mercado-pago-card-form";
@@ -53,7 +53,24 @@ export default function CheckoutPage() {
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "ticket" | "pro">("card");
   const [cardReady, setCardReady] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
   const selectedShipping = shippingRates.flatMap((group) => group.shipping_rates).find((rate) => rate.selected);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/auth/me", { cache: "no-store", signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) {
+          router.replace("/conta?retorno=%2Fcheckout");
+          return;
+        }
+        setAuthReady(true);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) router.replace("/conta?retorno=%2Fcheckout");
+      });
+    return () => controller.abort();
+  }, [router]);
 
   async function handleAddressUpdate() {
     const form = formRef.current;
@@ -160,6 +177,18 @@ export default function CheckoutPage() {
       setPaymentError("O Mercado Pago retornou um endereço de pagamento inválido.");
       setProcessingPayment(false);
     }
+  }
+
+  if (!authReady) {
+    return (
+      <main className="min-h-screen bg-slate-50">
+        <SiteHeader />
+        <section className="grid min-h-[55vh] place-items-center px-5 text-center">
+          <div><LoaderCircle className="mx-auto h-9 w-9 animate-spin text-[#3E1255]" /><p className="mt-4 text-sm font-bold text-[#123F55]">Verificando sua conta...</p></div>
+        </section>
+        <SiteFooter />
+      </main>
+    );
   }
 
   return (

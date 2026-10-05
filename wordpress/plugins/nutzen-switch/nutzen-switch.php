@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Switch
  * Description: Central de diagnóstico, módulos e conexões da plataforma NutzenPet.
- * Version: 0.4.1
+ * Version: 0.4.2
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Switch_Plugin {
-	private const VERSION = '0.4.1';
+	private const VERSION = '0.4.2';
 	private const OPTION = 'nutzen_switch_settings';
 	private const LOG    = 'nutzen_switch_log';
 
@@ -49,6 +49,8 @@ final class Nutzen_Switch_Plugin {
 		add_action( 'save_post_nutzen_plan', array( __CLASS__, 'subscription_plan_changed' ), 30, 3 );
 		add_action( 'edited_product_cat', array( __CLASS__, 'category_changed' ) );
 		add_action( 'created_product_cat', array( __CLASS__, 'category_changed' ) );
+		add_filter( 'determine_current_user', array( __CLASS__, 'authenticate_bearer_user' ), 30 );
+		add_action( 'woocommerce_checkout_validate_order_before_payment', array( __CLASS__, 'require_customer_account' ), 10, 2 );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_routes' ) );
 	}
 
@@ -612,6 +614,31 @@ final class Nutzen_Switch_Plugin {
 	private static function bearer_token(): string {
 		$header = isset( $_SERVER['HTTP_AUTHORIZATION'] ) ? trim( (string) $_SERVER['HTTP_AUTHORIZATION'] ) : '';
 		return preg_match( '/^Bearer\s+([a-f0-9]{64})$/i', $header, $matches ) ? strtolower( $matches[1] ) : '';
+	}
+
+	private static function session_user_id( string $token ): int {
+		global $wpdb;
+		$now = current_time( 'mysql', true );
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::sessions_table() . ' WHERE token_hash=%s AND expires_at>%s', hash( 'sha256', $token ), $now ), ARRAY_A );
+		if ( ! is_array( $row ) || ! get_user_by( 'id', (int) $row['user_id'] ) ) {
+			return 0;
+		}
+		$wpdb->update( self::sessions_table(), array( 'last_used_at' => $now ), array( 'id' => $row['id'] ), array( '%s' ), array( '%d' ) );
+		return (int) $row['user_id'];
+	}
+
+	public static function authenticate_bearer_user( $user_id ): int {
+		if ( (int) $user_id > 0 ) {
+			return (int) $user_id;
+		}
+		$token = self::bearer_token();
+		return $token ? self::session_user_id( $token ) : 0;
+	}
+
+	public static function require_customer_account( $order, $errors ): void {
+		if ( $order instanceof WC_Order && 0 === (int) $order->get_customer_id() && $errors instanceof WP_Error ) {
+			$errors->add( 'nutzen_account_required', 'Entre ou crie sua conta para finalizar a compra.' );
+		}
 	}
 
 	public static function authenticate_request() {
