@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Switch
  * Description: Central de diagnóstico, módulos e conexões da plataforma NutzenPet.
- * Version: 0.4.2
+ * Version: 0.4.3
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Switch_Plugin {
-	private const VERSION = '0.4.2';
+	private const VERSION = '0.4.3';
 	private const OPTION = 'nutzen_switch_settings';
 	private const LOG    = 'nutzen_switch_log';
 
@@ -51,6 +51,7 @@ final class Nutzen_Switch_Plugin {
 		add_action( 'created_product_cat', array( __CLASS__, 'category_changed' ) );
 		add_filter( 'determine_current_user', array( __CLASS__, 'authenticate_bearer_user' ), 30 );
 		add_action( 'woocommerce_checkout_validate_order_before_payment', array( __CLASS__, 'require_customer_account' ), 10, 2 );
+		add_filter( 'woocommerce_package_rates', array( __CLASS__, 'subsidize_shipping_rates' ), 1000, 2 );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_routes' ) );
 	}
 
@@ -285,6 +286,7 @@ final class Nutzen_Switch_Plugin {
 			'module_affiliates'    => '1',
 			'module_subscriptions' => '1',
 			'module_banners'       => '1',
+			'subsidize_shipping'   => '0',
 			'frontend_url'         => 'http://localhost:3000',
 			'wordpress_url'        => home_url(),
 			'webhook_secret'       => '',
@@ -309,12 +311,16 @@ final class Nutzen_Switch_Plugin {
 			'module_affiliates'    => isset( $input['module_affiliates'] ) ? '1' : '0',
 			'module_subscriptions' => isset( $input['module_subscriptions'] ) ? '1' : '0',
 			'module_banners'       => isset( $input['module_banners'] ) ? '1' : '0',
+			'subsidize_shipping'   => isset( $input['subsidize_shipping'] ) ? '1' : '0',
 			'frontend_url'         => esc_url_raw( (string) ( $input['frontend_url'] ?? '' ) ),
 			'wordpress_url'        => esc_url_raw( (string) ( $input['wordpress_url'] ?? home_url() ) ),
 			'webhook_secret'       => $current['webhook_secret'],
 		);
 		if ( ! empty( $input['webhook_secret'] ) ) {
 			$output['webhook_secret'] = sanitize_text_field( $input['webhook_secret'] );
+		}
+		if ( $current['subsidize_shipping'] !== $output['subsidize_shipping'] && class_exists( 'WC_Cache_Helper' ) ) {
+			WC_Cache_Helper::get_transient_version( 'shipping', true );
 		}
 		return $output;
 	}
@@ -421,6 +427,9 @@ final class Nutzen_Switch_Plugin {
 				<?php foreach ( self::MODULES as $module ) : $key = 'module_' . $module; ?>
 					<label style="display:block;margin:10px 0"><input type="checkbox" name="<?php echo esc_attr( self::OPTION . '[' . $key . ']' ); ?>" value="1" <?php checked( '1', $settings[ $key ] ); ?>> <?php echo esc_html( ucfirst( $module ) ); ?></label>
 				<?php endforeach; ?>
+				<h2>Entrega</h2>
+				<label style="display:block;margin:10px 0"><input type="checkbox" name="<?php echo esc_attr( self::OPTION ); ?>[subsidize_shipping]" value="1" <?php checked( '1', $settings['subsidize_shipping'] ); ?>> Oferecer frete gr&aacute;tis em todas as cota&ccedil;&otilde;es</label>
+				<p class="description">A loja absorve o custo. Os m&eacute;todos e prazos do Melhor Envio continuam vis&iacute;veis, mas o cliente paga R$ 0,00 pelo frete.</p>
 				<h2>Conexões</h2>
 				<table class="form-table">
 					<tr><th><label for="nutzen_frontend_url">URL do frontend</label></th><td><input class="regular-text" type="url" id="nutzen_frontend_url" name="<?php echo esc_attr( self::OPTION ); ?>[frontend_url]" value="<?php echo esc_attr( $settings['frontend_url'] ); ?>"></td></tr>
@@ -639,6 +648,35 @@ final class Nutzen_Switch_Plugin {
 		if ( $order instanceof WC_Order && 0 === (int) $order->get_customer_id() && $errors instanceof WP_Error ) {
 			$errors->add( 'nutzen_account_required', 'Entre ou crie sua conta para finalizar a compra.' );
 		}
+	}
+
+	/**
+	 * Mantem a transportadora e o prazo calculados, mas transfere o custo do frete para a loja.
+	 *
+	 * @param array<string, WC_Shipping_Rate> $rates
+	 * @param array<string, mixed>            $package
+	 * @return array<string, WC_Shipping_Rate>
+	 */
+	public static function subsidize_shipping_rates( array $rates, array $package ): array {
+		$settings = self::settings();
+		if ( '1' !== ( $settings['subsidize_shipping'] ?? '0' ) ) {
+			return $rates;
+		}
+
+		foreach ( $rates as $rate ) {
+			if ( ! $rate instanceof WC_Shipping_Rate ) {
+				continue;
+			}
+
+			$rate->set_cost( 0 );
+			$taxes = array();
+			foreach ( (array) $rate->get_taxes() as $tax_id => $amount ) {
+				$taxes[ $tax_id ] = 0;
+			}
+			$rate->set_taxes( $taxes );
+		}
+
+		return $rates;
 	}
 
 	public static function authenticate_request() {
