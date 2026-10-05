@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Switch
  * Description: Central de diagnóstico, módulos e conexões da plataforma NutzenPet.
- * Version: 0.4.8
+ * Version: 0.4.9
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Switch_Plugin {
-	private const VERSION = '0.4.8';
+	private const VERSION = '0.4.9';
 	private const OPTION = 'nutzen_switch_settings';
 	private const LOG    = 'nutzen_switch_log';
 
@@ -331,7 +331,7 @@ final class Nutzen_Switch_Plugin {
 	}
 
 	public static function admin_assets(): void {
-		wp_enqueue_style( 'nutzen-admin', plugins_url( 'assets/admin.css', __FILE__ ), array(), self::VERSION );
+		self::enqueue_admin_style( 'nutzen-admin' );
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 		if ( $screen && 'nutzen_banner' === $screen->post_type ) {
 			wp_enqueue_media();
@@ -340,7 +340,19 @@ final class Nutzen_Switch_Plugin {
 	}
 
 	public static function login_assets(): void {
-		wp_enqueue_style( 'nutzen-admin-login', plugins_url( 'assets/admin.css', __FILE__ ), array(), self::VERSION );
+		self::enqueue_admin_style( 'nutzen-admin-login' );
+	}
+
+	private static function enqueue_admin_style( string $handle ): void {
+		$path    = plugin_dir_path( __FILE__ ) . 'assets/admin.css';
+		$version = is_file( $path ) ? (string) filemtime( $path ) : self::VERSION;
+		wp_enqueue_style( $handle, plugins_url( 'assets/admin.css', __FILE__ ), array(), $version );
+		if ( is_readable( $path ) ) {
+			$css = file_get_contents( $path );
+			if ( is_string( $css ) && '' !== $css ) {
+				wp_add_inline_style( $handle, $css );
+			}
+		}
 	}
 
 	public static function admin_footer(): string {
@@ -707,12 +719,13 @@ final class Nutzen_Switch_Plugin {
 				$now              = new DateTimeImmutable( 'now', new DateTimeZone( 'America/Sao_Paulo' ) );
 				$is_business_day  = (int) $now->format( 'N' ) <= 5;
 				$is_before_cutoff = (int) $now->format( 'Hi' ) < 1100;
-				$delivery_time    = $is_business_day && $is_before_cutoff
-					? 'Entrega hoje para pagamentos aprovados até 11h'
-					: 'Entrega no próximo dia útil após a aprovação do pagamento';
-
-				// Some Store API versions omit delivery_time, so keep the promise visible in the label too.
-				$rate->set_label( 'Entrega própria — São Paulo capital — ' . $delivery_time );
+				if ( $is_business_day && $is_before_cutoff ) {
+					$delivery_time = 'Pagamento aprovado até 11h: entrega no mesmo dia.';
+				} elseif ( $is_business_day ) {
+					$delivery_time = 'Após 11h: entrega no próximo dia útil.';
+				} else {
+					$delivery_time = 'Pedidos aos fins de semana: entrega no próximo dia útil.';
+				}
 				if ( method_exists( $rate, 'set_delivery_time' ) ) {
 					$rate->set_delivery_time( $delivery_time );
 				}
