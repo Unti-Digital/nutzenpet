@@ -39,6 +39,7 @@ async function proxyAccountRequest(request: NextRequest, context: RouteParams) {
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
     headers.set("X-Nutzen-Session", token);
+    headers.set("Cookie", `${sessionCookie}=${encodeURIComponent(token)}`);
   }
 
   const upstream = await fetch(getWordPressApiUrl(`nutzen/v1/${route.endpoint}`), {

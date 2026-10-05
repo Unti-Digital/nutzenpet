@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Switch
  * Description: Central de diagnóstico, módulos e conexões da plataforma NutzenPet.
- * Version: 0.4.4
+ * Version: 0.4.5
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Switch_Plugin {
-	private const VERSION = '0.4.4';
+	private const VERSION = '0.4.5';
 	private const OPTION = 'nutzen_switch_settings';
 	private const LOG    = 'nutzen_switch_log';
 
@@ -621,6 +621,11 @@ final class Nutzen_Switch_Plugin {
 	}
 
 	private static function bearer_token(): string {
+		$cookie_token = isset( $_COOKIE['nutzen_session'] ) ? trim( (string) $_COOKIE['nutzen_session'] ) : '';
+		if ( preg_match( '/^[a-f0-9]{64}$/i', $cookie_token ) ) {
+			return strtolower( $cookie_token );
+		}
+
 		$proxy_token = isset( $_SERVER['HTTP_X_NUTZEN_SESSION'] ) ? trim( (string) $_SERVER['HTTP_X_NUTZEN_SESSION'] ) : '';
 		if ( preg_match( '/^[a-f0-9]{64}$/i', $proxy_token ) ) {
 			return strtolower( $proxy_token );
