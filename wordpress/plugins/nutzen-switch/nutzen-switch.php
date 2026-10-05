@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Switch
  * Description: Central de diagnóstico, módulos e conexões da plataforma NutzenPet.
- * Version: 0.4.5
+ * Version: 0.4.6
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Switch_Plugin {
-	private const VERSION = '0.4.5';
+	private const VERSION = '0.4.6';
 	private const OPTION = 'nutzen_switch_settings';
 	private const LOG    = 'nutzen_switch_log';
 
@@ -621,6 +621,16 @@ final class Nutzen_Switch_Plugin {
 	}
 
 	private static function bearer_token(): string {
+		$body_token = isset( $_POST['_nutzen_session'] ) ? trim( (string) wp_unslash( $_POST['_nutzen_session'] ) ) : '';
+		if ( ! $body_token ) {
+			$raw_body = file_get_contents( 'php://input' );
+			$json_body = is_string( $raw_body ) && '' !== $raw_body ? json_decode( $raw_body, true ) : null;
+			$body_token = is_array( $json_body ) && isset( $json_body['_nutzen_session'] ) ? trim( (string) $json_body['_nutzen_session'] ) : '';
+		}
+		if ( preg_match( '/^[a-f0-9]{64}$/i', $body_token ) ) {
+			return strtolower( $body_token );
+		}
+
 		$cookie_token = isset( $_COOKIE['nutzen_session'] ) ? trim( (string) $_COOKIE['nutzen_session'] ) : '';
 		if ( preg_match( '/^[a-f0-9]{64}$/i', $cookie_token ) ) {
 			return strtolower( $cookie_token );

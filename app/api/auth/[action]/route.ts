@@ -42,17 +42,46 @@ async function proxyAccountRequest(request: NextRequest, context: RouteParams) {
     headers.set("Cookie", `${sessionCookie}=${encodeURIComponent(token)}`);
   }
 
-  const upstream = await fetch(getWordPressApiUrl(`nutzen/v1/${route.endpoint}`), {
-    method: request.method,
+  let upstreamMethod = request.method;
+  let upstreamBody: string | undefined;
+  const upstreamUrl = getWordPressApiUrl(`nutzen/v1/${route.endpoint}`);
+
+  if (request.method === "GET" && token) {
+    // Some hosting proxies strip authentication headers and cookies from
+    // server-to-server requests. WordPress officially supports POST requests
+    // with a method override, which lets us carry the session in the body.
+    upstreamMethod = "POST";
+    upstreamUrl.searchParams.set("_method", "GET");
+    headers.set("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+    upstreamBody = new URLSearchParams({ _nutzen_session: token }).toString();
+  } else if (request.method !== "GET") {
+    const rawBody = await request.text();
+    if (token) {
+      let body: Record<string, unknown> = {};
+      if (rawBody) {
+        try {
+          const parsed = JSON.parse(rawBody) as unknown;
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) body = parsed as Record<string, unknown>;
+        } catch {
+          return NextResponse.json({ message: "Invalid request body." }, { status: 400 });
+        }
+      }
+      upstreamBody = JSON.stringify({ ...body, _nutzen_session: token });
+    } else {
+      upstreamBody = rawBody;
+    }
+  }
+
+  const upstream = await fetch(upstreamUrl, {
+    method: upstreamMethod,
     headers,
-    body: request.method === "GET" ? undefined : await request.text(),
+    body: upstreamBody,
     cache: "no-store",
   });
   const payload = await upstream.json().catch(() => ({ message: "Invalid WordPress response." })) as Record<string, unknown>;
   const issuedToken = typeof payload.token === "string" ? payload.token : null;
   delete payload.token;
   const response = NextResponse.json(payload, { status: upstream.status });
-  response.headers.set("X-Nutzen-Session-Seen", token ? "yes" : "no");
 
   if (issuedToken && upstream.ok) {
     response.cookies.set(sessionCookie, issuedToken, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 30 });
