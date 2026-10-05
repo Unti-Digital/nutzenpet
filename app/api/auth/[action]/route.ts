@@ -51,6 +51,7 @@ async function proxyAccountRequest(request: NextRequest, context: RouteParams) {
   const issuedToken = typeof payload.token === "string" ? payload.token : null;
   delete payload.token;
   const response = NextResponse.json(payload, { status: upstream.status });
+  response.headers.set("X-Nutzen-Session-Seen", token ? "yes" : "no");
 
   if (issuedToken && upstream.ok) {
     response.cookies.set(sessionCookie, issuedToken, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 30 });
