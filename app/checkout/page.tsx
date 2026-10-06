@@ -13,6 +13,7 @@ import { SiteHeader } from "../components/site-header";
 const fieldClass = "h-12 w-full rounded-md border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all duration-300 focus:border-[#3E1255] focus:bg-white focus:shadow-[0_0_0_3px_rgba(62,18,85,.1)] user-invalid:border-[#CC632B]";
 const mercadoPagoPublicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY ?? "";
 const addressFields = new Set(["full_name", "email", "phone", "postcode", "city", "state", "street_name", "street_number", "neighborhood", "address_2"]);
+const ownDeliveryPromise = "Pagamento aprovado até 11h: entrega no mesmo dia. Após 11h: entrega no próximo dia útil.";
 
 type CepLookup = {
   cep: string;
@@ -47,6 +48,13 @@ function getTicketPayment(formElement: HTMLFormElement): MercadoPagoTicketPaymen
     streetNumber: String(form.get("street_number") ?? "").trim(),
     neighborhood: String(form.get("neighborhood") ?? "").trim(),
   };
+}
+
+function getDeliveryTime(name: string, deliveryTime: string) {
+  const normalizedName = name.toLocaleLowerCase("pt-BR");
+  return normalizedName.includes("entrega própria") && normalizedName.includes("são paulo")
+    ? ownDeliveryPromise
+    : deliveryTime;
 }
 
 export default function CheckoutPage() {
@@ -326,7 +334,7 @@ export default function CheckoutPage() {
               <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8" style={{ animationDelay: "80ms" }}>
                 <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><MapPin className="h-5 w-5 text-[#FE8C05]" />Endereço de entrega</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <label className="grid gap-2 text-xs font-bold text-slate-600">
+                  <label className="grid content-start gap-2 text-xs font-bold text-slate-600">
                     CEP
                     <span className="relative block">
                       <input name="postcode" inputMode="numeric" autoComplete="postal-code" maxLength={9} onChange={handleCepChange} onBlur={(event) => void lookupCep(event.currentTarget.value)} className={`${fieldClass} pr-11`} pattern="[0-9]{5}-?[0-9]{3}" title="Informe um CEP válido" required />
@@ -335,7 +343,7 @@ export default function CheckoutPage() {
                     </span>
                     {cepMessage && <small aria-live="polite" className={`font-normal leading-5 ${cepStatus === "error" ? "text-[#CC632B]" : cepStatus === "success" ? "text-emerald-700" : "text-slate-500"}`}>{cepMessage}</small>}
                   </label>
-                  <label className="grid gap-2 text-xs font-bold text-slate-600">Estado<input name="state" className={fieldClass} placeholder="SP" maxLength={2} required /></label>
+                  <label className="grid content-start gap-2 text-xs font-bold text-slate-600">Estado<input name="state" className={fieldClass} placeholder="SP" maxLength={2} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Cidade<input name="city" className={fieldClass} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Endereço<input name="street_name" className={fieldClass} placeholder="Rua ou avenida" required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600">Número<input name="street_number" className={fieldClass} required /></label>
@@ -349,7 +357,10 @@ export default function CheckoutPage() {
                 <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><Truck className="h-5 w-5 text-[#FE8C05]" />Método de entrega</h2>
                 {!hasCalculatedShipping && <p className="mt-4 text-sm leading-6 text-slate-500">Preencha o endereço para consultar os métodos configurados no WooCommerce.</p>}
                 {hasCalculatedShipping && shippingRates.length === 0 && <p className="mt-4 rounded-md bg-orange-50 p-4 text-sm font-bold text-[#CC632B]">Não há método de entrega disponível para este endereço.</p>}
-                <div className="mt-5 grid gap-3">{shippingRates.flatMap((group) => group.shipping_rates.map((rate) => <button key={rate.rate_id} type="button" onClick={() => void selectShippingRate(group.package_id, rate.rate_id)} className={`flex items-center justify-between rounded-md border-2 p-4 text-left text-sm ${rate.selected ? "border-[#3E1255] bg-[#F5EFF8]" : "border-slate-200"}`}><span><strong className="block text-[#123F55]">{rate.name}</strong>{rate.delivery_time && <small className="text-slate-500">{rate.delivery_time}</small>}</span><strong className="text-[#3E1255]">{Number(rate.price) === 0 ? "Grátis" : formatCurrency(Number(rate.price) / 10 ** rate.currency_minor_unit)}</strong></button>))}</div>
+                <div className="mt-5 grid gap-3">{shippingRates.flatMap((group) => group.shipping_rates.map((rate) => {
+                  const deliveryTime = getDeliveryTime(rate.name, rate.delivery_time);
+                  return <button key={rate.rate_id} type="button" onClick={() => void selectShippingRate(group.package_id, rate.rate_id)} className={`flex items-center justify-between gap-4 rounded-md border-2 p-4 text-left text-sm ${rate.selected ? "border-[#3E1255] bg-[#F5EFF8]" : "border-slate-200"}`}><span><strong className="block text-[#123F55]">{rate.name}</strong>{deliveryTime && <small className="mt-1 block leading-5 text-slate-500">{deliveryTime}</small>}</span><strong className="shrink-0 text-[#3E1255]">{Number(rate.price) === 0 ? "Grátis" : formatCurrency(Number(rate.price) / 10 ** rate.currency_minor_unit)}</strong></button>;
+                }))}</div>
               </section>
 
               {purchaseType === "subscription" ? (
@@ -404,7 +415,7 @@ export default function CheckoutPage() {
             </div>
 
             <aside className="h-fit overflow-hidden rounded-lg bg-[#123F55] text-white shadow-[0_20px_50px_rgba(18,63,85,.2)] lg:sticky lg:top-28">
-              <div className="p-7"><LockKeyhole className="h-7 w-7 text-[#FE8C05]" /><h2 className="mt-4 text-2xl font-black">Resumo do pedido</h2><p className="mt-2 text-xs leading-5 text-white/60">Preços e totais são calculados pelo WooCommerce.</p></div>
+              <div className="p-7"><LockKeyhole className="h-7 w-7 text-[#FE8C05]" /><h2 className="mt-4 text-2xl font-black">Resumo do pedido</h2><p className="mt-2 text-xs leading-5 text-white/60">Preços e totais são calculados pela Nutzen.</p></div>
               <div className="max-h-[330px] divide-y divide-white/10 overflow-y-auto border-y border-white/10 px-7">
                 {items.map(({ product, quantity, subscription }) => <div key={product.slug} className="grid grid-cols-[60px_1fr_auto] items-center gap-3 py-4"><div className="relative h-16 rounded-md bg-white/95"><Image src={product.images[0]} alt="" fill sizes="60px" className="object-contain p-1" /></div><div><p className="text-xs font-bold leading-4">{product.shortName}</p><p className="mt-1 text-[10px] text-white/55">Qtd. {quantity}{subscription ? ` · ${subscription.frequencyLabel}` : ""}</p>{subscription && <span className="mt-2 inline-flex rounded-full bg-[#FE8C05] px-2 py-1 text-[9px] font-black uppercase text-white">Assinatura</span>}</div><strong className="text-xs">{formatCurrency(product.priceValue * quantity)}{subscription ? " / ciclo" : ""}</strong></div>)}
               </div>
