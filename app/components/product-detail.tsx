@@ -27,13 +27,14 @@ export function ProductDetail({ product }: { product: Product }) {
   const { addItem, addSubscription, decrement, increment, items } = useCart();
   const cartItem = items.find((item) => item.product.slug === product.slug);
   const isInCart = Boolean(cartItem);
+  const isUnavailable = product.stockStatus === "outofstock" || !product.availableForPurchase;
 
   function handleAddToCart() {
     if (product.availableForPurchase && !isInCart) addItem(product, 1);
   }
 
   async function handleSubscribe(replaceExisting = false) {
-    if (!selectedPlanId) return;
+    if (!selectedPlanId || isUnavailable) return;
     setSubscriptionPending(true);
     const result = await addSubscription(product, selectedPlanId, replaceExisting);
     setSubscriptionPending(false);
@@ -113,8 +114,10 @@ export function ProductDetail({ product }: { product: Product }) {
             </div>
           </div>
           <div className="mt-9 flex items-end justify-between border-y border-slate-200 py-6">
-            <strong className="block text-3xl font-black" style={{ color: product.accent }}>{product.price}</strong>
-            {cartItem && (
+            <strong className={`${isUnavailable ? "text-base uppercase tracking-[0.08em]" : "text-3xl"} block font-black`} style={{ color: product.accent }}>
+              {isUnavailable ? "Produto indisponível" : product.price}
+            </strong>
+            {cartItem && !isUnavailable && (
               <div className="flex flex-col items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">No carrinho</span>
                 <div className="flex items-center gap-4 bg-slate-100 px-3 py-2">
@@ -126,9 +129,9 @@ export function ProductDetail({ product }: { product: Product }) {
             )}
           </div>
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            <button type="button" onClick={handleAddToCart} disabled={isInCart || !product.availableForPurchase} aria-pressed={isInCart} className="flex h-14 min-w-0 items-center justify-center gap-2 rounded-full bg-[#FE8C05] px-4 text-xs font-black text-white transition-all duration-300 enabled:hover:scale-[0.98] enabled:hover:bg-[#CC632B] enabled:active:scale-95 disabled:cursor-default disabled:bg-slate-300 sm:text-sm">
-              {isInCart ? <Check className="h-5 w-5 shrink-0" /> : <ShoppingBag className="h-5 w-5 shrink-0" />}
-              <span>{isInCart ? "Adicionado" : product.availableForPurchase ? "Adicionar ao carrinho" : "Preço em breve"}</span>
+            <button type="button" onClick={handleAddToCart} disabled={isInCart || isUnavailable} aria-pressed={isInCart && !isUnavailable} className="flex h-14 min-w-0 items-center justify-center gap-2 rounded-full bg-[#FE8C05] px-4 text-xs font-black text-white transition-all duration-300 enabled:hover:scale-[0.98] enabled:hover:bg-[#CC632B] enabled:active:scale-95 disabled:cursor-default disabled:bg-slate-300 sm:text-sm">
+              {isInCart && !isUnavailable ? <Check className="h-5 w-5 shrink-0" /> : <ShoppingBag className="h-5 w-5 shrink-0" />}
+              <span>{isUnavailable ? "Produto indisponível" : isInCart ? "Adicionado" : "Adicionar ao carrinho"}</span>
             </button>
             <Link href="/carrinho" className="group flex h-14 min-w-0 items-center justify-center gap-2 rounded-full border-2 border-[#3E1255] px-4 text-center text-xs font-black text-[#3E1255] transition-colors duration-300 hover:bg-[#F5EFF8]">
               <span>Ir para o carrinho</span>
@@ -139,7 +142,7 @@ export function ProductDetail({ product }: { product: Product }) {
               <ArrowRight className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-x-2" />
             </Link>
           </div>
-          {product.subscription?.eligible && <section className="mt-5 rounded-lg border border-[#E2D4E9] bg-[#F5EFF8] p-5 sm:p-6" aria-labelledby={`subscription-${product.slug}`}>
+          {product.subscription?.eligible && !isUnavailable && <section className="mt-5 rounded-lg border border-[#E2D4E9] bg-[#F5EFF8] p-5 sm:p-6" aria-labelledby={`subscription-${product.slug}`}>
             <div className="flex items-start gap-4">
               <span className="sonar sonar-purple relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#6F3B85] text-white">
                 <RefreshCw className="relative z-10 h-5 w-5" />

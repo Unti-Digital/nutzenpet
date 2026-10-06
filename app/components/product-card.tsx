@@ -11,6 +11,7 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
   const [activeImage, setActiveImage] = useState(0);
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
+  const isUnavailable = product.stockStatus === "outofstock" || !product.availableForPurchase;
 
   function handleAddToCart() {
     if (!product.availableForPurchase) return;
@@ -34,7 +35,7 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
         aria-label={`Conhecer ${product.name}, ${product.weight}`}
         className="absolute inset-0 z-10 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3E1255]"
       />
-      <button type="button" onClick={handleAddToCart} disabled={!product.availableForPurchase} aria-label={product.availableForPurchase ? `Adicionar ${product.name}, ${product.weight}, ao carrinho` : `Preço de ${product.name}, ${product.weight}, ainda não disponível`} className="sonar sonar-active absolute right-7 top-7 z-20 grid h-10 w-10 place-items-center rounded-full text-white transition-all duration-300 enabled:hover:scale-90 enabled:active:scale-75 disabled:cursor-not-allowed disabled:opacity-45" style={{ backgroundColor: product.accent, "--sonar-color": product.accent } as CSSProperties}>
+      <button type="button" onClick={handleAddToCart} disabled={isUnavailable} aria-label={isUnavailable ? `${product.name}, ${product.weight}, indisponível` : `Adicionar ${product.name}, ${product.weight}, ao carrinho`} className="sonar sonar-active absolute right-7 top-7 z-20 grid h-10 w-10 place-items-center rounded-full text-white transition-all duration-300 enabled:hover:scale-90 enabled:active:scale-75 disabled:cursor-not-allowed disabled:opacity-45" style={{ backgroundColor: product.accent, "--sonar-color": product.accent } as CSSProperties}>
         {added ? <Check className="relative z-10 h-4 w-4" /> : <ShoppingBag className="relative z-10 h-4 w-4" />}
       </button>
 
@@ -61,7 +62,9 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
       <h3 className="mt-2 line-clamp-2 min-h-14 text-xl font-black leading-7 text-slate-900">{product.name}</h3>
       <p className="mt-3 line-clamp-3 h-[72px] text-sm leading-6 text-slate-500">{product.description}</p>
       <div className="mt-auto flex items-end justify-between gap-4 pt-6">
-        <strong className={`${product.availableForPurchase ? "text-xl" : "text-sm"} font-black`} style={{ color: product.accent }}>{product.price}</strong>
+        <strong className={`${isUnavailable ? "text-sm uppercase tracking-[0.08em]" : "text-xl"} font-black`} style={{ color: product.accent }}>
+          {isUnavailable ? "Produto indisponível" : product.price}
+        </strong>
         <Link href={`/produto/${product.slug}`} className="group/link relative z-20 flex items-center gap-2 text-xs font-black text-[#3E1255] transition-colors duration-300 hover:text-[#FE8C05]">
           <span>Conhecer</span>
           <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/link:translate-x-2" />
