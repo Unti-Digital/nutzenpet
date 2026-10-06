@@ -14,6 +14,14 @@ const fieldClass = "h-12 w-full rounded-md border border-slate-200 bg-slate-50 p
 const mercadoPagoPublicKey = process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY ?? "";
 const addressFields = new Set(["full_name", "email", "phone", "postcode", "city", "state", "street_name", "street_number", "neighborhood", "address_2"]);
 
+type CepLookup = {
+  cep: string;
+  street: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+};
+
 function getCheckoutAddress(formElement: HTMLFormElement): CheckoutAddress {
   const form = new FormData(formElement);
   const fullName = String(form.get("full_name") ?? "").trim().split(/\s+/);
@@ -46,6 +54,8 @@ export default function CheckoutPage() {
   const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, checkoutWithMercadoPago, checkoutWithMercadoPagoCard, checkoutWithMercadoPagoPix, checkoutWithMercadoPagoTicket, shippingRates, hasCalculatedShipping, error } = useCart();
   const formRef = useRef<HTMLFormElement>(null);
   const cardFormRef = useRef<MercadoPagoCardFormHandle>(null);
+  const cepRequestRef = useRef<AbortController | null>(null);
+  const lastCepRef = useRef("");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -54,6 +64,8 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "pix" | "ticket" | "pro">("card");
   const [cardReady, setCardReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [cepStatus, setCepStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [cepMessage, setCepMessage] = useState<string | null>(null);
   const selectedShipping = shippingRates.flatMap((group) => group.shipping_rates).find((rate) => rate.selected);
 
   useEffect(() => {
@@ -71,6 +83,77 @@ export default function CheckoutPage() {
       });
     return () => controller.abort();
   }, [router]);
+
+  useEffect(() => () => cepRequestRef.current?.abort(), []);
+
+  function setAddressField(name: string, value: string) {
+    const field = formRef.current?.elements.namedItem(name);
+    if (field instanceof HTMLInputElement) field.value = value;
+  }
+
+  function clearAutomaticAddress() {
+    setAddressField("street_name", "");
+    setAddressField("neighborhood", "");
+    setAddressField("city", "");
+    setAddressField("state", "");
+  }
+
+  async function lookupCep(rawCep: string) {
+    const cep = rawCep.replace(/\D/g, "");
+    if (cep.length !== 8) {
+      cepRequestRef.current?.abort();
+      lastCepRef.current = "";
+      setCepStatus("idle");
+      setCepMessage(null);
+      return;
+    }
+    if (lastCepRef.current === cep) return;
+
+    cepRequestRef.current?.abort();
+    const controller = new AbortController();
+    cepRequestRef.current = controller;
+    lastCepRef.current = cep;
+    setSubmitted(false);
+    setCepStatus("loading");
+    setCepMessage("Buscando endereço...");
+
+    try {
+      const response = await fetch(`/api/address/cep/${cep}`, { cache: "no-store", signal: controller.signal });
+      const payload = await response.json().catch(() => null) as CepLookup | { message?: string } | null;
+      if (!response.ok || !payload || !("city" in payload)) {
+        throw new Error(payload && "message" in payload ? payload.message : "Não foi possível consultar o CEP.");
+      }
+
+      setAddressField("street_name", payload.street);
+      setAddressField("neighborhood", payload.neighborhood);
+      setAddressField("city", payload.city);
+      setAddressField("state", payload.state);
+      setCepStatus("success");
+      setCepMessage(payload.street
+        ? "Endereço encontrado. Agora informe o número."
+        : "Cidade encontrada. Complete a rua, o bairro e o número.");
+
+      const nextFieldName = payload.street ? "street_number" : "street_name";
+      const nextField = formRef.current?.elements.namedItem(nextFieldName);
+      if (nextField instanceof HTMLInputElement) nextField.focus();
+    } catch (reason) {
+      if (controller.signal.aborted) return;
+      lastCepRef.current = "";
+      clearAutomaticAddress();
+      setCepStatus("error");
+      setCepMessage(reason instanceof Error ? reason.message : "Não foi possível consultar o CEP.");
+    }
+  }
+
+  function handleCepChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const digits = event.currentTarget.value.replace(/\D/g, "").slice(0, 8);
+    event.currentTarget.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+    if (digits !== lastCepRef.current) {
+      setCepStatus("idle");
+      setCepMessage(null);
+    }
+    void lookupCep(digits);
+  }
 
   async function handleAddressUpdate() {
     const form = formRef.current;
@@ -243,7 +326,15 @@ export default function CheckoutPage() {
               <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8" style={{ animationDelay: "80ms" }}>
                 <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><MapPin className="h-5 w-5 text-[#FE8C05]" />Endereço de entrega</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                  <label className="grid gap-2 text-xs font-bold text-slate-600">CEP<input name="postcode" inputMode="numeric" className={fieldClass} pattern="[0-9]{5}-?[0-9]{3}" title="Informe um CEP válido" required /></label>
+                  <label className="grid gap-2 text-xs font-bold text-slate-600">
+                    CEP
+                    <span className="relative block">
+                      <input name="postcode" inputMode="numeric" autoComplete="postal-code" maxLength={9} onChange={handleCepChange} onBlur={(event) => void lookupCep(event.currentTarget.value)} className={`${fieldClass} pr-11`} pattern="[0-9]{5}-?[0-9]{3}" title="Informe um CEP válido" required />
+                      {cepStatus === "loading" && <LoaderCircle aria-label="Buscando CEP" className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#3E1255]" />}
+                      {cepStatus === "success" && <CheckCircle2 aria-label="CEP encontrado" className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-600" />}
+                    </span>
+                    {cepMessage && <small aria-live="polite" className={`font-normal leading-5 ${cepStatus === "error" ? "text-[#CC632B]" : cepStatus === "success" ? "text-emerald-700" : "text-slate-500"}`}>{cepMessage}</small>}
+                  </label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600">Estado<input name="state" className={fieldClass} placeholder="SP" maxLength={2} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Cidade<input name="city" className={fieldClass} required /></label>
                   <label className="grid gap-2 text-xs font-bold text-slate-600 sm:col-span-2">Endereço<input name="street_name" className={fieldClass} placeholder="Rua ou avenida" required /></label>
