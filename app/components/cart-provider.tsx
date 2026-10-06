@@ -78,6 +78,7 @@ type CartContextValue = {
   selectShippingRate: (packageId: number, rateId: string) => Promise<boolean>;
   checkoutWithMercadoPago: (address: CheckoutAddress) => Promise<StoreApiCheckout | null>;
   checkoutWithMercadoPagoCard: (address: CheckoutAddress, card: MercadoPagoCardPayment) => Promise<StoreApiCheckout | null>;
+  checkoutWithMercadoPagoPix: (address: CheckoutAddress) => Promise<StoreApiCheckout | null>;
   checkoutWithMercadoPagoTicket: (address: CheckoutAddress, ticket: MercadoPagoTicketPayment) => Promise<StoreApiCheckout | null>;
 };
 
@@ -476,6 +477,52 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           return payload;
         } catch (reason) {
           setError(reason instanceof Error ? reason.message : "Não foi possível processar o cartão.");
+          return null;
+        }
+      },
+      checkoutWithMercadoPagoPix: async (address) => {
+        if (mode !== "woocommerce" || !storeCart) {
+          setError("O checkout do WooCommerce não está disponível no momento.");
+          return null;
+        }
+
+        const shippingAddress = {
+          first_name: address.first_name,
+          last_name: address.last_name,
+          postcode: address.postcode,
+          city: address.city,
+          state: address.state,
+          country: address.country,
+          address_1: address.address_1,
+          address_2: address.address_2,
+        };
+
+        try {
+          const response = await fetch("/api/store/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({
+              billing_address: address,
+              shipping_address: shippingAddress,
+              payment_method: "woo-mercado-pago-pix",
+              payment_data: [
+                {
+                  key: "mercadopago_checkout_session[_mp_flow_id]",
+                  value: crypto.randomUUID(),
+                },
+              ],
+              expected_total: storeCart.totals.total_price,
+            }),
+          });
+          const payload = await response.json().catch(() => null) as StoreApiCheckout | { message?: string } | null;
+          if (!response.ok || !payload || !("order_id" in payload)) {
+            throw new Error(payload && "message" in payload ? payload.message : "Não foi possível gerar o Pix.");
+          }
+          setError(null);
+          return payload;
+        } catch (reason) {
+          setError(reason instanceof Error ? reason.message : "Não foi possível gerar o Pix.");
           return null;
         }
       },

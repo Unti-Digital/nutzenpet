@@ -43,7 +43,7 @@ function getTicketPayment(formElement: HTMLFormElement): MercadoPagoTicketPaymen
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, checkoutWithMercadoPago, checkoutWithMercadoPagoCard, checkoutWithMercadoPagoTicket, shippingRates, hasCalculatedShipping, error } = useCart();
+  const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, checkoutWithMercadoPago, checkoutWithMercadoPagoCard, checkoutWithMercadoPagoPix, checkoutWithMercadoPagoTicket, shippingRates, hasCalculatedShipping, error } = useCart();
   const formRef = useRef<HTMLFormElement>(null);
   const cardFormRef = useRef<MercadoPagoCardFormHandle>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -51,7 +51,7 @@ export default function CheckoutPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "ticket" | "pro">("card");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "pix" | "ticket" | "pro">("card");
   const [cardReady, setCardReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const selectedShipping = shippingRates.flatMap((group) => group.shipping_rates).find((rate) => rate.selected);
@@ -139,6 +139,25 @@ export default function CheckoutPage() {
         setPaymentError("Aguarde os campos seguros do cartão terminarem de carregar.");
         setProcessingPayment(false);
       }
+      return;
+    }
+
+    if (paymentMethod === "pix") {
+      const checkout = await checkoutWithMercadoPagoPix(getCheckoutAddress(form));
+      if (!checkout?.payment_result || checkout.payment_result.payment_status !== "success") {
+        const details = checkout?.payment_result
+          ? Object.fromEntries(checkout.payment_result.payment_details.map(({ key, value }) => [key, value]))
+          : {};
+        setPaymentError(details.message || "O Mercado Pago não conseguiu gerar o Pix. Confira os dados e tente novamente.");
+        setProcessingPayment(false);
+        return;
+      }
+      const query = new URLSearchParams({
+        pedido: String(checkout.order_id),
+        chave: checkout.order_key,
+        retorno: checkout.payment_result.redirect_url,
+      });
+      router.push(`/pedido/pix?${query.toString()}`);
       return;
     }
 
@@ -264,6 +283,10 @@ export default function CheckoutPage() {
                       }}
                     />
                   )}
+                  <label className={`mt-5 flex cursor-pointer items-start gap-4 rounded-md border-2 p-4 ${paymentMethod === "pix" ? "border-[#3E1255] bg-[#F5EFF8]" : "border-slate-200"}`}>
+                    <input type="radio" name="payment_method" value="woo-mercado-pago-pix" checked={paymentMethod === "pix"} onChange={() => setPaymentMethod("pix")} className="mt-1 accent-[#3E1255]" />
+                    <span><strong className="block text-sm text-[#123F55]">Pix</strong><small className="mt-1 block leading-5 text-slate-500">Pague com QR Code ou Pix Copia e Cola sem sair do site. O código vence em 30 minutos.</small></span>
+                  </label>
                   <label className={`mt-5 flex cursor-pointer items-start gap-4 rounded-md border-2 p-4 ${paymentMethod === "ticket" ? "border-[#3E1255] bg-[#F5EFF8]" : "border-slate-200"}`}>
                     <input type="radio" name="payment_method" value="woo-mercado-pago-ticket" checked={paymentMethod === "ticket"} onChange={() => setPaymentMethod("ticket")} className="mt-1 accent-[#3E1255]" />
                     <span><strong className="block text-sm text-[#123F55]">Boleto bancário</strong><small className="mt-1 block leading-5 text-slate-500">Gere o boleto diretamente no site. O vencimento será em até 3 dias.</small></span>
@@ -300,7 +323,7 @@ export default function CheckoutPage() {
                 {purchaseType === "subscription" && <div className="mt-5 grid gap-2 border-t border-white/15 pt-5 text-xs text-white/70"><div className="flex justify-between gap-4"><span>Total recorrente</span><strong className="text-[#FE8C05]">{formatCurrency(total)} / ciclo</strong></div><div className="flex justify-between gap-4"><span>Frequência</span><strong className="text-right text-white">{items[0]?.subscription?.frequencyLabel}</strong></div><div className="flex justify-between gap-4"><span>Primeira renovação</span><strong className="text-right text-white">Definida após o pagamento</strong></div></div>}
                 <Link href="/carrinho" className="mt-7 flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-white/70 text-sm font-black text-white transition-colors duration-300 hover:bg-white hover:text-[#3E1255]"><ShoppingBag className="h-4 w-4" />Conferir carrinho</Link>
                 <button type="button" onClick={() => void handlePayment()} disabled={processingPayment || purchaseType === "subscription" || !submitted || !selectedShipping || !acceptedTerms || (paymentMethod === "card" && !cardReady)} className="mt-3 flex h-13 w-full items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black text-white transition-colors hover:bg-[#CC632B] disabled:cursor-not-allowed disabled:bg-slate-400">
-                  {processingPayment ? <><LoaderCircle className="h-4 w-4 animate-spin" />Processando pagamento...</> : paymentMethod === "card" ? <><span>Finalizar pedido</span><LockKeyhole className="h-4 w-4" /></> : paymentMethod === "ticket" ? <><span>Gerar boleto</span><LockKeyhole className="h-4 w-4" /></> : <><span>Ir para o Mercado Pago</span><ExternalLink className="h-4 w-4" /></>}
+                  {processingPayment ? <><LoaderCircle className="h-4 w-4 animate-spin" />Processando pagamento...</> : paymentMethod === "card" ? <><span>Finalizar pedido</span><LockKeyhole className="h-4 w-4" /></> : paymentMethod === "pix" ? <><span>Gerar Pix</span><LockKeyhole className="h-4 w-4" /></> : paymentMethod === "ticket" ? <><span>Gerar boleto</span><LockKeyhole className="h-4 w-4" /></> : <><span>Ir para o Mercado Pago</span><ExternalLink className="h-4 w-4" /></>}
                 </button>
                 {!submitted && purchaseType === "one_time" && <p className="mt-3 text-center text-[11px] leading-5 text-white/55">Calcule a entrega para liberar o pagamento.</p>}
               </div>
