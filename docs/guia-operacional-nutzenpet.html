@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Guia operacional — NutzenPet</title>
+  <style>
+    @page { size: A4; margin: 14mm 15mm 14mm; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; color: #123f55; font-family: Arial, Helvetica, sans-serif; font-size: 10.5pt; line-height: 1.38; }
+    body { background: #fff; }
+    .page { min-height: 268mm; position: relative; page-break-after: always; padding-bottom: 12mm; }
+    .page:last-child { page-break-after: auto; }
+    .cover { display: flex; min-height: 268mm; flex-direction: column; justify-content: space-between; padding: 18mm 12mm; border: 1px solid #e6d9ec; background: linear-gradient(145deg, #fff 0%, #f7f1fa 65%, #fff5e9 100%); }
+    .logo { width: 64mm; height: auto; object-fit: contain; }
+    .eyebrow { margin: 0 0 3mm; color: #fe8c05; font-size: 9pt; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 0; max-width: 150mm; color: #3e1255; font-size: 33pt; line-height: 1.04; }
+    h2 { margin: 0 0 5mm; padding-bottom: 3mm; border-bottom: 2px solid #f0e6f4; color: #3e1255; font-size: 21pt; }
+    h3 { margin: 5mm 0 2mm; color: #123f55; font-size: 13pt; }
+    p { margin: 0 0 3mm; }
+    ul, ol { margin: 1.5mm 0 4mm 5mm; padding-left: 5mm; }
+    li { margin-bottom: 1.4mm; }
+    strong { color: #3e1255; }
+    .subtitle { max-width: 130mm; margin-top: 5mm; color: #536b78; font-size: 15pt; line-height: 1.45; }
+    .meta { color: #6f7f88; font-size: 9pt; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8mm; }
+    .topbar img { width: 37mm; height: auto; }
+    .page-number { color: #81909a; font-size: 8.5pt; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+    .card { break-inside: avoid; border: 1px solid #e4d7ea; border-radius: 3mm; padding: 4mm; background: #fff; }
+    .card h3 { margin-top: 0; }
+    .callout { break-inside: avoid; margin: 4mm 0; border-left: 4px solid #fe8c05; padding: 3.5mm 4mm; background: #fff5e9; }
+    .danger { border-left-color: #a82d42; background: #fff1f3; }
+    .success { border-left-color: #1b8d68; background: #eefaf6; }
+    .steps { counter-reset: item; list-style: none; margin-left: 0; padding-left: 0; }
+    .steps > li { position: relative; min-height: 9mm; margin: 0 0 2.2mm; padding: 2.3mm 3mm 2.3mm 11mm; border-radius: 2mm; background: #f6f3f8; }
+    .steps > li::before { counter-increment: item; content: counter(item); position: absolute; left: 2.5mm; top: 2.1mm; display: grid; width: 6mm; height: 6mm; place-items: center; border-radius: 50%; background: #3e1255; color: #fff; font-size: 8pt; font-weight: 800; }
+    table { width: 100%; border-collapse: collapse; break-inside: avoid; }
+    th, td { border-bottom: 1px solid #e9e1ed; padding: 2.5mm 2.2mm; text-align: left; vertical-align: top; }
+    th { color: #3e1255; background: #f6f1f8; font-size: 9pt; }
+    td:first-child { width: 34%; font-weight: 700; color: #3e1255; }
+    .tag { display: inline-block; margin: .5mm; padding: 1mm 2.2mm; border-radius: 999px; background: #f0e7f4; color: #3e1255; font-size: 8.5pt; font-weight: 700; }
+    .checklist { list-style: none; margin-left: 0; padding-left: 0; }
+    .checklist li { position: relative; padding-left: 7mm; }
+    .checklist li::before { content: "✓"; position: absolute; left: 0; color: #1b8d68; font-weight: 900; }
+    .small { color: #647783; font-size: 9pt; }
+    .compact { font-size: 10pt; line-height: 1.3; }
+    .compact h3 { margin: 3.5mm 0 1.5mm; }
+    .compact th, .compact td { padding: 2mm; }
+    .compact ul, .compact ol { margin-bottom: 2.5mm; }
+    .compact .steps > li { min-height: 8mm; margin-bottom: 1.4mm; padding-top: 2mm; padding-bottom: 2mm; }
+    .compact .callout { margin: 2.8mm 0; padding-top: 2.7mm; padding-bottom: 2.7mm; }
+    .footer { position: absolute; right: 0; bottom: 0; left: 0; display: flex; justify-content: space-between; padding-top: 2mm; border-top: 1px solid #eee6f1; color: #85939b; font-size: 8pt; }
+  </style>
+</head>
+<body>
+  <section class="page cover">
+    <div><img class="logo" src="../public/logo/logo.png" alt="NutzenPet"></div>
+    <div>
+      <p class="eyebrow">Guia rápido de operação</p>
+      <h1>Site e Nutzen Switch</h1>
+      <p class="subtitle">Produtos, estoque, pedidos, pagamentos e áreas administrativas — sem termos técnicos.</p>
+    </div>
+    <div class="meta">Versão operacional • Atualizado em 07/10/2026</div>
+  </section>
+
+  <section class="page">
+    <div class="topbar"><img src="../public/logo/logo.png" alt="NutzenPet"><span class="page-number">01</span></div>
+    <h2>Como o site funciona</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>WordPress + WooCommerce</h3>
+        <p>É a fonte dos produtos, preços, estoque, clientes, pedidos, fretes e pagamentos.</p>
+      </div>
+      <div class="card">
+        <h3>Loja NutzenPet</h3>
+        <p>Mostra ao cliente os dados cadastrados no WooCommerce e envia as compras de volta ao painel.</p>
+      </div>
+      <div class="card">
+        <h3>Nutzen Switch</h3>
+        <p>Centraliza configurações próprias da Nutzen: frete, banners, candidaturas, afiliados e assinaturas.</p>
+      </div>
+      <div class="card">
+        <h3>Bling</h3>
+        <p>Recebe os pedidos e, após a organização do catálogo, será a referência para produtos e estoque.</p>
+      </div>
+    </div>
+    <h3>Fluxo de uma venda</h3>
+    <ol class="steps">
+      <li>Cliente escolhe o produto e informa o endereço.</li>
+      <li>WooCommerce calcula frete e total.</li>
+      <li>Mercado Pago processa Pix, cartão ou boleto.</li>
+      <li>Pagamento aprovado deixa o pedido como <strong>Processando</strong>.</li>
+      <li>Pedido fica disponível para importação no Bling.</li>
+      <li>Após separar e enviar, altere o pedido para <strong>Concluído</strong>.</li>
+    </ol>
+    <div class="callout success"><strong>Regra principal:</strong> preço, estoque e status do pedido devem sempre estar corretos no WooCommerce.</div>
+    <div class="footer"><span>Guia operacional NutzenPet</span><span>Site e operação diária</span></div>
+  </section>
+
+  <section class="page">
+    <div class="topbar"><img src="../public/logo/logo.png" alt="NutzenPet"><span class="page-number">02</span></div>
+    <h2>Operar produtos</h2>
+    <p><strong>Caminho:</strong> Produtos → Todos os produtos → escolha o produto → Editar.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Dados essenciais</h3>
+        <ul>
+          <li><strong>Nome:</strong> título exibido na loja.</li>
+          <li><strong>Preço:</strong> Dados do produto → Geral.</li>
+          <li><strong>SKU:</strong> Dados do produto → Inventário.</li>
+          <li><strong>Estoque:</strong> quantidade e status.</li>
+          <li><strong>Peso e medidas:</strong> aba Entrega.</li>
+          <li><strong>Imagem:</strong> imagem principal e galeria.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Para alterar estoque</h3>
+        <ol>
+          <li>Abra o produto.</li>
+          <li>Vá em <strong>Dados do produto → Inventário</strong>.</li>
+          <li>Informe a quantidade.</li>
+          <li>Não permita pedidos em espera.</li>
+          <li>Clique em <strong>Atualizar</strong>.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="callout"><strong>Estoque zero:</strong> o site oculta o preço, mostra “Produto indisponível” e bloqueia compra e assinatura.</div>
+    <h3>Publicar ou ocultar</h3>
+    <table>
+      <tr><th>Situação</th><th>O que fazer</th></tr>
+      <tr><td>Produto chegou</td><td>Atualize estoque, preço, peso, medidas e publique.</td></tr>
+      <tr><td>Produto ainda não chegou</td><td>Mantenha estoque zero. Não exclua o produto.</td></tr>
+      <tr><td>Produto saiu de linha</td><td>Altere para rascunho após confirmar que não há pedidos pendentes.</td></tr>
+      <tr><td>Preço promocional</td><td>Use preço promocional e defina período, se necessário.</td></tr>
+    </table>
+    <div class="callout danger"><strong>Não altere o SKU</strong> depois de vincular o produto ao Bling. SKUs diferentes podem gerar duplicidade.</div>
+    <p class="small">Após salvar, aguarde alguns minutos e atualize a loja com Ctrl + F5 se a mudança ainda não aparecer.</p>
+    <div class="footer"><span>Guia operacional NutzenPet</span><span>Produtos</span></div>
+  </section>
+
+  <section class="page compact">
+    <div class="topbar"><img src="../public/logo/logo.png" alt="NutzenPet"><span class="page-number">03</span></div>
+    <h2>Pedidos, pagamentos e Bling</h2>
+    <h3>Pedidos</h3>
+    <p><strong>Caminho:</strong> WooCommerce → Pedidos.</p>
+    <table>
+      <tr><th>Status</th><th>Uso</th></tr>
+      <tr><td>Pendente</td><td>Pedido criado, mas pagamento ainda não confirmado.</td></tr>
+      <tr><td>Processando</td><td>Pagamento aprovado. Pode separar o pedido.</td></tr>
+      <tr><td>Concluído</td><td>Pedido finalizado e entregue/enviado.</td></tr>
+      <tr><td>Cancelado</td><td>Pedido cancelado. Isso não é o mesmo que reembolso.</td></tr>
+      <tr><td>Reembolsado</td><td>Pagamento devolvido pelo meio de pagamento.</td></tr>
+    </table>
+    <div class="callout danger"><strong>Importante:</strong> não envie produtos enquanto o pedido estiver pendente. Para devolver dinheiro, use a função de reembolso do Mercado Pago; apenas cancelar no WooCommerce não garante estorno.</div>
+    <h3>Pagamentos</h3>
+    <ul>
+      <li><strong>Pix:</strong> aprovado muda o pedido para Processando.</li>
+      <li><strong>Cartão:</strong> aguarde a aprovação antes de separar.</li>
+      <li><strong>Boleto:</strong> fica pendente até a compensação.</li>
+      <li><strong>Nota fiscal:</strong> é gerada no Bling, não no Mercado Pago.</li>
+    </ul>
+    <h3>Bling — operação atual</h3>
+    <ol class="steps">
+      <li>Vá em <strong>Vendas → Importar pedidos manualmente</strong>.</li>
+      <li>Selecione a integração WooCommerce e clique em <strong>Visualizar</strong>.</li>
+      <li>Importe somente pedidos reais e pagos.</li>
+      <li>Depois, o pedido aparece em <strong>Vendas → Pedidos de venda</strong>.</li>
+      <li>Use os três pontos do pedido para gerar a nota fiscal.</li>
+    </ol>
+    <div class="callout"><strong>Automação:</strong> ativar somente quando todos os produtos estiverem cadastrados no Bling com os mesmos SKUs da loja.</div>
+    <div class="footer"><span>Guia operacional NutzenPet</span><span>Pedidos e Bling</span></div>
+  </section>
+
+  <section class="page">
+    <div class="topbar"><img src="../public/logo/logo.png" alt="NutzenPet"><span class="page-number">04</span></div>
+    <h2>Nutzen Switch — visão rápida</h2>
+    <p><strong>Caminho:</strong> menu lateral → Nutzen Switch.</p>
+    <table>
+      <tr><th>Área</th><th>Para que serve</th></tr>
+      <tr><td>Configurações</td><td>Resumo da operação, módulos, subsídio de frete, conexões e logs.</td></tr>
+      <tr><td>Planos Nutzen</td><td>Cria frequências e descontos para assinaturas.</td></tr>
+      <tr><td>Candidaturas</td><td>Analisa lojistas, afiliados e interessados no Nutzen Club.</td></tr>
+      <tr><td>Banners rotativos</td><td>Administra banners da página inicial.</td></tr>
+      <tr><td>Campos de produto</td><td>Define campos técnicos exibidos nos produtos.</td></tr>
+      <tr><td>Afiliados</td><td>Participantes, códigos, comissões, PIX e saques.</td></tr>
+      <tr><td>Assinaturas</td><td>Assinantes, planos, status, recorrência e histórico.</td></tr>
+    </table>
+    <h3>Configurações</h3>
+    <ul>
+      <li><strong>Painel:</strong> atalhos para produtos, pedidos, clientes, afiliados, assinaturas, candidaturas e banners.</li>
+      <li><strong>Saúde dos módulos:</strong> confirma se plugins e WooCommerce estão ativos.</li>
+      <li><strong>Módulos:</strong> liga ou desliga Campos, Afiliados, Assinaturas e Banners.</li>
+      <li><strong>Entrega:</strong> subsídio nacional atual de <strong>R$ 15,90</strong>.</li>
+      <li><strong>Conexões:</strong> URLs e segredo que atualizam a loja.</li>
+      <li><strong>Logs:</strong> mostra o resultado das últimas atualizações.</li>
+    </ul>
+    <div class="callout danger"><strong>Não alterar sem suporte:</strong> URL do frontend, URL do WordPress, segredo do webhook, chaves técnicas de campos e ativação dos módulos.</div>
+    <h3>Regras atuais de entrega</h3>
+    <ul>
+      <li><strong>São Paulo Capital e regiões próprias:</strong> grátis para qualquer peso.</li>
+      <li><strong>Pagamento aprovado até 11h:</strong> entrega no mesmo dia.</li>
+      <li><strong>Após 11h:</strong> entrega no próximo dia útil.</li>
+      <li><strong>Demais regiões:</strong> desconto de R$ 15,90 em cada cotação; cliente paga a diferença.</li>
+    </ul>
+    <div class="footer"><span>Guia operacional NutzenPet</span><span>Nutzen Switch</span></div>
+  </section>
+
+  <section class="page">
+    <div class="topbar"><img src="../public/logo/logo.png" alt="NutzenPet"><span class="page-number">05</span></div>
+    <h2>Planos, candidaturas e banners</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Planos Nutzen</h3>
+        <ol>
+          <li>Adicionar novo plano.</li>
+          <li>Informar nome, recorrência e desconto.</li>
+          <li>Publicar o plano.</li>
+          <li>No produto, marcar “Elegível para assinatura”.</li>
+          <li>Selecionar os planos disponíveis e atualizar.</li>
+        </ol>
+        <p class="small"><strong>Atenção:</strong> criar ou ativar manualmente uma assinatura não cobra o cliente automaticamente.</p>
+      </div>
+      <div class="card">
+        <h3>Candidaturas</h3>
+        <ol>
+          <li>Abra a candidatura.</li>
+          <li>Confira tipo e dados do candidato.</li>
+          <li>Use: Pendente, Em análise, Aprovada ou Rejeitada.</li>
+          <li>Clique em Atualizar.</li>
+        </ol>
+        <p class="small">Aprovar candidato afiliado ativa o programa para o usuário vinculado.</p>
+      </div>
+    </div>
+    <h3>Banners rotativos</h3>
+    <ol class="steps">
+      <li>Nutzen Switch → Banners rotativos → Adicionar novo.</li>
+      <li>Digite um nome interno para o banner.</li>
+      <li>Selecione imagem desktop <strong>1920 × 840 px</strong>.</li>
+      <li>Selecione imagem mobile <strong>1080 × 1350 px</strong>.</li>
+      <li>Informe o link opcional e a ordem.</li>
+      <li>Publique. Para ocultar, altere para rascunho.</li>
+    </ol>
+    <h3>Campos de produto</h3>
+    <ul>
+      <li>Define a estrutura dos campos técnicos usados nos produtos.</li>
+      <li>Para preencher: abra o produto e localize “NutzenPet — Informações técnicas”.</li>
+      <li>Use para benefícios, ingredientes, conservação, tabela nutricional e porções.</li>
+    </ul>
+    <div class="callout danger"><strong>Não troque a chave técnica</strong> de um campo existente. Isso pode interromper a exibição na loja.</div>
+    <div class="footer"><span>Guia operacional NutzenPet</span><span>Conteúdo e catálogo</span></div>
+  </section>
+
+  <section class="page">
+    <div class="topbar"><img src="../public/logo/logo.png" alt="NutzenPet"><span class="page-number">06</span></div>
+    <h2>Afiliados e assinaturas</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Afiliados</h3>
+        <ul>
+          <li>Busque por nome, e-mail, código ou status.</li>
+          <li><strong>Ver afiliado:</strong> abre perfil, cliques, pedidos e comissões.</li>
+          <li>Aprove, suspenda, rejeite ou remova o participante.</li>
+          <li>Comissão: Pendente → Aprovada, Rejeitada ou Estornada.</li>
+          <li>Saque: registre status, observação e comprovante.</li>
+          <li>Em Regras, defina prazo de atribuição e saque mínimo.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Assinaturas</h3>
+        <ul>
+          <li>Busque assinante por nome, e-mail, produto ou status.</li>
+          <li><strong>Ver assinante:</strong> mostra todas as assinaturas e o histórico.</li>
+          <li>Edite plano, quantidade, recorrência, desconto e próxima cobrança.</li>
+          <li>Status: Pendente, Ativa, Pausada, Cancelada, Rejeitada ou Removida.</li>
+          <li>“Nova assinatura” cria cadastro manual, mas não efetua cobrança.</li>
+        </ul>
+      </div>
+    </div>
+    <h3>Checklist diário</h3>
+    <ul class="checklist">
+      <li>Conferir pedidos com status Processando.</li>
+      <li>Não separar pedidos Pendentes.</li>
+      <li>Conferir estoque dos produtos disponíveis.</li>
+      <li>Importar no Bling somente pedidos reais e pagos.</li>
+      <li>Atualizar pedido para Concluído após envio/entrega.</li>
+      <li>Verificar candidaturas, comissões e solicitações de saque.</li>
+    </ul>
+    <h3>Antes de publicar um produto</h3>
+    <div>
+      <span class="tag">SKU</span><span class="tag">Preço</span><span class="tag">Estoque</span><span class="tag">Peso</span><span class="tag">Medidas</span><span class="tag">Imagem</span><span class="tag">Categoria</span><span class="tag">Descrição</span>
+    </div>
+    <div class="callout success"><strong>Pronto para vender:</strong> produto em estoque, pedido pago, frete calculado e dados do cliente completos.</div>
+    <div class="footer"><span>Guia operacional NutzenPet</span><span>Rotina administrativa</span></div>
+  </section>
+</body>
+</html>
