@@ -5,6 +5,7 @@ import { RouteScrollManager } from "./components/route-scroll-manager";
 import { ScrollRevealObserver } from "./components/scroll-reveal-observer";
 import { WhatsAppContact } from "./components/whatsapp-contact";
 import { AffiliateAttribution } from "./components/affiliate-attribution";
+import { MetaPixel } from "./components/meta-pixel";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.FRONTEND_URL || "http://localhost:3000"),
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
+        <MetaPixel />
         <CartProvider>
           <RouteScrollManager />
           <AffiliateAttribution />

@@ -6,9 +6,10 @@ import { SiteFooter } from "../../components/site-footer";
 import { SiteHeader } from "../../components/site-header";
 import { getWordPressUrl } from "@/lib/woocommerce/config";
 import { PixActions } from "./pix-actions";
+import { MetaPurchase } from "../../components/meta-purchase";
 
 type PixPageProps = {
-  searchParams: Promise<{ pedido?: string; chave?: string; retorno?: string }>;
+  searchParams: Promise<{ pedido?: string; chave?: string; retorno?: string; valor?: string }>;
 };
 
 type PixReceipt = {
@@ -81,11 +82,12 @@ async function getPixReceipt(orderId: string, orderKey: string, returnUrl: strin
 }
 
 export default async function PixPage({ searchParams }: PixPageProps) {
-  const { pedido = "", chave = "", retorno = "" } = await searchParams;
+  const { pedido = "", chave = "", retorno = "", valor = "" } = await searchParams;
   const pix = await getPixReceipt(pedido, chave, retorno);
 
   return (
     <main className="min-h-screen bg-slate-50">
+      {pix?.status === "approved" && <MetaPurchase orderId={pedido} value={valor} />}
       <SiteHeader />
       <section className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-3xl rounded-xl bg-white p-7 shadow-[0_20px_60px_rgba(18,63,85,.1)] sm:p-10">

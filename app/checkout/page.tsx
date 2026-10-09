@@ -210,7 +210,11 @@ export default function CheckoutPage() {
 
     if (checkout.payment_result.payment_status === "success") {
       const status = checkout.status === "pending" || checkout.status === "on-hold" ? "pendente" : "aprovado";
-      router.push(`/pedido/${status}?pedido=${checkout.order_id}`);
+      const query = new URLSearchParams({
+        pedido: String(checkout.order_id),
+        valor: total.toFixed(2),
+      });
+      router.push(`/pedido/${status}?${query.toString()}`);
       return;
     }
 
@@ -247,6 +251,7 @@ export default function CheckoutPage() {
         pedido: String(checkout.order_id),
         chave: checkout.order_key,
         retorno: checkout.payment_result.redirect_url,
+        valor: total.toFixed(2),
       });
       router.push(`/pedido/pix?${query.toString()}`);
       return;
@@ -266,6 +271,7 @@ export default function CheckoutPage() {
         pedido: String(checkout.order_id),
         chave: checkout.order_key,
         retorno: checkout.payment_result.redirect_url,
+        valor: total.toFixed(2),
       });
       router.push(`/pedido/boleto?${query.toString()}`);
       return;
