@@ -3,6 +3,7 @@ import { AlertCircle, CheckCircle2, Clock3 } from "lucide-react";
 import { SiteFooter } from "../../components/site-footer";
 import { SiteHeader } from "../../components/site-header";
 import { MetaPurchase } from "../../components/meta-purchase";
+import { GoogleAdsPurchase } from "../../components/google-ads-purchase";
 
 type PaymentStatusPageProps = {
   params: Promise<{ status: string }>;
@@ -44,7 +45,12 @@ export default async function PaymentStatusPage({ params, searchParams }: Paymen
 
   return (
     <main className="min-h-screen bg-slate-50">
-      {status === "aprovado" && <MetaPurchase orderId={pedido} value={valor} />}
+      {status === "aprovado" && (
+        <>
+          <MetaPurchase orderId={pedido} value={valor} />
+          <GoogleAdsPurchase orderId={pedido} value={valor} />
+        </>
+      )}
       <SiteHeader />
       <section className="px-5 py-16 sm:px-8 sm:py-24">
         <div className="mx-auto max-w-2xl rounded-xl bg-white p-8 text-center shadow-[0_20px_60px_rgba(18,63,85,.1)] sm:p-12">

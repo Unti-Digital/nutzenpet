@@ -7,6 +7,7 @@ import { SiteHeader } from "../../components/site-header";
 import { getWordPressUrl } from "@/lib/woocommerce/config";
 import { PixActions } from "./pix-actions";
 import { MetaPurchase } from "../../components/meta-purchase";
+import { GoogleAdsPurchase } from "../../components/google-ads-purchase";
 
 type PixPageProps = {
   searchParams: Promise<{ pedido?: string; chave?: string; retorno?: string; valor?: string }>;
@@ -87,7 +88,12 @@ export default async function PixPage({ searchParams }: PixPageProps) {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      {pix?.status === "approved" && <MetaPurchase orderId={pedido} value={valor} />}
+      {pix?.status === "approved" && (
+        <>
+          <MetaPurchase orderId={pedido} value={valor} />
+          <GoogleAdsPurchase orderId={pedido} value={valor} />
+        </>
+      )}
       <SiteHeader />
       <section className="px-5 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-3xl rounded-xl bg-white p-7 shadow-[0_20px_60px_rgba(18,63,85,.1)] sm:p-10">
