@@ -10,14 +10,18 @@ import { SiteFooter } from "../components/site-footer";
 import { SiteHeader } from "../components/site-header";
 
 export default function CartPage() {
-  const { items, itemCount, subtotal, total, purchaseType, increment, decrement, removeItem, coupons, applyCoupon, removeCoupon, error, hasCalculatedShipping, shippingRates } = useCart();
+  const { items, itemCount, subtotal, total, discountTotal, purchaseType, increment, decrement, removeItem, coupons, applyCoupon, removeCoupon, error, hasCalculatedShipping, shippingRates } = useCart();
   const [coupon, setCoupon] = useState("");
   const [couponPending, setCouponPending] = useState(false);
   const selectedShipping = shippingRates.flatMap((group) => group.shipping_rates).find((rate) => rate.selected);
+  const normalizedCoupon = coupon.trim().toLocaleLowerCase("pt-BR");
+  const couponAlreadyApplied = normalizedCoupon.length > 0 && coupons.some(
+    (item) => item.code.trim().toLocaleLowerCase("pt-BR") === normalizedCoupon,
+  );
 
   async function handleCoupon(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!coupon.trim()) return;
+    if (!coupon.trim() || couponAlreadyApplied) return;
     setCouponPending(true);
     const applied = await applyCoupon(coupon.trim());
     if (applied) setCoupon("");
@@ -72,8 +76,9 @@ export default function CartPage() {
                 <label className="grid flex-1 gap-2 text-xs font-bold text-slate-600">Cupom de desconto
                   <span className="relative"><Tag className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#3E1255]" /><input value={coupon} onChange={(event) => setCoupon(event.target.value)} className="h-12 w-full rounded-md border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm uppercase outline-none focus:border-[#3E1255]" placeholder="DIGITE O CÓDIGO" /></span>
                 </label>
-                <button type="submit" disabled={couponPending || !coupon.trim()} className="h-12 rounded-full bg-[#3E1255] px-6 text-xs font-black text-white transition-colors duration-300 hover:bg-[#5B2674] disabled:cursor-not-allowed disabled:opacity-50">{couponPending ? "Aplicando..." : "Aplicar cupom"}</button>
+                <button type="submit" disabled={couponPending || !coupon.trim() || couponAlreadyApplied} className="h-12 rounded-full bg-[#3E1255] px-6 text-xs font-black text-white transition-colors duration-300 hover:bg-[#5B2674] disabled:cursor-not-allowed disabled:opacity-50">{couponPending ? "Aplicando..." : couponAlreadyApplied ? "Cupom já aplicado" : "Aplicar cupom"}</button>
               </form>
+              {couponAlreadyApplied && <p role="status" className="-mt-1 text-xs font-bold text-[#3E1255]">Esse cupom já está aplicado ao pedido.</p>}
               {coupons.length > 0 && <div className="flex flex-wrap gap-2">{coupons.map((item) => <button key={item.code} type="button" onClick={() => void removeCoupon(item.code)} className="flex items-center gap-2 rounded-full bg-[#F5EFF8] px-4 py-2 text-xs font-black uppercase text-[#3E1255]">{item.code}<X className="h-3.5 w-3.5" /></button>)}</div>}
               <Link href="/produto" className="group inline-flex items-center gap-2 py-3 text-sm font-black text-[#3E1255] transition-colors duration-300 hover:text-[#FE8C05]"><ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-2" /> Continuar comprando</Link>
             </div>
@@ -82,6 +87,7 @@ export default function CartPage() {
               <h2 className="text-2xl font-black">{purchaseType === "subscription" ? "Resumo da assinatura" : "Resumo do pedido"}</h2>
               <div className="mt-6 grid gap-4 border-b border-white/15 pb-6 text-sm">
                 <div className="flex justify-between text-white/70"><span>Produtos ({itemCount})</span><span>{formatCurrency(subtotal)}</span></div>
+                {discountTotal > 0 && <div className="flex justify-between gap-4 text-[#F4C95D]"><span>Desconto</span><strong>-{formatCurrency(discountTotal)}</strong></div>}
                 <div className="flex justify-between gap-4 text-white/70"><span>Entrega</span><span className="text-right font-bold text-[#D9C7E3]">{hasCalculatedShipping ? selectedShipping?.name ?? "Selecione no checkout" : "Calculada no checkout"}</span></div>
               </div>
               <div className="flex items-end justify-between pt-6"><strong>Total</strong><strong className="text-2xl text-[#FE8C05]">{formatCurrency(total)}</strong></div>

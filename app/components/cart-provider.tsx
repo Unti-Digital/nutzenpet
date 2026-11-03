@@ -58,6 +58,7 @@ type CartContextValue = {
   itemCount: number;
   subtotal: number;
   total: number;
+  discountTotal: number;
   mode: CartMode;
   loading: boolean;
   error: string | null;
@@ -328,6 +329,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       itemCount: items.reduce((total, item) => total + item.quantity, 0),
       subtotal: storeCart ? minorValue(storeCart.totals.total_items, currencyUnit) : items.reduce((total, item) => total + item.product.priceValue * item.quantity, 0),
       total: storeCart ? minorValue(storeCart.totals.total_price, currencyUnit) : items.reduce((total, item) => total + item.product.priceValue * item.quantity, 0),
+      discountTotal: storeCart ? minorValue(storeCart.totals.total_discount, currencyUnit) : 0,
       mode,
       loading: mode === "loading",
       error,
@@ -370,7 +372,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           setItems([]);
         }
       },
-      applyCoupon: (code) => runCartAction("cart/apply-coupon", { code }),
+      applyCoupon: (code) => {
+        const trimmedCode = code.trim();
+        const normalizedCode = trimmedCode.toLocaleLowerCase("pt-BR");
+        const alreadyApplied = (storeCart?.coupons ?? []).some(
+          (coupon) => coupon.code.trim().toLocaleLowerCase("pt-BR") === normalizedCode,
+        );
+
+        if (alreadyApplied) {
+          setError(`O cupom ${trimmedCode.toLocaleUpperCase("pt-BR")} já está aplicado.`);
+          return Promise.resolve(false);
+        }
+
+        return runCartAction("cart/apply-coupon", { code: trimmedCode });
+      },
       removeCoupon: (code) => runCartAction("cart/remove-coupon", { code }),
       updateCustomer: (data) => runCartAction("cart/update-customer", { shipping_address: data, billing_address: data }),
       selectShippingRate: (packageId, rateId) => runCartAction("cart/select-shipping-rate", { package_id: packageId, rate_id: rateId }),

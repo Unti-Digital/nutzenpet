@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard, ExternalLink, LoaderCircle, LockKeyhole, MapPin, PackageCheck, ShoppingBag, Truck, UserRound } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, CreditCard, ExternalLink, LoaderCircle, LockKeyhole, MapPin, PackageCheck, ShoppingBag, Tag, Truck, UserRound, X } from "lucide-react";
 import { formatCurrency, useCart, type CheckoutAddress, type MercadoPagoCardPayment, type MercadoPagoTicketPayment } from "../components/cart-provider";
 import { MercadoPagoCardForm, type MercadoPagoCardFormHandle } from "../components/mercado-pago-card-form";
 import { SiteFooter } from "../components/site-footer";
@@ -59,7 +59,7 @@ function getDeliveryTime(name: string, deliveryTime: string) {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, itemCount, total, purchaseType, updateCustomer, selectShippingRate, checkoutWithMercadoPago, checkoutWithMercadoPagoCard, checkoutWithMercadoPagoPix, checkoutWithMercadoPagoTicket, shippingRates, hasCalculatedShipping, error } = useCart();
+  const { items, itemCount, total, discountTotal, purchaseType, coupons, applyCoupon, removeCoupon, updateCustomer, selectShippingRate, checkoutWithMercadoPago, checkoutWithMercadoPagoCard, checkoutWithMercadoPagoPix, checkoutWithMercadoPagoTicket, shippingRates, hasCalculatedShipping, error } = useCart();
   const formRef = useRef<HTMLFormElement>(null);
   const cardFormRef = useRef<MercadoPagoCardFormHandle>(null);
   const cepRequestRef = useRef<AbortController | null>(null);
@@ -74,6 +74,20 @@ export default function CheckoutPage() {
   const [authReady, setAuthReady] = useState(false);
   const [cepStatus, setCepStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [cepMessage, setCepMessage] = useState<string | null>(null);
+  const [coupon, setCoupon] = useState("");
+  const [couponPending, setCouponPending] = useState(false);
+  const normalizedCoupon = coupon.trim().toLocaleLowerCase("pt-BR");
+  const couponAlreadyApplied = normalizedCoupon.length > 0 && coupons.some(
+    (item) => item.code.trim().toLocaleLowerCase("pt-BR") === normalizedCoupon,
+  );
+
+  async function handleCoupon() {
+    if (!coupon.trim() || couponAlreadyApplied) return;
+    setCouponPending(true);
+    const applied = await applyCoupon(coupon.trim());
+    if (applied) setCoupon("");
+    setCouponPending(false);
+  }
   const selectedShipping = shippingRates.flatMap((group) => group.shipping_rates).find((rate) => rate.selected);
 
   useEffect(() => {
@@ -426,7 +440,42 @@ export default function CheckoutPage() {
                 {items.map(({ product, quantity, subscription }) => <div key={product.slug} className="grid grid-cols-[60px_1fr_auto] items-center gap-3 py-4"><div className="relative h-16 rounded-md bg-white/95"><Image src={product.images[0]} alt="" fill sizes="60px" className="object-contain p-1" /></div><div><p className="text-xs font-bold leading-4">{product.shortName}</p><p className="mt-1 text-[10px] text-white/55">Qtd. {quantity}{subscription ? ` · ${subscription.frequencyLabel}` : ""}</p>{subscription && <span className="mt-2 inline-flex rounded-full bg-[#FE8C05] px-2 py-1 text-[9px] font-black uppercase text-white">Assinatura</span>}</div><strong className="text-xs">{formatCurrency(product.priceValue * quantity)}{subscription ? " / ciclo" : ""}</strong></div>)}
               </div>
               <div className="p-7">
+                <div className="mb-6 border-b border-white/15 pb-6">
+                  <label htmlFor="checkout-coupon" className="text-xs font-black uppercase tracking-[0.12em] text-white/70">Cupom de desconto</label>
+                  <div className="mt-3 flex gap-2">
+                    <span className="relative min-w-0 flex-1">
+                      <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#3E1255]" />
+                      <input
+                        id="checkout-coupon"
+                        value={coupon}
+                        onChange={(event) => setCoupon(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            void handleCoupon();
+                          }
+                        }}
+                        className="h-11 w-full rounded-md border border-white/20 bg-white pl-10 pr-3 text-sm font-bold uppercase text-[#123F55] outline-none focus:border-[#FE8C05]"
+                        placeholder="DIGITE O CÓDIGO"
+                      />
+                    </span>
+                    <button type="button" onClick={() => void handleCoupon()} disabled={couponPending || !coupon.trim() || couponAlreadyApplied} className="h-11 shrink-0 rounded-full bg-[#FE8C05] px-4 text-xs font-black text-white transition-colors hover:bg-[#CC632B] disabled:cursor-not-allowed disabled:bg-slate-400">
+                      {couponPending ? "Aplicando..." : "Aplicar"}
+                    </button>
+                  </div>
+                  {couponAlreadyApplied && <p role="status" className="mt-2 text-xs font-bold text-[#F4C95D]">Esse cupom já está aplicado ao pedido.</p>}
+                  {coupons.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {coupons.map((item) => (
+                        <button key={item.code} type="button" onClick={() => void removeCoupon(item.code)} className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-[10px] font-black uppercase text-white hover:bg-white/20" aria-label={`Remover cupom ${item.code}`}>
+                          {item.code}<X className="h-3.5 w-3.5" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="grid gap-3 text-sm text-white/65"><div className="flex justify-between"><span>Produtos ({itemCount})</span><span>Incluídos</span></div><div className="flex justify-between gap-4"><span>Entrega</span><span className="text-right text-[#D9C7E3]">{hasCalculatedShipping ? selectedShipping?.name ?? "Selecione um método" : "A calcular"}</span></div></div>
+                {discountTotal > 0 && <div className="mt-3 flex justify-between gap-4 text-sm text-[#F4C95D]"><span>Desconto</span><strong>-{formatCurrency(discountTotal)}</strong></div>}
                 <div className="mt-5 flex items-end justify-between border-t border-white/15 pt-5"><strong>Total</strong><strong className="text-2xl text-[#FE8C05]">{formatCurrency(total)}</strong></div>
                 {purchaseType === "subscription" && <div className="mt-5 grid gap-2 border-t border-white/15 pt-5 text-xs text-white/70"><div className="flex justify-between gap-4"><span>Total recorrente</span><strong className="text-[#FE8C05]">{formatCurrency(total)} / ciclo</strong></div><div className="flex justify-between gap-4"><span>Frequência</span><strong className="text-right text-white">{items[0]?.subscription?.frequencyLabel}</strong></div><div className="flex justify-between gap-4"><span>Primeira renovação</span><strong className="text-right text-white">Definida após o pagamento</strong></div></div>}
                 <Link href="/carrinho" className="mt-7 flex h-13 w-full items-center justify-center gap-2 rounded-full border-2 border-white/70 text-sm font-black text-white transition-colors duration-300 hover:bg-white hover:text-[#3E1255]"><ShoppingBag className="h-4 w-4" />Conferir carrinho</Link>
