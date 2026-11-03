@@ -147,6 +147,8 @@ C:\xampp\php\php.exe wordpress\tools\import-products.php `
 |---|---|---|
 | POST | `/wp-json/nutzen/v1/auth/register` | Público, sujeito à configuração do WooCommerce e rate limit |
 | POST | `/wp-json/nutzen/v1/auth/login` | Público com rate limit |
+| POST | `/wp-json/nutzen/v1/auth/password/forgot` | Público com resposta neutra e rate limit |
+| POST | `/wp-json/nutzen/v1/auth/password/reset` | Chave temporária do WordPress e rate limit |
 | GET/POST | `/wp-json/nutzen/v1/auth/me` | Bearer token |
 | POST | `/wp-json/nutzen/v1/auth/logout` | Bearer token |
 | GET | `/wp-json/nutzen/v1/customer/orders` | Somente pedidos do cliente autenticado |

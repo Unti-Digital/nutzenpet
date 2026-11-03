@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nutzen Switch
  * Description: Central de diagnóstico, módulos e conexões da plataforma NutzenPet.
- * Version: 0.4.11
+ * Version: 0.4.12
  * Author: NutzenPet
  * Requires at least: 6.7
  * Requires PHP: 8.1
@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 
 final class Nutzen_Switch_Plugin {
-	private const VERSION = '0.4.11';
+	private const VERSION = '0.4.12';
 	private const OPTION = 'nutzen_switch_settings';
 	private const LOG    = 'nutzen_switch_log';
 	private const ADMIN_CSS_BASE64 = 'OnJvb3QgewogIC0tbnV0emVuLXB1cnBsZTogIzNlMTI1NTsKICAtLW51dHplbi1wdXJwbGUtZGFyazogIzI1MGEzNTsKICAtLW51dHplbi1saWxhYzogI2Y1ZWZmODsKICAtLW51dHplbi1vcmFuZ2U6ICNmZThjMDU7CiAgLS1udXR6ZW4tdGVhbDogIzEyNGQ1NTsKfQoKI3dwYWRtaW5iYXIgeyBiYWNrZ3JvdW5kOiB2YXIoLS1udXR6ZW4tcHVycGxlLWRhcmspOyB9CiNhZG1pbm1lbnUsICNhZG1pbm1lbnV3cmFwLCAjYWRtaW5tZW51YmFjayB7IGJhY2tncm91bmQ6IHZhcigtLW51dHplbi1wdXJwbGUpOyB9CiNhZG1pbm1lbnUgYSB7IGNvbG9yOiByZ2JhKDI1NSwyNTUsMjU1LC44NCk7IH0KI2FkbWlubWVudSAud3AtaGFzLWN1cnJlbnQtc3VibWVudSAud3Atc3VibWVudSwgI2FkbWlubWVudSAud3AtaGFzLWN1cnJlbnQtc3VibWVudS5vcGVuc3ViIC53cC1zdWJtZW51LCAjYWRtaW5tZW51IC53cC1zdWJtZW51IHsgYmFja2dyb3VuZDogdmFyKC0tbnV0emVuLXB1cnBsZS1kYXJrKTsgfQojYWRtaW5tZW51IC53cC1oYXMtY3VycmVudC1zdWJtZW51ID4gYS5tZW51LXRvcCwgI2FkbWlubWVudSAuY3VycmVudCA+IGEubWVudS10b3AsICNhZG1pbm1lbnUgYTpob3ZlciwgI2FkbWlubWVudSBsaS5tZW51LXRvcDpob3ZlciwgI2FkbWlubWVudSBsaS5vcGVuc3ViID4gYS5tZW51LXRvcCB7IGJhY2tncm91bmQ6ICM1NjFiNzA7IGNvbG9yOiAjZmZmOyB9CiNhZG1pbm1lbnUgLndwLW1lbnUtaW1hZ2U6YmVmb3JlLCAjYWRtaW5tZW51IC53cC1zdWJtZW51IGE6Zm9jdXMsICNhZG1pbm1lbnUgLndwLXN1Ym1lbnUgYTpob3ZlciB7IGNvbG9yOiAjZmZkMzljOyB9Ci53cC1jb3JlLXVpIC5idXR0b24tcHJpbWFyeSB7IGJvcmRlci1jb2xvcjogdmFyKC0tbnV0emVuLW9yYW5nZSk7IGJhY2tncm91bmQ6IHZhcigtLW51dHplbi1vcmFuZ2UpOyBjb2xvcjogI2ZmZjsgfQoud3AtY29yZS11aSAuYnV0dG9uLXByaW1hcnk6aG92ZXIsIC53cC1jb3JlLXVpIC5idXR0b24tcHJpbWFyeTpmb2N1cyB7IGJvcmRlci1jb2xvcjogI2NjNjMyYjsgYmFja2dyb3VuZDogI2NjNjMyYjsgfQoud3AtY29yZS11aSAuYnV0dG9uOmZvY3VzLCBhOmZvY3VzLCBpbnB1dDpmb2N1cywgc2VsZWN0OmZvY3VzLCB0ZXh0YXJlYTpmb2N1cyB7IGJveC1zaGFkb3c6IDAgMCAwIDFweCB2YXIoLS1udXR6ZW4tcHVycGxlKTsgfQphIHsgY29sb3I6IHZhcigtLW51dHplbi1wdXJwbGUpOyB9CmE6aG92ZXIsIGE6Zm9jdXMgeyBjb2xvcjogIzZmMzE4OTsgfQoKLm51dHplbi1hZG1pbiB7IG1heC13aWR0aDogMTE4MHB4OyB9Ci5udXR6ZW4tYWRtaW4taGVybyB7IGRpc3BsYXk6ZmxleDsgYWxpZ24taXRlbXM6Y2VudGVyOyBqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjsgZ2FwOjI0cHg7IG1hcmdpbjoyMHB4IDA7IHBhZGRpbmc6MzBweDsgYm9yZGVyLXJhZGl1czo4cHg7IGNvbG9yOiNmZmY7IGJhY2tncm91bmQ6dmFyKC0tbnV0emVuLXB1cnBsZSk7IGJveC1zaGFkb3c6MCAxOHB4IDQ1cHggcmdiYSg2MiwxOCw4NSwuMTYpOyB9Ci5udXR6ZW4tYWRtaW4taGVybyBoMSB7IG1hcmdpbjo1cHggMCA4cHg7IGNvbG9yOiNmZmY7IGZvbnQtc2l6ZTozMnB4OyBmb250LXdlaWdodDo4MDA7IH0KLm51dHplbi1hZG1pbi1oZXJvIHAgeyBtYXJnaW46MDsgY29sb3I6cmdiYSgyNTUsMjU1LDI1NSwuNzUpOyB9Ci5udXR6ZW4tYWRtaW4taGVybyAuYnV0dG9uIHsgZGlzcGxheTppbmxpbmUtZmxleDsgYWxpZ24taXRlbXM6Y2VudGVyOyBtaW4taGVpZ2h0OjQycHg7IHBhZGRpbmc6MCAyMnB4OyB9Ci5udXR6ZW4ta2lja2VyIHsgbWFyZ2luOjA7IGNvbG9yOnZhcigtLW51dHplbi1vcmFuZ2UpOyBmb250LXNpemU6MTBweDsgZm9udC13ZWlnaHQ6ODAwOyBsZXR0ZXItc3BhY2luZzouMThlbTsgfQoubnV0emVuLXN0YXQtZ3JpZCB7IGRpc3BsYXk6Z3JpZDsgZ3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdChhdXRvLWZpdCxtaW5tYXgoMTUwcHgsMWZyKSk7IGdhcDoxMHB4OyBtYXJnaW46MTRweCAwOyB9Ci5udXR6ZW4tc3RhdC1ncmlkIGEsIC5udXR6ZW4tc3RhdC1ncmlkIGFydGljbGUgeyBkaXNwbGF5OmZsZXg7IG1pbi1oZWlnaHQ6NzhweDsgZmxleC1kaXJlY3Rpb246Y29sdW1uOyBqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyOyBwYWRkaW5nOjE0cHggMTZweDsgYm9yZGVyOjFweCBzb2xpZCAjZTVkOGViOyBib3JkZXItcmFkaXVzOjdweDsgYmFja2dyb3VuZDojZmZmOyBjb2xvcjp2YXIoLS1udXR6ZW4tdGVhbCk7IHRleHQtZGVjb3JhdGlvbjpub25lOyB0cmFuc2l0aW9uOnRyYW5zZm9ybSAuMnMgZWFzZSwgYm94LXNoYWRvdyAuMnMgZWFzZSwgYm9yZGVyLWNvbG9yIC4ycyBlYXNlOyB9Ci5udXR6ZW4tc3RhdC1ncmlkIGE6aG92ZXIgeyB0cmFuc2Zvcm06dHJhbnNsYXRlWSgtMnB4KTsgYm9yZGVyLWNvbG9yOiNjOGFjZDU7IGJveC1zaGFkb3c6MCAxMHB4IDI0cHggcmdiYSg2MiwxOCw4NSwuMSk7IH0KLm51dHplbi1zdGF0LWdyaWQgc3Ryb25nIHsgY29sb3I6dmFyKC0tbnV0emVuLXB1cnBsZSk7IGZvbnQtc2l6ZToyNXB4OyBsaW5lLWhlaWdodDoxOyB9Ci5udXR6ZW4tc3RhdC1ncmlkIHNwYW4geyBtYXJnaW4tdG9wOjdweDsgY29sb3I6IzVkNjg3MjsgZm9udC1zaXplOjEycHg7IGZvbnQtd2VpZ2h0OjYwMDsgfQoubnV0emVuLXN0YXQtZ3JpZC0tcGFnZSB7IG1hcmdpbjowIDAgMjhweDsgfQoubnV0emVuLXF1aWNrLWFjdGlvbnMgeyBkaXNwbGF5OmZsZXg7IGZsZXgtd3JhcDp3cmFwOyBnYXA6OHB4OyBtYXJnaW4tdG9wOjE0cHg7IH0KLm51dHplbi1zdGF0dXMtdGFibGUsIC5udXR6ZW4tc2V0dGluZ3MtY2FyZCwgLm51dHplbi1sb2cgeyBtYXgtd2lkdGg6MTAwJTsgYm9yZGVyOjFweCBzb2xpZCAjZTVkOGViOyBib3JkZXItcmFkaXVzOjdweDsgYmFja2dyb3VuZDojZmZmOyBib3gtc2hhZG93OjAgOHB4IDI0cHggcmdiYSg2MiwxOCw4NSwuMDUpOyB9Ci5udXR6ZW4tc3RhdHVzLXRhYmxlIHsgbWFyZ2luOjEycHggMCAyOHB4OyBvdmVyZmxvdzpoaWRkZW47IH0KLm51dHplbi1zZXR0aW5ncy1jYXJkIHsgcGFkZGluZzoyNHB4OyB9Ci5udXR6ZW4tbG9nIHsgbWF4LWhlaWdodDoyNjBweDsgb3ZlcmZsb3c6YXV0bzsgcGFkZGluZzoxOHB4OyB9Ci5udXR6ZW4tYWRtaW4tZm9vdGVyIHN0cm9uZyB7IGNvbG9yOnZhcigtLW51dHplbi1wdXJwbGUpOyB9Ci5udXR6ZW4tYWRtaW4tY29sdW1ucyB7IGRpc3BsYXk6Z3JpZDsgZ3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdCgyLG1pbm1heCgwLDFmcikpOyBnYXA6MThweDsgbWFyZ2luOjE4cHggMCAyOHB4OyB9Ci5udXR6ZW4tZm9ybS1ncmlkLCAubnV0emVuLWFwcGxpY2F0aW9uLWdyaWQgeyBkaXNwbGF5OmdyaWQ7IGdyaWQtdGVtcGxhdGUtY29sdW1uczpyZXBlYXQoMixtaW5tYXgoMCwxZnIpKTsgZ2FwOjE2cHg7IH0KLm51dHplbi1mb3JtLWdyaWQgbGFiZWwsIC5udXR6ZW4tYXBwbGljYXRpb24tZ3JpZCBsYWJlbCB7IGRpc3BsYXk6Z3JpZDsgYWxpZ24tY29udGVudDpzdGFydDsgZ2FwOjdweDsgY29sb3I6IzMzNDE1NTsgZm9udC13ZWlnaHQ6NjAwOyB9Ci5udXR6ZW4tZm9ybS1ncmlkIGxhYmVsID4gc3BhbjpmaXJzdC1jaGlsZCwgLm51dHplbi1hcHBsaWNhdGlvbi1ncmlkIGxhYmVsID4gc3BhbjpmaXJzdC1jaGlsZCB7IGZvbnQtc2l6ZToxMnB4OyB9Ci5udXR6ZW4tZm9ybS1ncmlkIC5pcy13aWRlLCAubnV0emVuLWFwcGxpY2F0aW9uLWdyaWQgLmlzLXdpZGUgeyBncmlkLWNvbHVtbjoxLy0xOyB9Ci5udXR6ZW4tZm9ybS1ncmlkIGlucHV0Om5vdChbdHlwZT0iY2hlY2tib3giXSksIC5udXR6ZW4tZm9ybS1ncmlkIHNlbGVjdCwgLm51dHplbi1mb3JtLWdyaWQgdGV4dGFyZWEsIC5udXR6ZW4tYXBwbGljYXRpb24tZ3JpZCBpbnB1dCwgLm51dHplbi1hcHBsaWNhdGlvbi1ncmlkIHNlbGVjdCwgLm51dHplbi1hcHBsaWNhdGlvbi1ncmlkIHRleHRhcmVhIHsgd2lkdGg6MTAwJTsgbWluLWhlaWdodDo0MHB4OyBib3JkZXItY29sb3I6I2Q4YzhlMTsgYm9yZGVyLXJhZGl1czo1cHg7IH0KLm51dHplbi10YWJsZS13cmFwIHsgb3ZlcmZsb3c6YXV0bzsgbWFyZ2luOjEycHggMCAzMHB4OyBib3JkZXI6MXB4IHNvbGlkICNlNWQ4ZWI7IGJvcmRlci1yYWRpdXM6N3B4OyBiYWNrZ3JvdW5kOiNmZmY7IGJveC1zaGFkb3c6MCA4cHggMjRweCByZ2JhKDYyLDE4LDg1LC4wNSk7IH0KLm51dHplbi10YWJsZS13cmFwIHRhYmxlIHsgbWluLXdpZHRoOjg2MHB4OyBib3JkZXI6MDsgfQoubnV0emVuLXRhYmxlLXdyYXAgaW5wdXQsIC5udXR6ZW4tdGFibGUtd3JhcCBzZWxlY3QgeyBtYXgtd2lkdGg6MjEwcHg7IH0KLm51dHplbi1pbmxpbmUtZm9ybSB7IGRpc3BsYXk6ZmxleDsgYWxpZ24taXRlbXM6Y2VudGVyOyBnYXA6N3B4OyB9Ci5udXR6ZW4taW5saW5lLWZvcm0gaW5wdXQsIC5udXR6ZW4taW5saW5lLWZvcm0gc2VsZWN0IHsgbWluLXdpZHRoOjA7IH0KLm51dHplbi1hZG1pbi1maWx0ZXIgeyBkaXNwbGF5OmZsZXg7IGZsZXgtd3JhcDp3cmFwOyBhbGlnbi1pdGVtczpjZW50ZXI7IGdhcDo5cHg7IG1hcmdpbjowIDAgMjJweDsgcGFkZGluZzoxNHB4OyBib3JkZXI6MXB4IHNvbGlkICNlNWQ4ZWI7IGJvcmRlci1yYWRpdXM6N3B4OyBiYWNrZ3JvdW5kOiNmZmY7IH0KLm51dHplbi1hZG1pbi1maWx0ZXIgaW5wdXRbdHlwZT0ic2VhcmNoIl0geyB3aWR0aDptaW4oMzYwcHgsMTAwJSk7IH0KLm51dHplbi1zdWJzY3JpcHRpb24tbGlzdCB7IGRpc3BsYXk6Z3JpZDsgZ2FwOjE1cHg7IH0KLm51dHplbi1yZWNvcmQtY2FyZCB7IHBhZGRpbmc6MjJweDsgYm9yZGVyOjFweCBzb2xpZCAjZTVkOGViOyBib3JkZXItcmFkaXVzOjdweDsgYmFja2dyb3VuZDojZmZmOyBib3gtc2hhZG93OjAgOHB4IDI0cHggcmdiYSg2MiwxOCw4NSwuMDUpOyB9Ci5udXR6ZW4tcmVjb3JkLWNhcmRfX2hlYWQsIC5udXR6ZW4tcmVjb3JkLWNhcmRfX2FjdGlvbnMgeyBkaXNwbGF5OmZsZXg7IGFsaWduLWl0ZW1zOmZsZXgtc3RhcnQ7IGp1c3RpZnktY29udGVudDpzcGFjZS1iZXR3ZWVuOyBnYXA6MThweDsgfQoubnV0emVuLXJlY29yZC1jYXJkX19oZWFkIHsgbWFyZ2luLWJvdHRvbToyMHB4OyB9Ci5udXR6ZW4tcmVjb3JkLWNhcmRfX2hlYWQgaDMgeyBtYXJnaW46NXB4IDA7IGNvbG9yOnZhcigtLW51dHplbi10ZWFsKTsgZm9udC1zaXplOjIxcHg7IH0KLm51dHplbi1yZWNvcmQtY2FyZF9faGVhZCBwIHsgbWFyZ2luOjA7IGNvbG9yOiM2NDc0OGI7IH0KLm51dHplbi1yZWNvcmQtY2FyZF9fYWN0aW9ucyB7IGFsaWduLWl0ZW1zOmNlbnRlcjsgbWFyZ2luLXRvcDoyMHB4OyB9Ci5udXR6ZW4tYXBwbGljYXRpb24tZWRpdG9yIHsgcGFkZGluZzo2cHggMnB4OyB9Ci5udXR6ZW4tc3RhdHVzIHsgZGlzcGxheTppbmxpbmUtZmxleDsgcGFkZGluZzo0cHggOXB4OyBib3JkZXItcmFkaXVzOjk5cHg7IGJhY2tncm91bmQ6I2VlZTsgZm9udC1zaXplOjExcHg7IGZvbnQtd2VpZ2h0OjcwMDsgfQoubnV0emVuLXN0YXR1cy0tYXBwcm92ZWQgeyBiYWNrZ3JvdW5kOiNlYWY2ZGY7IGNvbG9yOiM0ZjdiMmU7IH0KLm51dHplbi1zdGF0dXMtLXBlbmRpbmcsIC5udXR6ZW4tc3RhdHVzLS1pbl9yZXZpZXcgeyBiYWNrZ3JvdW5kOiNmZmYwZGQ7IGNvbG9yOiNhODVmMTY7IH0KLm51dHplbi1zdGF0dXMtLXJlamVjdGVkIHsgYmFja2dyb3VuZDojZmJlNGU0OyBjb2xvcjojYTMzNDM0OyB9Ci5udXR6ZW4tc3RhdHVzLS1zdXNwZW5kZWQgeyBiYWNrZ3JvdW5kOiNmMWU4ZjY7IGNvbG9yOiM1YjI2NzQ7IH0KLm51dHplbi1zdGF0dXMtLXJlbW92ZWQgeyBiYWNrZ3JvdW5kOiNlOWVkZjA7IGNvbG9yOiM1MjYwNmI7IH0KLm51dHplbi1zdGF0dXMtLWFjdGl2ZSB7IGJhY2tncm91bmQ6I2VhZjZkZjsgY29sb3I6IzRmN2IyZTsgfQoubnV0emVuLXN0YXR1cy0tcGVuZGluZ19nYXRld2F5IHsgYmFja2dyb3VuZDojZmZmMGRkOyBjb2xvcjojYTg1ZjE2OyB9Ci5udXR6ZW4tc3RhdHVzLS1wYXVzZWQgeyBiYWNrZ3JvdW5kOiNmMWU4ZjY7IGNvbG9yOiM1YjI2NzQ7IH0KLm51dHplbi1zdGF0dXMtLWNhbmNlbGxlZCB7IGJhY2tncm91bmQ6I2U5ZWRmMDsgY29sb3I6IzUyNjA2YjsgfQoubnV0emVuLXF1aWNrLWFjdGlvbnMtLXBhZ2UgeyBtYXJnaW46LTEycHggMCAyOHB4OyB9Ci5udXR6ZW4tYmFubmVyLWVkaXRvciB7IHBhZGRpbmc6OHB4IDJweDsgfQoubnV0emVuLWJhbm5lci1ncmlkIHsgZGlzcGxheTpncmlkOyBncmlkLXRlbXBsYXRlLWNvbHVtbnM6cmVwZWF0KDIsbWlubWF4KDAsMWZyKSk7IGdhcDoxOHB4OyBtYXJnaW46MThweCAwOyB9Ci5udXR6ZW4tYmFubmVyLW1lZGlhIHsgZGlzcGxheTpncmlkOyBnYXA6MTBweDsgcGFkZGluZzoxNnB4OyBib3JkZXI6MXB4IHNvbGlkICNlNWQ4ZWI7IGJvcmRlci1yYWRpdXM6N3B4OyBiYWNrZ3JvdW5kOiNmYWY3ZmM7IH0KLm51dHplbi1iYW5uZXItcHJldmlldyB7IGRpc3BsYXk6Z3JpZDsgbWluLWhlaWdodDoyMTBweDsgcGxhY2UtaXRlbXM6Y2VudGVyOyBvdmVyZmxvdzpoaWRkZW47IGJvcmRlcjoxcHggZGFzaGVkICNjYmI2ZDU7IGJvcmRlci1yYWRpdXM6NnB4OyBiYWNrZ3JvdW5kOiNmZmY7IGNvbG9yOiM3NzZhN2U7IH0KLm51dHplbi1iYW5uZXItcHJldmlldyBpbWcgeyBkaXNwbGF5OmJsb2NrOyB3aWR0aDoxMDAlOyBoZWlnaHQ6MjEwcHg7IG9iamVjdC1maXQ6Y29udGFpbjsgfQoubnV0emVuLWJhbm5lci1tZWRpYV9fYWN0aW9ucyB7IGRpc3BsYXk6ZmxleDsgZmxleC13cmFwOndyYXA7IGdhcDo4cHg7IH0KLm51dHplbi1iYW5uZXItb3B0aW9ucyB7IG1hcmdpbi10b3A6MjBweDsgfQoubnV0emVuLWJhbm5lci1vcHRpb25zIHNtYWxsIHsgY29sb3I6IzY0NzQ4YjsgZm9udC13ZWlnaHQ6NDAwOyB9Ci5udXR6ZW4tYmFubmVyLWxpc3QtcHJldmlldyB7IGRpc3BsYXk6YmxvY2s7IHdpZHRoOjEyMHB4OyBoZWlnaHQ6NTRweDsgb2JqZWN0LWZpdDpjb3ZlcjsgYm9yZGVyLXJhZGl1czo0cHg7IH0KLmNvbHVtbi1iYW5uZXJfcHJldmlldyB7IHdpZHRoOjEzMHB4OyB9Ci5jb2x1bW4tYmFubmVyX29yZGVyIHsgd2lkdGg6NzBweDsgfQoKI2Rhc2hib2FyZC13aWRnZXRzICNudXR6ZW5fb3ZlcnZpZXcgLmluc2lkZSB7IG1hcmdpbjowOyBwYWRkaW5nOjEycHggMTRweCAxNnB4OyB9CiNkYXNoYm9hcmQtd2lkZ2V0cyAjbnV0emVuX292ZXJ2aWV3IC5udXR6ZW4tc3RhdC1ncmlkIHsgZ3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdChhdXRvLWZpdCxtaW5tYXgoODVweCwxZnIpKTsgfQoKYm9keS5sb2dpbiB7IGJhY2tncm91bmQ6dmFyKC0tbnV0emVuLWxpbGFjKTsgfQpib2R5LmxvZ2luICNsb2dpbiBoMSBhIHsgd2lkdGg6YXV0bzsgaGVpZ2h0OmF1dG87IGJhY2tncm91bmQ6bm9uZTsgdGV4dC1pbmRlbnQ6MDsgY29sb3I6dmFyKC0tbnV0emVuLW9yYW5nZSk7IGZvbnQtc2l6ZTozNHB4OyBmb250LXdlaWdodDo5MDA7IGxpbmUtaGVpZ2h0OjEuMjsgfQpib2R5LmxvZ2luICNsb2dpbmZvcm0geyBib3JkZXI6MDsgYm9yZGVyLXJhZGl1czo4cHg7IGJveC1zaGFkb3c6MCAxOHB4IDU1cHggcmdiYSg2MiwxOCw4NSwuMTQpOyB9CmJvZHkubG9naW4gLmJ1dHRvbi1wcmltYXJ5IHsgbWluLWhlaWdodDozOHB4OyB9CgpAbWVkaWEgKG1heC13aWR0aDogOTYwcHgpIHsKICAubnV0emVuLXN0YXQtZ3JpZCwgI2Rhc2hib2FyZC13aWRnZXRzICNudXR6ZW5fb3ZlcnZpZXcgLm51dHplbi1zdGF0LWdyaWQgeyBncmlkLXRlbXBsYXRlLWNvbHVtbnM6cmVwZWF0KDIsbWlubWF4KDAsMWZyKSk7IH0KICAubnV0emVuLWFkbWluLWhlcm8geyBhbGlnbi1pdGVtczpmbGV4LXN0YXJ0OyBmbGV4LWRpcmVjdGlvbjpjb2x1bW47IH0KICAubnV0emVuLWFkbWluLWNvbHVtbnMsIC5udXR6ZW4tZm9ybS1ncmlkLCAubnV0emVuLWFwcGxpY2F0aW9uLWdyaWQsIC5udXR6ZW4tYmFubmVyLWdyaWQgeyBncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyOyB9CiAgLm51dHplbi1mb3JtLWdyaWQgLmlzLXdpZGUsIC5udXR6ZW4tYXBwbGljYXRpb24tZ3JpZCAuaXMtd2lkZSB7IGdyaWQtY29sdW1uOmF1dG87IH0KfQo=';
@@ -525,6 +525,8 @@ final class Nutzen_Switch_Plugin {
 		register_rest_route( 'nutzen/v1', '/banners', array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'rest_banners' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'nutzen/v1', '/auth/register', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'rest_register' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'nutzen/v1', '/auth/login', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'rest_login' ), 'permission_callback' => '__return_true' ) );
+		register_rest_route( 'nutzen/v1', '/auth/password/forgot', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'rest_forgot_password' ), 'permission_callback' => '__return_true' ) );
+		register_rest_route( 'nutzen/v1', '/auth/password/reset', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'rest_reset_password' ), 'permission_callback' => '__return_true' ) );
 		register_rest_route( 'nutzen/v1', '/auth/logout', array( 'methods' => 'POST', 'callback' => array( __CLASS__, 'rest_logout' ), 'permission_callback' => array( __CLASS__, 'authenticate_request' ) ) );
 		register_rest_route( 'nutzen/v1', '/auth/me', array( 'methods' => array( 'GET', 'POST' ), 'callback' => array( __CLASS__, 'rest_me' ), 'permission_callback' => array( __CLASS__, 'authenticate_request' ) ) );
 		register_rest_route( 'nutzen/v1', '/customer/orders', array( 'methods' => 'GET', 'callback' => array( __CLASS__, 'rest_orders' ), 'permission_callback' => array( __CLASS__, 'authenticate_request' ) ) );
@@ -832,6 +834,83 @@ final class Nutzen_Switch_Plugin {
 		$user = wp_authenticate( $login, $password );
 		if ( is_wp_error( $user ) ) return new WP_Error( 'nutzen_invalid_credentials', 'E-mail ou senha inválidos.', array( 'status' => 401 ) );
 		return new WP_REST_Response( array_merge( array( 'user' => self::user_payload( $user->ID ) ), self::issue_session( $user->ID ) ) );
+	}
+
+	private static function password_reset_response(): WP_REST_Response {
+		return new WP_REST_Response(
+			array( 'message' => 'Se existir uma conta com esse e-mail, enviaremos as instruções para redefinir a senha.' )
+		);
+	}
+
+	public static function rest_forgot_password( WP_REST_Request $request ) {
+		$email = sanitize_email( (string) $request->get_param( 'email' ) );
+		$ip    = sanitize_text_field( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+		if ( ! self::rate_limit( 'password-reset-ip:' . $ip, 5, HOUR_IN_SECONDS ) ) {
+			return new WP_Error( 'nutzen_rate_limited', 'Muitas solicitações. Aguarde alguns minutos e tente novamente.', array( 'status' => 429 ) );
+		}
+
+		$email_bucket_available = self::rate_limit( 'password-reset-email:' . hash( 'sha256', strtolower( $email ) ), 3, HOUR_IN_SECONDS );
+		if ( ! is_email( $email ) || ! $email_bucket_available ) {
+			return self::password_reset_response();
+		}
+
+		$user = get_user_by( 'email', $email );
+		if ( ! $user instanceof WP_User ) {
+			return self::password_reset_response();
+		}
+
+		$key = get_password_reset_key( $user );
+		if ( is_wp_error( $key ) ) {
+			self::log( 'Não foi possível gerar uma chave de redefinição de senha.' );
+			return self::password_reset_response();
+		}
+
+		$settings  = self::settings();
+		$frontend  = untrailingslashit( (string) $settings['frontend_url'] );
+		if ( '' === $frontend ) $frontend = untrailingslashit( home_url() );
+		$reset_url = add_query_arg(
+			array( 'key' => $key, 'login' => $user->user_login ),
+			$frontend . '/api/auth/password-reset-link'
+		);
+		$display_name = $user->display_name ?: 'cliente';
+		$subject      = '[NutzenPet] Redefinição de senha';
+		$message      = sprintf(
+			'<p>Olá, %1$s.</p><p>Recebemos uma solicitação para redefinir a senha da sua conta NutzenPet.</p><p><a href="%2$s">Criar uma nova senha</a></p><p>Se você não fez essa solicitação, ignore este e-mail. O link expira automaticamente.</p>',
+			esc_html( $display_name ),
+			esc_url( $reset_url )
+		);
+		$sent = wp_mail( $user->user_email, $subject, $message, array( 'Content-Type: text/html; charset=UTF-8' ) );
+		self::log( $sent ? 'E-mail de redefinição de senha enviado.' : 'Falha ao enviar e-mail de redefinição de senha.' );
+
+		return self::password_reset_response();
+	}
+
+	public static function rest_reset_password( WP_REST_Request $request ) {
+		$login    = sanitize_text_field( (string) $request->get_param( 'login' ) );
+		$key      = sanitize_text_field( (string) $request->get_param( 'key' ) );
+		$password = (string) $request->get_param( 'password' );
+		$ip       = sanitize_text_field( (string) ( $_SERVER['REMOTE_ADDR'] ?? '' ) );
+		if ( ! self::rate_limit( 'password-reset-confirm:' . $ip, 10, HOUR_IN_SECONDS ) ) {
+			return new WP_Error( 'nutzen_rate_limited', 'Muitas tentativas. Aguarde alguns minutos e tente novamente.', array( 'status' => 429 ) );
+		}
+		if ( strlen( $password ) < 10 ) {
+			return new WP_Error( 'nutzen_weak_password', 'Use uma senha com pelo menos 10 caracteres.', array( 'status' => 400 ) );
+		}
+		if ( '' === $login || '' === $key ) {
+			return new WP_Error( 'nutzen_invalid_reset_key', 'Este link de redefinição é inválido ou expirou.', array( 'status' => 400 ) );
+		}
+
+		$user = check_password_reset_key( $key, $login );
+		if ( is_wp_error( $user ) ) {
+			return new WP_Error( 'nutzen_invalid_reset_key', 'Este link de redefinição é inválido ou expirou.', array( 'status' => 400 ) );
+		}
+
+		reset_password( $user, $password );
+		global $wpdb;
+		$wpdb->delete( self::sessions_table(), array( 'user_id' => $user->ID ), array( '%d' ) );
+		self::log( 'Senha de cliente redefinida; sessões existentes encerradas.' );
+
+		return new WP_REST_Response( array( 'message' => 'Senha redefinida com sucesso. Entre novamente para continuar.' ) );
 	}
 
 	public static function rest_logout(): WP_REST_Response {

@@ -2,9 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getWordPressApiUrl, isWordPressConfigured } from "@/lib/woocommerce/config";
 
 const sessionCookie = "nutzen_session";
+const passwordResetKeyCookie = "nutzen_password_reset_key";
+const passwordResetLoginCookie = "nutzen_password_reset_login";
 const routes: Record<string, { endpoint: string; methods: string[] }> = {
   login: { endpoint: "auth/login", methods: ["POST"] },
   register: { endpoint: "auth/register", methods: ["POST"] },
+  "forgot-password": { endpoint: "auth/password/forgot", methods: ["POST"] },
+  "reset-password": { endpoint: "auth/password/reset", methods: ["POST"] },
   logout: { endpoint: "auth/logout", methods: ["POST"] },
   me: { endpoint: "auth/me", methods: ["GET", "POST"] },
   orders: { endpoint: "customer/orders", methods: ["GET"] },
@@ -56,7 +60,7 @@ async function proxyAccountRequest(request: NextRequest, context: RouteParams) {
     upstreamBody = new URLSearchParams({ _nutzen_session: token }).toString();
   } else if (request.method !== "GET") {
     const rawBody = await request.text();
-    if (token) {
+    if (token || action === "reset-password") {
       let body: Record<string, unknown> = {};
       if (rawBody) {
         try {
@@ -66,7 +70,12 @@ async function proxyAccountRequest(request: NextRequest, context: RouteParams) {
           return NextResponse.json({ message: "Invalid request body." }, { status: 400 });
         }
       }
-      upstreamBody = JSON.stringify({ ...body, _nutzen_session: token });
+      if (token) body._nutzen_session = token;
+      if (action === "reset-password") {
+        body.key = request.cookies.get(passwordResetKeyCookie)?.value ?? "";
+        body.login = request.cookies.get(passwordResetLoginCookie)?.value ?? "";
+      }
+      upstreamBody = JSON.stringify(body);
     } else {
       upstreamBody = rawBody;
     }
@@ -85,6 +94,11 @@ async function proxyAccountRequest(request: NextRequest, context: RouteParams) {
 
   if (issuedToken && upstream.ok) {
     response.cookies.set(sessionCookie, issuedToken, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 30 });
+  }
+  if (action === "reset-password" && (upstream.ok || payload.code === "nutzen_invalid_reset_key")) {
+    const resetCookieOptions = { httpOnly: true, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production", path: "/api/auth/reset-password", maxAge: 0 };
+    response.cookies.set(passwordResetKeyCookie, "", resetCookieOptions);
+    response.cookies.set(passwordResetLoginCookie, "", resetCookieOptions);
   }
   if (action === "logout") response.cookies.delete(sessionCookie);
   return response;
