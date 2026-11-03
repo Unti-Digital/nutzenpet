@@ -184,7 +184,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return;
       } catch {
         setMode("fallback");
-        setError("Carrinho do WooCommerce indisponível. Os itens serão mantidos apenas neste navegador.");
+        setError("Carrinho temporariamente indisponível. Os itens serão mantidos apenas neste navegador.");
       }
 
       try {
@@ -271,7 +271,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       if (mode === "woocommerce") {
         if (!connectedProduct.wooId) {
-          setError("Este produto ainda não está sincronizado com o WooCommerce.");
+          setError("Este produto ainda não está disponível para compra online.");
           return "unavailable";
         }
         try {
@@ -391,7 +391,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       selectShippingRate: (packageId, rateId) => runCartAction("cart/select-shipping-rate", { package_id: packageId, rate_id: rateId }),
       checkoutWithMercadoPago: async (address) => {
         if (mode !== "woocommerce" || !storeCart) {
-          setError("O checkout do WooCommerce não está disponível no momento.");
+          setError("O checkout não está disponível no momento.");
           return null;
         }
 
@@ -436,7 +436,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       },
       checkoutWithMercadoPagoCard: async (address, card) => {
         if (mode !== "woocommerce" || !storeCart) {
-          setError("O checkout do WooCommerce não está disponível no momento.");
+          setError("O checkout não está disponível no momento.");
           return null;
         }
 
@@ -497,7 +497,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       },
       checkoutWithMercadoPagoPix: async (address) => {
         if (mode !== "woocommerce" || !storeCart) {
-          setError("O checkout do WooCommerce não está disponível no momento.");
+          setError("O checkout não está disponível no momento.");
           return null;
         }
 
@@ -543,7 +543,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       },
       checkoutWithMercadoPagoTicket: async (address, ticket) => {
         if (mode !== "woocommerce" || !storeCart) {
-          setError("O checkout do WooCommerce não está disponível no momento.");
+          setError("O checkout não está disponível no momento.");
           return null;
         }
 

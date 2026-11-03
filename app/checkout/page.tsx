@@ -294,7 +294,7 @@ export default function CheckoutPage() {
     const checkout = await checkoutWithMercadoPago(getCheckoutAddress(form));
     const redirectUrl = checkout?.payment_result?.redirect_url;
     if (!checkout || !redirectUrl) {
-      setPaymentError("O Mercado Pago não iniciou o pagamento. Confira se o Checkout Pro está ativo no WooCommerce.");
+      setPaymentError("O Mercado Pago não iniciou o pagamento. Tente novamente em alguns instantes ou escolha outra forma de pagamento.");
       setProcessingPayment(false);
       return;
     }
@@ -339,7 +339,7 @@ export default function CheckoutPage() {
             const fieldName = event.target instanceof HTMLInputElement ? event.target.name : "";
             if (addressFields.has(fieldName)) setSubmitted(false);
           }} className="mx-auto grid max-w-[1180px] gap-8 lg:grid-cols-[1fr_390px]">
-            {submitted && <div role="status" className="reveal-up flex items-center gap-3 rounded-lg border border-[#D9C7E3] bg-[#F5EFF8] p-5 text-sm font-bold text-[#3E1255] lg:col-span-2"><CheckCircle2 className="h-5 w-5 shrink-0 text-[#FE8C05]" /> Endereço atualizado no WooCommerce. Confira os métodos de entrega disponíveis.</div>}
+            {submitted && <div role="status" className="reveal-up flex items-center gap-3 rounded-lg border border-[#D9C7E3] bg-[#F5EFF8] p-5 text-sm font-bold text-[#3E1255] lg:col-span-2"><CheckCircle2 className="h-5 w-5 shrink-0 text-[#FE8C05]" /> Endereço atualizado. Confira os métodos de entrega disponíveis.</div>}
             {error && <div role="alert" className="flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 p-5 text-sm font-bold text-[#CC632B] lg:col-span-2"><AlertCircle className="h-5 w-5 shrink-0" />{error}</div>}
             <div className="space-y-6">
               <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8">
@@ -375,7 +375,7 @@ export default function CheckoutPage() {
 
               <section className="reveal-up rounded-lg bg-white p-6 shadow-[0_10px_30px_rgba(18,63,85,.06)] sm:p-8" style={{ animationDelay: "160ms" }}>
                 <h2 className="flex items-center gap-3 text-xl font-black text-[#123F55]"><Truck className="h-5 w-5 text-[#FE8C05]" />Método de entrega</h2>
-                {!hasCalculatedShipping && <p className="mt-4 text-sm leading-6 text-slate-500">Preencha o endereço para consultar os métodos configurados no WooCommerce.</p>}
+                {!hasCalculatedShipping && <p className="mt-4 text-sm leading-6 text-slate-500">Preencha o endereço para consultar os métodos de entrega disponíveis para sua região.</p>}
                 {hasCalculatedShipping && shippingRates.length === 0 && <p className="mt-4 rounded-md bg-orange-50 p-4 text-sm font-bold text-[#CC632B]">Não há método de entrega disponível para este endereço.</p>}
                 <div className="mt-5 grid gap-3">{shippingRates.flatMap((group) => group.shipping_rates.map((rate) => {
                   const deliveryTime = getDeliveryTime(rate.name, rate.delivery_time);

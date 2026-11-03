@@ -94,7 +94,7 @@ export default function CartPage() {
               {purchaseType === "subscription" && <div className="mt-4 rounded-md bg-white/10 p-4 text-xs leading-5 text-white/75"><strong className="block text-white">Total recorrente: {formatCurrency(total)}</strong><span>{items[0]?.subscription?.frequencyLabel}. A ativação e a primeira renovação dependem de um gateway recorrente compatível.</span></div>}
               <Link href="/conta?retorno=%2Fcheckout" className="group mt-7 flex h-13 items-center justify-center gap-2 rounded-full bg-[#FE8C05] text-sm font-black transition-all duration-300 hover:scale-[0.98] hover:bg-[#CC632B] active:scale-95">Entrar e finalizar compra <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" /></Link>
               <div className="mt-7 grid gap-3 border-t border-white/15 pt-6 text-xs text-white/70">
-                <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#D9C7E3]" /> Totais calculados pelo WooCommerce</span>
+                <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[#D9C7E3]" /> Totais calculados com segurança pela Nutzen</span>
                 <span className="flex items-center gap-2"><Truck className="h-4 w-4 text-[#D9C7E3]" /> Entrega conforme o endereço</span>
                 <span className="flex items-center gap-2"><PackageCheck className="h-4 w-4 text-[#D9C7E3]" /> Estoque validado no carrinho</span>
               </div>

@@ -86,7 +86,7 @@ export default function PrivacyPage() {
                 Não vendemos dados pessoais. Podemos compartilhá-los, somente na medida necessária, com fornecedores que apoiam a operação da loja, como:
               </p>
               <ul className={listClass}>
-                <li><strong className="text-[#123F55]">WooCommerce e WordPress:</strong> cadastro, catálogo, carrinho, pedidos e conta do cliente;</li>
+                <li><strong className="text-[#123F55]">Plataforma da loja online:</strong> cadastro, catálogo, carrinho, pedidos e conta do cliente;</li>
                 <li><strong className="text-[#123F55]">Mercado Pago:</strong> processamento e confirmação de pagamentos;</li>
                 <li><strong className="text-[#123F55]">Melhor Envio, transportadoras e operadores logísticos:</strong> cotação, postagem, entrega e rastreamento;</li>
                 <li><strong className="text-[#123F55]">Bling:</strong> gestão de produtos, estoque, vendas e documentos fiscais, conforme os recursos habilitados;</li>
