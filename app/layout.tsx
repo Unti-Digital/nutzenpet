@@ -28,8 +28,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">
+      <head>
         <GoogleTag />
+      </head>
+      <body className="min-h-full flex flex-col">
         <MetaPixel />
         <CartProvider>
           <RouteScrollManager />
