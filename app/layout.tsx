@@ -5,7 +5,7 @@ import { RouteScrollManager } from "./components/route-scroll-manager";
 import { ScrollRevealObserver } from "./components/scroll-reveal-observer";
 import { WhatsAppContact } from "./components/whatsapp-contact";
 import { AffiliateAttribution } from "./components/affiliate-attribution";
-import { MetaPixel } from "./components/meta-pixel";
+import { MetaPixel, MetaPixelBase } from "./components/meta-pixel";
 import { GoogleTag } from "./components/google-tag";
 
 export const metadata: Metadata = {
@@ -30,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="pt-BR" className="h-full antialiased">
       <head>
         <GoogleTag />
+        <MetaPixelBase />
       </head>
       <body className="min-h-full flex flex-col">
         <MetaPixel />
