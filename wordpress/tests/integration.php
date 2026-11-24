@@ -117,6 +117,8 @@ try {
 	$forgot_data = $forgot_response instanceof WP_REST_Response ? $forgot_response->get_data() : array();
 	$unknown_data = $unknown_response instanceof WP_REST_Response ? $unknown_response->get_data() : array();
 	nutzen_test( isset( $forgot_data['message'], $unknown_data['message'] ) && $forgot_data['message'] === $unknown_data['message'], 'password recovery does not reveal whether an account exists' );
+	$password_reset_headers = (array) ( $password_reset_mail['headers'] ?? array() );
+	nutzen_test( in_array( 'From: Recuperação de senha Nutzen <recuperacao@administracao.nutzenclub.com.br>', $password_reset_headers, true ), 'password recovery uses the dedicated Nutzen sender' );
 	$mail_message = html_entity_decode( (string) ( $password_reset_mail['message'] ?? '' ), ENT_QUOTES | ENT_HTML5, 'UTF-8' );
 	preg_match( '/href="([^"]+)"/', $mail_message, $reset_link_match );
 	$reset_query = array();
